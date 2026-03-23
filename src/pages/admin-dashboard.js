@@ -21,6 +21,7 @@ function renderAdminDashboard() {
                 '<h2 class="sidebar-title" data-i18n="admin.chats">' + t('admin.chats') + '</h2>' +
                 '<div style="display:flex;gap:6px;align-items:center">' +
                     '<span style="font-size:var(--font-xs);color:var(--text-muted)">' + (window.adminSession ? window.adminSession.profile.display_name : '') + '</span>' +
+                    '<button class="btn-settings" onclick="openAdminSettings()" title="Settings" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px">⚙️</button>' +
                     '<button class="btn-logout" onclick="handleAdminLogout()" data-i18n="admin.logout">' + t('admin.logout') + '</button>' +
                 '</div>' +
             '</div>' +
@@ -41,6 +42,28 @@ function renderAdminDashboard() {
             '<div class="admin-empty-state">' +
                 '<div class="admin-empty-icon">💬</div>' +
                 '<p data-i18n="admin.selectConversation">' + t('admin.selectConversation') + '</p>' +
+            '</div>' +
+        '</div>' +
+        /* Settings Modal */
+        '<div id="admin-settings-modal" class="settings-modal hidden">' +
+            '<div class="settings-overlay" onclick="closeAdminSettings()"></div>' +
+            '<div class="settings-card">' +
+                '<h3 style="margin:0 0 16px;font-size:18px">⚙️ Settings</h3>' +
+                '<div style="text-align:center;margin-bottom:16px">' +
+                    '<div id="settings-avatar-preview" class="settings-avatar" onclick="document.getElementById(\'avatar-input\').click()">' +
+                        getAdminAvatar() +
+                    '</div>' +
+                    '<p style="font-size:var(--font-xs);color:var(--text-muted);margin:6px 0 0">Click to change avatar</p>' +
+                    '<input type="file" id="avatar-input" accept="image/*" hidden onchange="handleAvatarChange(event)">' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom:16px">' +
+                    '<label class="form-label">Display Name</label>' +
+                    '<input type="text" class="form-input" id="settings-display-name" value="' + (window.adminSession ? escapeHtml(window.adminSession.profile.display_name) : '') + '">' +
+                '</div>' +
+                '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+                    '<button onclick="closeAdminSettings()" style="padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:white;cursor:pointer">Cancel</button>' +
+                    '<button onclick="saveAdminSettings()" style="padding:8px 20px;border:none;border-radius:8px;background:var(--primary);color:white;cursor:pointer;font-weight:600">Save</button>' +
+                '</div>' +
             '</div>' +
         '</div>' +
     '</div>';
@@ -187,4 +210,66 @@ async function handleAdminLogout() {
     } catch(e) {
         console.error('Logout failed:', e);
     }
+}
+
+// ============ Admin Settings ============
+
+function getAdminAvatar() {
+    if (!window.adminSession) return '👤';
+    var avatar = window.adminSession.profile.avatar;
+    if (avatar) {
+        return '<img src="' + avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    }
+    return window.adminSession.profile.display_name.charAt(0).toUpperCase();
+}
+
+function openAdminSettings() {
+    var modal = document.getElementById('admin-settings-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeAdminSettings() {
+    var modal = document.getElementById('admin-settings-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function handleAvatarChange(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+        var preview = document.getElementById('settings-avatar-preview');
+        if (preview) {
+            preview.innerHTML = '<img src="' + ev.target.result + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+            preview.dataset.newAvatar = ev.target.result;
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function saveAdminSettings() {
+    var nameInput = document.getElementById('settings-display-name');
+    var preview = document.getElementById('settings-avatar-preview');
+    var newName = nameInput ? nameInput.value.trim() : '';
+    var newAvatar = preview ? preview.dataset.newAvatar || '' : '';
+
+    if (!newName) {
+        showToast('Name cannot be empty', 'error');
+        return;
+    }
+
+    // Update session
+    if (window.adminSession) {
+        window.adminSession.profile.display_name = newName;
+        if (newAvatar) {
+            window.adminSession.profile.avatar = newAvatar;
+        }
+        // Save to localStorage
+        localStorage.setItem('jobchat_admin', JSON.stringify(window.adminSession.profile));
+    }
+
+    closeAdminSettings();
+    showToast('Settings saved ✓', 'success');
+    // Re-render to show updated name
+    renderAdminDashboard();
 }

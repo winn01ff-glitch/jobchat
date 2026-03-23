@@ -140,13 +140,13 @@ var DemoDB = {
 
     adminLogin: function(email, password) {
         var demoAdmins = [
-            { id: 'admin1', email: 'admin1@jobchat.com', display_name: 'Admin 1', role: 'admin' },
-            { id: 'admin2', email: 'admin2@jobchat.com', display_name: 'Admin 2', role: 'admin' },
-            { id: 'admin3', email: 'admin3@jobchat.com', display_name: 'Admin 3', role: 'admin' },
-            { id: 'admin4', email: 'admin4@jobchat.com', display_name: 'Admin 4', role: 'admin' }
+            { id: 'admin1', email: 'thang@jobchat.com', display_name: 'Thang', role: 'admin', avatar: '' },
+            { id: 'admin2', email: 'minh@jobchat.com', display_name: 'Minh', role: 'admin', avatar: '' },
+            { id: 'admin3', email: 'okuyama@jobchat.com', display_name: 'Okuyama', role: 'admin', avatar: '' },
+            { id: 'admin4', email: 'nakagawa@jobchat.com', display_name: 'Nakagawa', role: 'admin', avatar: '' }
         ];
         var admin = demoAdmins.find(function(a) { return a.email === email; });
-        if (admin && password === 'demo1234') {
+        if (admin && password === '1936') {
             localStorage.setItem('jobchat_admin', JSON.stringify(admin));
             return { user: { id: admin.id, email: admin.email }, profile: admin };
         }
@@ -267,22 +267,24 @@ var DB = {
 
     adminLogin: async function(email, password) {
         if (!supabaseClient) return DemoDB.adminLogin(email, password);
-        var result = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
-        if (result.error) throw result.error;
-        var profileResult = await supabaseClient.from('admins').select('*').eq('id', result.data.user.id).single();
-        return { user: result.data.user, profile: profileResult.data };
+        // Query admins table directly (no Supabase Auth needed)
+        var result = await supabaseClient.from('admins').select('*').eq('email', email).eq('password_hash', password).single();
+        if (result.error || !result.data) throw new Error('Invalid credentials');
+        var admin = result.data;
+        localStorage.setItem('jobchat_admin', JSON.stringify(admin));
+        return { user: { id: admin.id, email: admin.email }, profile: admin };
     },
 
     adminLogout: async function() {
-        if (!supabaseClient) return DemoDB.adminLogout();
-        await supabaseClient.auth.signOut();
+        localStorage.removeItem('jobchat_admin');
     },
 
     getAdminSession: async function() {
-        if (!supabaseClient) return DemoDB.getAdminSession();
-        var result = await supabaseClient.auth.getSession();
-        if (!result.data.session) return null;
-        var profileResult = await supabaseClient.from('admins').select('*').eq('id', result.data.session.user.id).single();
-        return { user: result.data.session.user, profile: profileResult.data };
+        var saved = localStorage.getItem('jobchat_admin');
+        if (!saved) return null;
+        try {
+            var admin = JSON.parse(saved);
+            return { user: { id: admin.id, email: admin.email }, profile: admin };
+        } catch(e) { return null; }
     }
 };
