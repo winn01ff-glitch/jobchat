@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JobChat - Ứng tuyển nhanh</title>
+    <meta name="description" content="Nền tảng tuyển dụng trực tuyến - Ứng tuyển và chat trực tiếp với nhà tuyển dụng">
+    <meta name="theme-color" content="#0f0f23">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Supabase CDN (async - not required for demo mode) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" async></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="src/styles/index.css">
+    <link rel="stylesheet" href="src/styles/landing.css">
+    <link rel="stylesheet" href="src/styles/form.css">
+    <link rel="stylesheet" href="src/styles/chat.css">
+    <link rel="stylesheet" href="src/styles/admin.css">
+
+    <!-- Manifest for PWA -->
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <!-- App Container -->
+    <div id="app">
+        <!-- Header -->
+        <header id="app-header" class="glass-header">
+            <div class="header-left">
+                <button id="btn-back" class="btn-icon hidden" onclick="goBack()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                </button>
+                <h1 class="logo">Job<span class="logo-accent">Chat</span></h1>
+            </div>
+            <div class="header-right">
+                <div id="lang-switcher" class="lang-switcher">
+                    <button class="lang-btn active" data-lang="ja">🇯🇵</button>
+                    <button class="lang-btn" data-lang="vi">🇻🇳</button>
+                    <button class="lang-btn" data-lang="en">🇬🇧</button>
+                    <button class="lang-btn" data-lang="my">🇲🇲</button>
+                    <button class="lang-btn" data-lang="pt">🇧🇷</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Pages Container -->
+        <main id="page-container">
+            <!-- Landing Page -->
+            <section id="page-landing" class="page active"></section>
+            <!-- Register Page -->
+            <section id="page-register" class="page"></section>
+            <!-- Chat Page -->
+            <section id="page-chat" class="page"></section>
+            <!-- Admin Login Page -->
+            <section id="page-admin-login" class="page"></section>
+            <!-- Admin Dashboard Page -->
+            <section id="page-admin-dashboard" class="page"></section>
+            <!-- Admin Chat Page -->
+            <section id="page-admin-chat" class="page"></section>
+        </main>
+    </div>
+
+    <!-- Notification Sound -->
+    <audio id="notification-sound" preload="auto">
+        <source src="public/notification.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Scripts: helpers must load before supabase -->
+    <script src="src/utils/helpers.js?v=6"></script>
+    <script src="src/i18n/index.js?v=6"></script>
+    <script src="src/supabase.js?v=6"></script>
+    <script src="src/router.js?v=6"></script>
+    <script src="src/utils/notifications.js?v=6"></script>
+    <script src="src/components/header.js?v=6"></script>
+    <script src="src/components/message.js?v=6"></script>
+    <script src="src/pages/landing.js?v=6"></script>
+    <script src="src/pages/register.js?v=6"></script>
+    <script src="src/pages/chat.js?v=6"></script>
+    <script src="src/pages/admin-login.js?v=6"></script>
+    <script src="src/pages/admin-dashboard.js?v=6"></script>
+    <script src="src/pages/admin-chat.js?v=6"></script>
+    <script src="src/main.js?v=6"></script>
+</body>
+</html>

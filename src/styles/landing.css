@@ -1,0 +1,140 @@
+/* ============ LANDING PAGE - Light Theme ============ */
+.landing-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2xl) var(--space-lg);
+    min-height: calc(100dvh - var(--header-height));
+    background: linear-gradient(180deg, #f0f2f5 0%, #ffffff 40%);
+}
+
+.landing-content {
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+}
+
+.company-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 6px 14px;
+    background: rgba(0,132,255,0.08);
+    border: 1px solid rgba(0,132,255,0.15);
+    border-radius: var(--radius-full);
+    font-size: var(--font-sm);
+    color: var(--messenger-blue);
+    font-weight: 600;
+    margin-bottom: var(--space-xl);
+    animation: slideUp 0.3s ease 0.1s both;
+}
+
+.company-badge .pulse-dot {
+    width: 8px; height: 8px;
+    background: var(--online);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.landing-messenger-icon {
+    width: 80px; height: 80px;
+    margin: 0 auto var(--space-xl);
+    background: var(--messenger-gradient);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: slideUp 0.3s ease 0.15s both;
+    box-shadow: 0 4px 20px rgba(0,132,255,0.25);
+}
+
+.landing-messenger-icon svg {
+    width: 44px; height: 44px;
+    fill: white;
+}
+
+.landing-title {
+    font-size: var(--font-3xl);
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: var(--space-md);
+    animation: slideUp 0.3s ease 0.2s both;
+    color: var(--text-primary);
+}
+
+.landing-subtitle {
+    font-size: var(--font-md);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2xl);
+    line-height: 1.5;
+    animation: slideUp 0.3s ease 0.3s both;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+    margin-bottom: var(--space-2xl);
+    animation: slideUp 0.3s ease 0.35s both;
+}
+
+.feature-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: var(--space-lg) var(--space-md);
+    text-align: center;
+    transition: var(--transition-normal);
+    box-shadow: var(--shadow-card);
+}
+
+.feature-card:hover {
+    border-color: var(--messenger-blue);
+    box-shadow: 0 2px 12px rgba(0,132,255,0.12);
+    transform: translateY(-1px);
+}
+
+.feature-icon { font-size: 28px; margin-bottom: var(--space-sm); }
+.feature-title { font-size: var(--font-sm); font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.feature-desc { font-size: var(--font-xs); color: var(--text-muted); }
+
+.landing-cta {
+    animation: slideUp 0.3s ease 0.4s both;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.landing-cta .btn-primary {
+    width: 100%;
+    max-width: 300px;
+    padding: 14px 24px;
+    font-size: var(--font-lg);
+    background: var(--messenger-gradient);
+    border: none;
+    box-shadow: 0 4px 16px rgba(0,132,255,0.3);
+}
+
+.landing-cta .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,132,255,0.35);
+}
+
+.admin-link {
+    color: var(--text-muted);
+    font-size: var(--font-sm);
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.admin-link:hover { color: var(--messenger-blue); }
+
+@media (max-width: 400px) {
+    .landing-title { font-size: var(--font-2xl); }
+    .features-grid { grid-template-columns: 1fr; }
+}

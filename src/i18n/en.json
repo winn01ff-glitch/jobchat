@@ -1,0 +1,82 @@
+{
+    "landing": {
+        "badge": "Now Hiring",
+        "title": "Your new career starts here",
+        "subtitle": "Quick registration lets you chat directly with recruiters. Let's find the right job for you.",
+        "feature1": "Real-time Chat",
+        "feature1Desc": "Chat directly with recruiters",
+        "feature2": "Quick Apply",
+        "feature2Desc": "Just fill in 3 fields",
+        "feature3": "File Sharing",
+        "feature3Desc": "Share CV & photos",
+        "feature4": "Share Location",
+        "feature4Desc": "Send your current location",
+        "cta": "Apply Now",
+        "adminLink": "Admin Login"
+    },
+    "register": {
+        "title": "Application Form",
+        "subtitle": "Fill in your details to start chatting",
+        "name": "Full Name",
+        "namePlaceholder": "e.g. John Smith",
+        "email": "Email",
+        "emailPlaceholder": "e.g. example@gmail.com",
+        "phone": "Phone Number",
+        "phonePlaceholder": "e.g. +81-90-1234-5678",
+        "optional": "optional",
+        "position": "Desired Position",
+        "positionPlaceholder": "Select a position",
+        "positions": {
+            "factory": "Factory / Manufacturing",
+            "restaurant": "Restaurant / Food Service",
+            "construction": "Construction",
+            "office": "Office Work",
+            "it": "IT / Technical",
+            "other": "Other"
+        },
+        "submit": "Start Chat",
+        "fillAll": "Please fill in name, email and position",
+        "welcomeBack": "Welcome back!"
+    },
+    "chat": {
+        "teamName": "Recruitment Team",
+        "online": "Online",
+        "placeholder": "Type a message...",
+        "welcomeTitle": "Welcome to the chat!",
+        "welcomeMsg": "Our recruitment team is ready to help. Feel free to ask any questions!",
+        "attachFile": "Attach file",
+        "sendImage": "Send image",
+        "sendLocation": "Send location",
+        "image": "Image",
+        "location": "Location",
+        "locationShared": "Location shared",
+        "fileTooLarge": "File exceeds 10MB limit",
+        "locationNotSupported": "Location not supported in this browser",
+        "gettingLocation": "Getting location...",
+        "locationError": "Failed to get location"
+    },
+    "admin": {
+        "loginTitle": "Admin Login",
+        "email": "Email",
+        "password": "Password",
+        "login": "Log in",
+        "loginError": "Invalid email or password",
+        "logout": "Logout",
+        "chats": "Chats",
+        "search": "Search...",
+        "filterAll": "All",
+        "filterActive": "Active",
+        "filterNew": "New",
+        "selectConversation": "Select a conversation",
+        "newApplicant": "New Applicant",
+        "noConversations": "No conversations yet",
+        "conversationStarted": "Started:"
+    },
+    "common": {
+        "error": "An error occurred"
+    },
+    "notification": {
+        "newMessage": "New message",
+        "newApplicant": "New applicant"
+    }
+}

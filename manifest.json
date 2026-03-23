@@ -1,0 +1,10 @@
+{
+    "name": "JobChat",
+    "short_name": "JobChat",
+    "description": "Job recruitment chat platform",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0a0a1a",
+    "theme_color": "#6c63ff",
+    "icons": []
+}

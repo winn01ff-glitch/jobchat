@@ -1,0 +1,82 @@
+{
+    "landing": {
+        "badge": "အလုပ်ခေါ်နေသည်",
+        "title": "သင့်အသက်မွေးဝမ်းကျောင်းသစ်ကဒီကနေစတယ်",
+        "subtitle": "လွယ်ကူစွာစာရင်းသွင်းပြီး အလုပ်ရှာဖွေရေးအဖွဲ့နှင့် တိုက်ရိုက်ချက်တင်စကားပြောပါ။",
+        "feature1": "အချိန်နဲ့တပြေးညီ ချတ်",
+        "feature1Desc": "အလုပ်ခေါ်သူနဲ့ တိုက်ရိုက်ချတ်",
+        "feature2": "မြန်ဆန်ထောက်ခံ",
+        "feature2Desc": "အချက် ၃ ချက်ပဲဖြည့်ရန်",
+        "feature3": "ဖိုင်ပို့ပါ",
+        "feature3Desc": "CV နှင့် ပုံများ မျှဝေပါ",
+        "feature4": "တည်နေရာ မျှဝေပါ",
+        "feature4Desc": "လက်ရှိတည်နေရာ ပို့ပါ",
+        "cta": "အခုပဲ လျှောက်ထားပါ",
+        "adminLink": "စီမံခန့်ခွဲသူ ဝင်ရောက်ပါ"
+    },
+    "register": {
+        "title": "လျှောက်လွှာပုံစံ",
+        "subtitle": "ချက်တင်စတင်ရန် အချက်အလက်ဖြည့်ပါ",
+        "name": "အမည်",
+        "namePlaceholder": "ဥပမာ: မောင်မောင်",
+        "email": "အီးမေးလ်",
+        "emailPlaceholder": "ဥပမာ: example@gmail.com",
+        "phone": "ဖုန်းနံပါတ်",
+        "phonePlaceholder": "ဥပမာ: 09-XXXXXXXXX",
+        "optional": "မလိုအပ်ပါ",
+        "position": "လိုချင်သောရာထူး",
+        "positionPlaceholder": "ရာထူးရွေးပါ",
+        "positions": {
+            "factory": "စက်ရုံ / ထုတ်လုပ်ရေး",
+            "restaurant": "စားသောက်ဆိုင်",
+            "construction": "ဆောက်လုပ်ရေး",
+            "office": "ရုံးအလုပ်",
+            "it": "IT / နည်းပညာ",
+            "other": "အခြား"
+        },
+        "submit": "ချက်တင်စတင်ပါ",
+        "fillAll": "အမည်၊ အီးမေးလ်နှင့် ရာထူးဖြည့်ပါ",
+        "welcomeBack": "ပြန်လာတာကြိုဆိုပါတယ်!"
+    },
+    "chat": {
+        "teamName": "ခေါ်ယူရေးအဖွဲ့",
+        "online": "အွန်လိုင်း",
+        "placeholder": "မက်ဆေ့ချ်ရိုက်ပါ...",
+        "welcomeTitle": "ကြိုဆိုပါတယ်!",
+        "welcomeMsg": "ခေါ်ယူရေးအဖွဲ့က သင့်ကိုကူညီဖို့အသင့်ရှိပါတယ်။",
+        "attachFile": "ဖိုင်ပူးတွဲ",
+        "sendImage": "ပုံပို့",
+        "sendLocation": "တည်နေရာပို့",
+        "image": "ပုံ",
+        "location": "တည်နေရာ",
+        "locationShared": "တည်နေရာမျှဝေပြီး",
+        "fileTooLarge": "ဖိုင် 10MB ကျော်နေသည်",
+        "locationNotSupported": "တည်နေရာ မပံ့ပိုးပါ",
+        "gettingLocation": "တည်နေရာရယူနေသည်...",
+        "locationError": "တည်နေရာ ရယူ၍မရပါ"
+    },
+    "admin": {
+        "loginTitle": "စီမံခန့်ခွဲသူ ဝင်ရောက်ခြင်း",
+        "email": "အီးမေးလ်",
+        "password": "စကား၀ှက်",
+        "login": "ဝင်ရောက်",
+        "loginError": "အီးမေးလ် သို့မဟုတ် စကား၀ှက် မှားနေသည်",
+        "logout": "ထွက်",
+        "chats": "ချတ်",
+        "search": "ရှာရန်...",
+        "filterAll": "အားလုံး",
+        "filterActive": "အသက်ဝင်",
+        "filterNew": "အသစ်",
+        "selectConversation": "ချတ်ရွေးပါ",
+        "newApplicant": "လျှောက်ထားသူအသစ်",
+        "noConversations": "ချတ်မရှိသေးပါ",
+        "conversationStarted": "စတင်:"
+    },
+    "common": {
+        "error": "အမှားတစ်ခုဖြစ်ပွားခဲ့သည်"
+    },
+    "notification": {
+        "newMessage": "မက်ဆေ့ချ်အသစ်",
+        "newApplicant": "လျှောက်ထားသူအသစ်"
+    }
+}

@@ -1,0 +1,82 @@
+{
+    "landing": {
+        "badge": "採用活動中",
+        "title": "新しいキャリアをここから始めよう",
+        "subtitle": "簡単な登録で、すぐにリクルーターとチャットできます。あなたに合った仕事を一緒に見つけましょう。",
+        "feature1": "リアルタイムチャット",
+        "feature1Desc": "リクルーターと直接チャット",
+        "feature2": "かんたん応募",
+        "feature2Desc": "3項目を入力するだけ",
+        "feature3": "ファイル送信",
+        "feature3Desc": "履歴書・写真を共有",
+        "feature4": "位置情報共有",
+        "feature4Desc": "現在位置を送信",
+        "cta": "今すぐ応募する",
+        "adminLink": "管理者ログイン"
+    },
+    "register": {
+        "title": "応募フォーム",
+        "subtitle": "情報を入力してチャットを始めましょう",
+        "name": "お名前",
+        "namePlaceholder": "例：田中太郎",
+        "email": "メールアドレス",
+        "emailPlaceholder": "例：example@gmail.com",
+        "phone": "電話番号",
+        "phonePlaceholder": "例：090-1234-5678",
+        "optional": "任意",
+        "position": "希望職種",
+        "positionPlaceholder": "職種を選択",
+        "positions": {
+            "factory": "工場・製造",
+            "restaurant": "飲食店",
+            "construction": "建設",
+            "office": "事務",
+            "it": "IT・技術",
+            "other": "その他"
+        },
+        "submit": "チャットを開始",
+        "fillAll": "名前、メール、職種を入力してください",
+        "welcomeBack": "おかえりなさい！"
+    },
+    "chat": {
+        "teamName": "採用チーム",
+        "online": "オンライン",
+        "placeholder": "メッセージを入力...",
+        "welcomeTitle": "チャットへようこそ！",
+        "welcomeMsg": "採用チームがあなたのメッセージをお待ちしています。お気軽にご質問ください。",
+        "attachFile": "ファイルを添付",
+        "sendImage": "画像を送信",
+        "sendLocation": "位置情報を送信",
+        "image": "画像",
+        "location": "位置情報",
+        "locationShared": "位置情報を共有しました",
+        "fileTooLarge": "ファイルサイズが10MBを超えています",
+        "locationNotSupported": "位置情報がサポートされていません",
+        "gettingLocation": "現在位置を取得中...",
+        "locationError": "位置情報の取得に失敗しました"
+    },
+    "admin": {
+        "loginTitle": "管理者ログイン",
+        "email": "メールアドレス",
+        "password": "パスワード",
+        "login": "ログイン",
+        "loginError": "メールまたはパスワードが正しくありません",
+        "logout": "ログアウト",
+        "chats": "チャット",
+        "search": "検索...",
+        "filterAll": "すべて",
+        "filterActive": "アクティブ",
+        "filterNew": "新規",
+        "selectConversation": "チャットを選択してください",
+        "newApplicant": "新規応募者",
+        "noConversations": "会話がありません",
+        "conversationStarted": "会話開始："
+    },
+    "common": {
+        "error": "エラーが発生しました"
+    },
+    "notification": {
+        "newMessage": "新しいメッセージ",
+        "newApplicant": "新しい応募者"
+    }
+}

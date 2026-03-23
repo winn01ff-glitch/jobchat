@@ -1,0 +1,82 @@
+{
+    "landing": {
+        "badge": "Đang tuyển dụng",
+        "title": "Sự nghiệp mới bắt đầu từ đây",
+        "subtitle": "Đăng ký đơn giản, chat trực tiếp với nhà tuyển dụng ngay lập tức. Cùng tìm công việc phù hợp cho bạn.",
+        "feature1": "Chat thời gian thực",
+        "feature1Desc": "Trao đổi trực tiếp với nhà tuyển dụng",
+        "feature2": "Ứng tuyển nhanh",
+        "feature2Desc": "Chỉ cần điền 3 thông tin",
+        "feature3": "Gửi file",
+        "feature3Desc": "Chia sẻ CV, ảnh hồ sơ",
+        "feature4": "Chia sẻ vị trí",
+        "feature4Desc": "Gửi vị trí hiện tại",
+        "cta": "Ứng tuyển ngay",
+        "adminLink": "Đăng nhập quản lý"
+    },
+    "register": {
+        "title": "Đăng ký ứng tuyển",
+        "subtitle": "Điền thông tin để bắt đầu chat",
+        "name": "Họ tên",
+        "namePlaceholder": "Ví dụ: Nguyễn Văn A",
+        "email": "Email",
+        "emailPlaceholder": "Ví dụ: example@gmail.com",
+        "phone": "Số điện thoại",
+        "phonePlaceholder": "Ví dụ: 0901234567",
+        "optional": "không bắt buộc",
+        "position": "Vị trí mong muốn",
+        "positionPlaceholder": "Chọn vị trí",
+        "positions": {
+            "factory": "Nhà máy / Sản xuất",
+            "restaurant": "Nhà hàng / Ẩm thực",
+            "construction": "Xây dựng",
+            "office": "Văn phòng",
+            "it": "IT / Kỹ thuật",
+            "other": "Khác"
+        },
+        "submit": "Bắt đầu chat",
+        "fillAll": "Vui lòng điền tên, email và vị trí",
+        "welcomeBack": "Chào mừng bạn quay lại!"
+    },
+    "chat": {
+        "teamName": "Đội ngũ tuyển dụng",
+        "online": "Trực tuyến",
+        "placeholder": "Nhập tin nhắn...",
+        "welcomeTitle": "Chào mừng bạn!",
+        "welcomeMsg": "Đội ngũ tuyển dụng đang chờ tin nhắn của bạn. Hãy đặt câu hỏi nhé!",
+        "attachFile": "Đính kèm file",
+        "sendImage": "Gửi ảnh",
+        "sendLocation": "Gửi vị trí",
+        "image": "Hình ảnh",
+        "location": "Vị trí",
+        "locationShared": "Đã chia sẻ vị trí",
+        "fileTooLarge": "File vượt quá 10MB",
+        "locationNotSupported": "Trình duyệt không hỗ trợ vị trí",
+        "gettingLocation": "Đang lấy vị trí...",
+        "locationError": "Không thể lấy vị trí"
+    },
+    "admin": {
+        "loginTitle": "Đăng nhập quản lý",
+        "email": "Email",
+        "password": "Mật khẩu",
+        "login": "Đăng nhập",
+        "loginError": "Email hoặc mật khẩu không đúng",
+        "logout": "Đăng xuất",
+        "chats": "Tin nhắn",
+        "search": "Tìm kiếm...",
+        "filterAll": "Tất cả",
+        "filterActive": "Đang hoạt động",
+        "filterNew": "Mới",
+        "selectConversation": "Chọn một cuộc trò chuyện",
+        "newApplicant": "Ứng viên mới",
+        "noConversations": "Chưa có cuộc trò chuyện",
+        "conversationStarted": "Bắt đầu:"
+    },
+    "common": {
+        "error": "Đã xảy ra lỗi"
+    },
+    "notification": {
+        "newMessage": "Tin nhắn mới",
+        "newApplicant": "Ứng viên mới"
+    }
+}

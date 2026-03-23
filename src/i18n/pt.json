@@ -1,0 +1,82 @@
+{
+    "landing": {
+        "badge": "Contratando",
+        "title": "Sua nova carreira começa aqui",
+        "subtitle": "Cadastro rápido para conversar diretamente com recrutadores. Vamos encontrar o emprego ideal para você.",
+        "feature1": "Chat em tempo real",
+        "feature1Desc": "Converse diretamente",
+        "feature2": "Candidatura rápida",
+        "feature2Desc": "Preencha apenas 3 campos",
+        "feature3": "Enviar arquivos",
+        "feature3Desc": "Compartilhe CV e fotos",
+        "feature4": "Compartilhar local",
+        "feature4Desc": "Envie sua localização",
+        "cta": "Candidatar-se agora",
+        "adminLink": "Login do administrador"
+    },
+    "register": {
+        "title": "Formulário",
+        "subtitle": "Preencha seus dados para começar a conversar",
+        "name": "Nome completo",
+        "namePlaceholder": "Ex: João Silva",
+        "email": "E-mail",
+        "emailPlaceholder": "Ex: example@gmail.com",
+        "phone": "Telefone",
+        "phonePlaceholder": "Ex: +55 11 98765-4321",
+        "optional": "opcional",
+        "position": "Posição desejada",
+        "positionPlaceholder": "Selecione uma posição",
+        "positions": {
+            "factory": "Fábrica / Produção",
+            "restaurant": "Restaurante / Alimentação",
+            "construction": "Construção",
+            "office": "Escritório",
+            "it": "TI / Técnico",
+            "other": "Outro"
+        },
+        "submit": "Iniciar chat",
+        "fillAll": "Preencha nome, e-mail e posição",
+        "welcomeBack": "Bem-vindo de volta!"
+    },
+    "chat": {
+        "teamName": "Equipe de Recrutamento",
+        "online": "Online",
+        "placeholder": "Digite uma mensagem...",
+        "welcomeTitle": "Bem-vindo ao chat!",
+        "welcomeMsg": "Nossa equipe está pronta para ajudar. Sinta-se à vontade!",
+        "attachFile": "Anexar arquivo",
+        "sendImage": "Enviar imagem",
+        "sendLocation": "Enviar localização",
+        "image": "Imagem",
+        "location": "Localização",
+        "locationShared": "Localização compartilhada",
+        "fileTooLarge": "Arquivo excede 10MB",
+        "locationNotSupported": "Localização não suportada",
+        "gettingLocation": "Obtendo localização...",
+        "locationError": "Falha ao obter localização"
+    },
+    "admin": {
+        "loginTitle": "Login do Administrador",
+        "email": "E-mail",
+        "password": "Senha",
+        "login": "Entrar",
+        "loginError": "E-mail ou senha inválidos",
+        "logout": "Sair",
+        "chats": "Conversas",
+        "search": "Buscar...",
+        "filterAll": "Todas",
+        "filterActive": "Ativas",
+        "filterNew": "Novas",
+        "selectConversation": "Selecione uma conversa",
+        "newApplicant": "Novo candidato",
+        "noConversations": "Sem conversas ainda",
+        "conversationStarted": "Início:"
+    },
+    "common": {
+        "error": "Ocorreu um erro"
+    },
+    "notification": {
+        "newMessage": "Nova mensagem",
+        "newApplicant": "Novo candidato"
+    }
+}
