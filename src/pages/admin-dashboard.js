@@ -56,9 +56,21 @@ function renderAdminDashboard() {
                     '<p style="font-size:var(--font-xs);color:var(--text-muted);margin:6px 0 0">Click to change avatar</p>' +
                     '<input type="file" id="avatar-input" accept="image/*" hidden onchange="handleAvatarChange(event)">' +
                 '</div>' +
-                '<div class="form-group" style="margin-bottom:16px">' +
+                '<div class="form-group" style="margin-bottom:12px">' +
                     '<label class="form-label">Display Name</label>' +
                     '<input type="text" class="form-input" id="settings-display-name" value="' + (window.adminSession ? escapeHtml(window.adminSession.profile.display_name) : '') + '">' +
+                '</div>' +
+                '<hr style="border:none;border-top:1px solid var(--border-light);margin:12px 0">' +
+                '<div class="form-group" style="margin-bottom:12px">' +
+                    '<label class="form-label">🔑 New Password</label>' +
+                    '<div style="position:relative">' +
+                        '<input type="password" class="form-input" id="settings-new-password" placeholder="Leave blank to keep current" style="padding-right:40px">' +
+                        '<button type="button" onclick="toggleSettingsPw()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted)">👁️</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom:16px">' +
+                    '<label class="form-label">Confirm Password</label>' +
+                    '<input type="password" class="form-input" id="settings-confirm-password" placeholder="Confirm new password">' +
                 '</div>' +
                 '<div style="display:flex;gap:8px;justify-content:flex-end">' +
                     '<button onclick="closeAdminSettings()" style="padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:white;cursor:pointer">Cancel</button>' +
@@ -250,26 +262,58 @@ function handleAvatarChange(e) {
 function saveAdminSettings() {
     var nameInput = document.getElementById('settings-display-name');
     var preview = document.getElementById('settings-avatar-preview');
+    var newPw = document.getElementById('settings-new-password');
+    var confirmPw = document.getElementById('settings-confirm-password');
+
     var newName = nameInput ? nameInput.value.trim() : '';
     var newAvatar = preview ? preview.dataset.newAvatar || '' : '';
+    var password = newPw ? newPw.value : '';
+    var confirm = confirmPw ? confirmPw.value : '';
 
     if (!newName) {
         showToast('Name cannot be empty', 'error');
         return;
     }
 
+    if (password && password !== confirm) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
+
+    if (password && password.length < 4) {
+        showToast('Password must be at least 4 characters', 'error');
+        return;
+    }
+
+    // Build update data
+    var updateData = { display_name: newName };
+    if (newAvatar) updateData.avatar = newAvatar;
+    if (password) updateData.password_hash = password;
+
     // Update session
     if (window.adminSession) {
         window.adminSession.profile.display_name = newName;
-        if (newAvatar) {
-            window.adminSession.profile.avatar = newAvatar;
-        }
-        // Save to localStorage
+        if (newAvatar) window.adminSession.profile.avatar = newAvatar;
+        if (password) window.adminSession.profile.password_hash = password;
         localStorage.setItem('jobchat_admin', JSON.stringify(window.adminSession.profile));
+
+        // Save to database
+        DB.updateAdminProfile(window.adminSession.user.id, updateData);
     }
 
     closeAdminSettings();
     showToast('Settings saved ✓', 'success');
-    // Re-render to show updated name
     renderAdminDashboard();
+}
+
+function toggleSettingsPw() {
+    var pw = document.getElementById('settings-new-password');
+    var btn = pw.parentElement.querySelector('button');
+    if (pw.type === 'password') {
+        pw.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        pw.type = 'password';
+        btn.textContent = '👁️';
+    }
 }

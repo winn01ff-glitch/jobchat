@@ -13,12 +13,15 @@ function renderAdminLogin() {
             '<h2 class="admin-login-title" data-i18n="admin.loginTitle">' + t('admin.loginTitle') + '</h2>' +
             '<form id="admin-login-form" onsubmit="handleAdminLogin(event)">' +
                 '<div class="form-group">' +
-                    '<label class="form-label" data-i18n="admin.email">' + t('admin.email') + '</label>' +
-                    '<input type="email" class="form-input" id="admin-email" required placeholder="admin@jobchat.com">' +
+                    '<label class="form-label">ID</label>' +
+                    '<input type="text" class="form-input" id="admin-username" required placeholder="Thang, Minh...">' +
                 '</div>' +
                 '<div class="form-group">' +
                     '<label class="form-label" data-i18n="admin.password">' + t('admin.password') + '</label>' +
-                    '<input type="password" class="form-input" id="admin-password" required placeholder="••••••••">' +
+                    '<div style="position:relative">' +
+                        '<input type="password" class="form-input" id="admin-password" required placeholder="••••••••" style="padding-right:40px">' +
+                        '<button type="button" class="password-toggle" onclick="togglePasswordVisibility()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted);padding:4px">👁️</button>' +
+                    '</div>' +
                 '</div>' +
                 '<button type="submit" class="form-submit" id="admin-login-btn">' +
                     '<span data-i18n="admin.login">' + t('admin.login') + '</span>' +
@@ -28,17 +31,29 @@ function renderAdminLogin() {
     '</div>';
 }
 
+function togglePasswordVisibility() {
+    var pw = document.getElementById('admin-password');
+    var btn = pw.parentElement.querySelector('.password-toggle');
+    if (pw.type === 'password') {
+        pw.type = 'text';
+        btn.textContent = '🙈';
+    } else {
+        pw.type = 'password';
+        btn.textContent = '👁️';
+    }
+}
+
 async function handleAdminLogin(e) {
     e.preventDefault();
     var btn = document.getElementById('admin-login-btn');
-    var email = document.getElementById('admin-email').value.trim();
+    var username = document.getElementById('admin-username').value.trim();
     var password = document.getElementById('admin-password').value;
 
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner"></div>';
 
     try {
-        var result = await DB.adminLogin(email, password);
+        var result = await DB.adminLogin(username, password);
         window.adminSession = result;
         NotificationManager.requestPermission();
         Router.navigateTo('admin-dashboard');

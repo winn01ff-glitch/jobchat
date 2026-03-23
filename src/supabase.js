@@ -138,17 +138,17 @@ var DemoDB = {
         return { type: 'applicants', callback: callback };
     },
 
-    adminLogin: function(email, password) {
+    adminLogin: function(username, password) {
         var demoAdmins = [
-            { id: 'admin1', email: 'thang@jobchat.com', display_name: 'Thang', role: 'admin', avatar: '' },
-            { id: 'admin2', email: 'minh@jobchat.com', display_name: 'Minh', role: 'admin', avatar: '' },
-            { id: 'admin3', email: 'okuyama@jobchat.com', display_name: 'Okuyama', role: 'admin', avatar: '' },
-            { id: 'admin4', email: 'nakagawa@jobchat.com', display_name: 'Nakagawa', role: 'admin', avatar: '' }
+            { id: 'admin1', username: 'Thang', display_name: 'Thang', role: 'admin', avatar: '', password_hash: '1936' },
+            { id: 'admin2', username: 'Minh', display_name: 'Minh', role: 'admin', avatar: '', password_hash: '1936' },
+            { id: 'admin3', username: 'Okuyama', display_name: 'Okuyama', role: 'admin', avatar: '', password_hash: '1936' },
+            { id: 'admin4', username: 'Nakagawa', display_name: 'Nakagawa', role: 'admin', avatar: '', password_hash: '1936' }
         ];
-        var admin = demoAdmins.find(function(a) { return a.email === email; });
-        if (admin && password === '1936') {
+        var admin = demoAdmins.find(function(a) { return a.username.toLowerCase() === username.toLowerCase(); });
+        if (admin && password === admin.password_hash) {
             localStorage.setItem('jobchat_admin', JSON.stringify(admin));
-            return { user: { id: admin.id, email: admin.email }, profile: admin };
+            return { user: { id: admin.id }, profile: admin };
         }
         throw new Error('Invalid credentials');
     },
@@ -162,7 +162,7 @@ var DemoDB = {
         if (!saved) return null;
         try {
             var admin = JSON.parse(saved);
-            return { user: { id: admin.id, email: admin.email }, profile: admin };
+            return { user: { id: admin.id }, profile: admin };
         } catch(e) { return null; }
     }
 };
@@ -265,14 +265,14 @@ var DB = {
         if (subscription) supabaseClient.removeChannel(subscription);
     },
 
-    adminLogin: async function(email, password) {
-        if (!supabaseClient) return DemoDB.adminLogin(email, password);
-        // Query admins table directly (no Supabase Auth needed)
-        var result = await supabaseClient.from('admins').select('*').eq('email', email).eq('password_hash', password).single();
+    adminLogin: async function(username, password) {
+        if (!supabaseClient) return DemoDB.adminLogin(username, password);
+        // Query admins table by username
+        var result = await supabaseClient.from('admins').select('*').ilike('username', username).eq('password_hash', password).single();
         if (result.error || !result.data) throw new Error('Invalid credentials');
         var admin = result.data;
         localStorage.setItem('jobchat_admin', JSON.stringify(admin));
-        return { user: { id: admin.id, email: admin.email }, profile: admin };
+        return { user: { id: admin.id }, profile: admin };
     },
 
     adminLogout: async function() {
@@ -284,7 +284,27 @@ var DB = {
         if (!saved) return null;
         try {
             var admin = JSON.parse(saved);
-            return { user: { id: admin.id, email: admin.email }, profile: admin };
+            return { user: { id: admin.id }, profile: admin };
         } catch(e) { return null; }
+    },
+
+    updateAdminProfile: async function(adminId, data) {
+        if (!supabaseClient) {
+            // DemoDB: just update localStorage
+            var saved = localStorage.getItem('jobchat_admin');
+            if (saved) {
+                var admin = JSON.parse(saved);
+                if (data.display_name) admin.display_name = data.display_name;
+                if (data.avatar) admin.avatar = data.avatar;
+                if (data.password_hash) admin.password_hash = data.password_hash;
+                localStorage.setItem('jobchat_admin', JSON.stringify(admin));
+            }
+            return;
+        }
+        var update = {};
+        if (data.display_name) update.display_name = data.display_name;
+        if (data.avatar) update.avatar = data.avatar;
+        if (data.password_hash) update.password_hash = data.password_hash;
+        await supabaseClient.from('admins').update(update).eq('id', adminId);
     }
 };
