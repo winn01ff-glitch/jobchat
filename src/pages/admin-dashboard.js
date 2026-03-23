@@ -19,11 +19,6 @@ function renderAdminDashboard() {
         '<div class="admin-sidebar" id="admin-sidebar">' +
             '<div class="sidebar-header">' +
                 '<h2 class="sidebar-title" data-i18n="admin.chats">' + t('admin.chats') + '</h2>' +
-                '<div style="display:flex;gap:6px;align-items:center">' +
-                    '<span style="font-size:var(--font-xs);color:var(--text-muted)">' + (window.adminSession ? window.adminSession.profile.display_name : '') + '</span>' +
-                    '<button class="btn-settings" onclick="openAdminSettings()" title="Settings" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px">⚙️</button>' +
-                    '<button class="btn-logout" onclick="handleAdminLogout()" data-i18n="admin.logout">' + t('admin.logout') + '</button>' +
-                '</div>' +
             '</div>' +
             '<div class="sidebar-search">' +
                 '<div class="search-wrapper">' +
@@ -82,6 +77,7 @@ function renderAdminDashboard() {
 
     loadApplicants();
     subscribeToUpdates();
+    showAdminHeaderControls();
 }
 
 async function loadApplicants() {
@@ -218,10 +214,27 @@ async function handleAdminLogout() {
         await DB.adminLogout();
         window.adminSession = null;
         dashboardState.subscriptions.forEach(function(sub) { DB.unsubscribe(sub); });
+        hideAdminHeaderControls();
         Router.navigateTo('landing');
     } catch(e) {
         console.error('Logout failed:', e);
     }
+}
+
+function showAdminHeaderControls() {
+    var controls = document.getElementById('admin-header-controls');
+    var nameEl = document.getElementById('admin-header-name');
+    var logoutBtn = document.getElementById('admin-header-logout');
+    if (controls && window.adminSession) {
+        nameEl.textContent = window.adminSession.profile.display_name;
+        logoutBtn.textContent = I18n.t('admin.logout');
+        controls.classList.remove('hidden');
+    }
+}
+
+function hideAdminHeaderControls() {
+    var controls = document.getElementById('admin-header-controls');
+    if (controls) controls.classList.add('hidden');
 }
 
 // ============ Admin Settings ============

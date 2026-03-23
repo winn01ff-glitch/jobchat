@@ -14,7 +14,7 @@ function renderAdminLogin() {
             '<form id="admin-login-form" onsubmit="handleAdminLogin(event)">' +
                 '<div class="form-group">' +
                     '<label class="form-label">ID</label>' +
-                    '<input type="text" class="form-input" id="admin-username" required placeholder="Thang, Minh...">' +
+                    '<input type="text" class="form-input" id="admin-username" required placeholder="Uphill...">' +
                 '</div>' +
                 '<div class="form-group">' +
                     '<label class="form-label" data-i18n="admin.password">' + t('admin.password') + '</label>' +
