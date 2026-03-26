@@ -61,6 +61,7 @@
     },
     "admin": {
         "loginTitle": "Admin Login",
+        "id": "ID",
         "email": "Email",
         "password": "Password",
         "login": "Log in",

@@ -61,6 +61,7 @@
     },
     "admin": {
         "loginTitle": "管理者ログイン",
+        "id": "ID",
         "email": "メールアドレス",
         "password": "パスワード",
         "login": "ログイン",

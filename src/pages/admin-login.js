@@ -13,7 +13,7 @@ function renderAdminLogin() {
             '<h2 class="admin-login-title" data-i18n="admin.loginTitle">' + t('admin.loginTitle') + '</h2>' +
             '<form id="admin-login-form" onsubmit="handleAdminLogin(event)">' +
                 '<div class="form-group">' +
-                    '<label class="form-label">ID</label>' +
+                    '<label class="form-label" data-i18n="admin.id">' + t('admin.id') + '</label>' +
                     '<input type="text" class="form-input" id="admin-username" required placeholder="Uphill...">' +
                 '</div>' +
                 '<div class="form-group">' +

@@ -15,7 +15,7 @@ async function renderAdminChatView(applicantId) {
     try {
         adminChatState.applicant = await DB.getApplicant(applicantId);
     } catch(e) {
-        chatArea.innerHTML = '<div class="admin-empty-state"><p>Error loading conversation</p></div>';
+        chatArea.innerHTML = '<div class="admin-empty-state"><p>' + I18n.t('common.error') + '</p></div>';
         return;
     }
 

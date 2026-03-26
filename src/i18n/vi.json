@@ -61,6 +61,7 @@
     },
     "admin": {
         "loginTitle": "Đăng nhập quản lý",
+        "id": "ID",
         "email": "Email",
         "password": "Mật khẩu",
         "login": "Đăng nhập",

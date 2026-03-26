@@ -61,6 +61,7 @@
     },
     "admin": {
         "loginTitle": "Login do Administrador",
+        "id": "ID",
         "email": "E-mail",
         "password": "Senha",
         "login": "Entrar",
