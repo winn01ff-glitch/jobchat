@@ -33,7 +33,8 @@ function initSupabase() {
 var DemoDB = {
     data: {
         applicants: [],
-        messages: []
+        messages: [],
+        job_posts: []
     },
     listeners: {
         messages: {},
@@ -44,7 +45,11 @@ var DemoDB = {
     init: function() {
         var saved = localStorage.getItem('jobchat_demo_data');
         if (saved) {
-            try { this.data = JSON.parse(saved); } catch(e) {}
+            try {
+                this.data = JSON.parse(saved);
+                // Ensure job_posts array exists (may be missing from old data)
+                if (!this.data.job_posts) this.data.job_posts = [];
+            } catch(e) {}
         }
     },
 
@@ -99,6 +104,7 @@ var DemoDB = {
             sender_name: senderName,
             sender_id: senderId,
             content: content,
+            status: 'sent',
             created_at: new Date().toISOString()
         };
         this.data.messages.push(msg);
@@ -109,6 +115,35 @@ var DemoDB = {
         this.listeners.allMessages.forEach(function(cb) { cb(msg); });
 
         return msg;
+    },
+
+    updateMessageStatus: function(messageId, status) {
+        var msg = this.data.messages.find(function(m) { return m.id === messageId; });
+        if (msg) { msg.status = status; this.save(); }
+    },
+
+    markMessagesAsDelivered: function(conversationId, senderType) {
+        var changed = [];
+        this.data.messages.forEach(function(m) {
+            if (m.conversation_id === conversationId && m.sender_type === senderType && m.status === 'sent') {
+                m.status = 'delivered';
+                changed.push(m);
+            }
+        });
+        if (changed.length) this.save();
+        return changed;
+    },
+
+    markMessagesAsSeen: function(conversationId, senderType) {
+        var changed = [];
+        this.data.messages.forEach(function(m) {
+            if (m.conversation_id === conversationId && m.sender_type === senderType && (m.status === 'sent' || m.status === 'delivered')) {
+                m.status = 'seen';
+                changed.push(m);
+            }
+        });
+        if (changed.length) this.save();
+        return changed;
     },
 
     getMessages: function(conversationId) {
@@ -136,6 +171,49 @@ var DemoDB = {
     subscribeToNewApplicants: function(callback) {
         this.listeners.newApplicants.push(callback);
         return { type: 'applicants', callback: callback };
+    },
+
+    // ============ Job Posts (Demo) ============
+    getPublishedJobs: function() {
+        return this.data.job_posts.filter(function(j) { return j.status === 'published'; }).sort(function(a,b) { return new Date(b.created_at) - new Date(a.created_at); });
+    },
+
+    getAllJobs: function() {
+        return this.data.job_posts.slice().sort(function(a,b) { return new Date(b.created_at) - new Date(a.created_at); });
+    },
+
+    createJob: function(data) {
+        var job = {
+            id: generateId(),
+            title: data.title,
+            content: data.content,
+            position: data.position || '',
+            salary: data.salary || '',
+            location: data.location || '',
+            status: data.status || 'draft',
+            author_id: data.author_id || '',
+            author_name: data.author_name || '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+        this.data.job_posts.unshift(job);
+        this.save();
+        return job;
+    },
+
+    updateJob: function(id, data) {
+        var job = this.data.job_posts.find(function(j) { return j.id === id; });
+        if (job) {
+            Object.keys(data).forEach(function(k) { job[k] = data[k]; });
+            job.updated_at = new Date().toISOString();
+            this.save();
+        }
+        return job;
+    },
+
+    deleteJob: function(id) {
+        this.data.job_posts = this.data.job_posts.filter(function(j) { return j.id !== id; });
+        this.save();
     },
 
     adminLogin: function(username, password) {
@@ -219,10 +297,28 @@ var DB = {
         if (!supabaseClient) return DemoDB.sendMessage(conversationId, senderType, senderName, senderId, content);
         var result = await supabaseClient.from('messages').insert({
             conversation_id: conversationId, sender_type: senderType,
-            sender_name: senderName, sender_id: senderId, content: content
+            sender_name: senderName, sender_id: senderId, content: content,
+            status: 'sent'
         }).select().single();
         if (result.error) throw result.error;
         return result.data;
+    },
+
+    updateMessageStatus: async function(messageId, status) {
+        if (!supabaseClient) return DemoDB.updateMessageStatus(messageId, status);
+        await supabaseClient.from('messages').update({ status: status }).eq('id', messageId);
+    },
+
+    markMessagesAsDelivered: async function(conversationId, senderType) {
+        if (!supabaseClient) return DemoDB.markMessagesAsDelivered(conversationId, senderType);
+        await supabaseClient.from('messages').update({ status: 'delivered' })
+            .eq('conversation_id', conversationId).eq('sender_type', senderType).eq('status', 'sent');
+    },
+
+    markMessagesAsSeen: async function(conversationId, senderType) {
+        if (!supabaseClient) return DemoDB.markMessagesAsSeen(conversationId, senderType);
+        await supabaseClient.from('messages').update({ status: 'seen' })
+            .eq('conversation_id', conversationId).eq('sender_type', senderType).in('status', ['sent', 'delivered']);
     },
 
     getMessages: async function(conversationId) {
@@ -306,5 +402,70 @@ var DB = {
         if (data.avatar) update.avatar = data.avatar;
         if (data.password_hash) update.password_hash = data.password_hash;
         await supabaseClient.from('admins').update(update).eq('id', adminId);
+    },
+
+    // ============ Job Posts ============
+    getPublishedJobs: async function() {
+        if (!supabaseClient) return DemoDB.getPublishedJobs();
+        try {
+            var result = await supabaseClient.from('job_posts').select('*').eq('status', 'published').order('created_at', { ascending: false });
+            if (result.error) throw result.error;
+            return result.data || [];
+        } catch(e) {
+            console.warn('job_posts table may not exist, using DemoDB:', e.message);
+            return DemoDB.getPublishedJobs();
+        }
+    },
+
+    getAllJobs: async function() {
+        if (!supabaseClient) return DemoDB.getAllJobs();
+        try {
+            var result = await supabaseClient.from('job_posts').select('*').order('created_at', { ascending: false });
+            if (result.error) throw result.error;
+            return result.data || [];
+        } catch(e) {
+            console.warn('job_posts table may not exist, using DemoDB:', e.message);
+            return DemoDB.getAllJobs();
+        }
+    },
+
+    createJob: async function(data) {
+        if (!supabaseClient) return DemoDB.createJob(data);
+        try {
+            var result = await supabaseClient.from('job_posts').insert({
+                title: data.title, content: data.content, position: data.position || '',
+                salary: data.salary || '', location: data.location || '',
+                status: data.status || 'draft', author_id: data.author_id || '',
+                author_name: data.author_name || ''
+            }).select().single();
+            if (result.error) throw result.error;
+            return result.data;
+        } catch(e) {
+            console.warn('job_posts table may not exist, using DemoDB:', e.message);
+            return DemoDB.createJob(data);
+        }
+    },
+
+    updateJob: async function(id, data) {
+        if (!supabaseClient) return DemoDB.updateJob(id, data);
+        try {
+            data.updated_at = new Date().toISOString();
+            var result = await supabaseClient.from('job_posts').update(data).eq('id', id).select().single();
+            if (result.error) throw result.error;
+            return result.data;
+        } catch(e) {
+            console.warn('job_posts table may not exist, using DemoDB:', e.message);
+            return DemoDB.updateJob(id, data);
+        }
+    },
+
+    deleteJob: async function(id) {
+        if (!supabaseClient) return DemoDB.deleteJob(id);
+        try {
+            await supabaseClient.from('job_posts').delete().eq('id', id);
+        } catch(e) {
+            console.warn('job_posts table may not exist, using DemoDB:', e.message);
+            DemoDB.deleteJob(id);
+        }
     }
 };

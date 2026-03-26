@@ -12,6 +12,7 @@
         "feature4": "Compartilhar local",
         "feature4Desc": "Envie sua localização",
         "cta": "Candidatar-se agora",
+        "viewJobs": "Ver vagas",
         "adminLink": "Login do administrador"
     },
     "register": {
@@ -53,7 +54,10 @@
         "fileTooLarge": "Arquivo excede 10MB",
         "locationNotSupported": "Localização não suportada",
         "gettingLocation": "Obtendo localização...",
-        "locationError": "Falha ao obter localização"
+        "locationError": "Falha ao obter localização",
+        "sent": "Agora mesmo",
+        "typing": "digitando...",
+        "logout": "Sair"
     },
     "admin": {
         "loginTitle": "Login do Administrador",
@@ -70,7 +74,20 @@
         "selectConversation": "Selecione uma conversa",
         "newApplicant": "Novo candidato",
         "noConversations": "Sem conversas ainda",
-        "conversationStarted": "Início:"
+        "conversationStarted": "Início:",
+        "jobPosts": "Vagas de emprego",
+        "createJob": "Criar nova",
+        "editJob": "Editar",
+        "deleteJob": "Excluir",
+        "jobTitle": "Título",
+        "jobContent": "Conteúdo",
+        "jobSalary": "Salário",
+        "jobLocation": "Local",
+        "jobPosition": "Posição",
+        "saveDraft": "Salvar rascunho",
+        "publish": "Publicar",
+        "noJobPosts": "Nenhuma vaga ainda",
+        "confirmDelete": "Tem certeza que deseja excluir?"
     },
     "common": {
         "error": "Ocorreu um erro"
@@ -78,5 +95,14 @@
     "notification": {
         "newMessage": "Nova mensagem",
         "newApplicant": "Novo candidato"
+    },
+    "jobs": {
+        "title": "Vagas de Emprego",
+        "subtitle": "Encontre o emprego ideal para você",
+        "viewDetail": "Ver detalhes",
+        "salary": "Salário",
+        "location": "Local",
+        "applyNow": "Candidatar-se a esta vaga",
+        "noJobs": "Nenhuma vaga disponível"
     }
 }

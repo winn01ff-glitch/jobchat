@@ -15,15 +15,6 @@ function renderChat(params) {
     chatState.applicantId = params && params[0] ? params[0] : null;
 
     page.innerHTML = '<div class="chat-container">' +
-        '<div class="chat-header-bar">' +
-            '<div class="chat-header-info">' +
-                '<div class="chat-avatar">👤<span class="avatar-status"></span></div>' +
-                '<div>' +
-                    '<div class="chat-header-name" data-i18n="chat.teamName">' + t('chat.teamName') + '</div>' +
-                    '<div class="chat-header-status"><span class="pulse-dot" style="width:6px;height:6px;background:var(--online);border-radius:50%;animation:pulse 2s infinite"></span> ' + t('chat.online') + '</div>' +
-                '</div>' +
-            '</div>' +
-        '</div>' +
         '<div id="chat-messages" class="chat-messages">' +
             '<div class="chat-welcome">' +
                 '<div class="chat-welcome-icon">💬</div>' +
@@ -58,10 +49,28 @@ function renderChat(params) {
     // Setup handlers
     setupChatHandlers();
 
+    // Hide back button on chat page (use logout instead)
+    document.getElementById('btn-back').classList.add('hidden');
+
     // Load existing messages
     if (chatState.applicantId) {
         loadChatMessages();
     }
+}
+
+function handleApplicantLogout() {
+    // Unsubscribe from realtime
+    if (chatState.subscription) {
+        DB.unsubscribe(chatState.subscription);
+        chatState.subscription = null;
+    }
+    // Clear session data
+    localStorage.removeItem('jobchat_session');
+    localStorage.removeItem('jobchat_email');
+    chatState.applicantId = null;
+    chatState.applicantName = '';
+    // Navigate to landing
+    Router.navigateTo('landing');
 }
 
 function setupChatHandlers() {
@@ -226,6 +235,11 @@ async function loadChatMessages() {
 
         scrollToBottom();
 
+        // Mark admin messages as seen by applicant
+        await DB.markMessagesAsSeen(chatState.applicantId, 'admin');
+        // Mark admin messages as delivered too
+        await DB.markMessagesAsDelivered(chatState.applicantId, 'admin');
+
         // Subscribe to new messages
         if (chatState.subscription) {
             DB.unsubscribe(chatState.subscription);
@@ -237,6 +251,12 @@ async function loadChatMessages() {
 
             appendMessageBubble(msg);
             scrollToBottom();
+
+            // Auto mark admin messages as seen since chat is open
+            if (msg.sender_type === 'admin') {
+                DB.markMessagesAsSeen(chatState.applicantId, 'admin');
+            }
+
             NotificationManager.showNotification(
                 msg.sender_name,
                 parseMessageContent(msg.content)
@@ -266,6 +286,7 @@ function appendMessageBubble(msg) {
     var isSent = msg.sender_type === 'applicant';
     var row = document.createElement('div');
     row.className = 'message-row ' + (isSent ? 'sent' : 'received');
+    if (msg.id) row.dataset.messageId = msg.id;
 
     var bubbleHtml = '';
     if (!isSent) {
@@ -281,12 +302,26 @@ function appendMessageBubble(msg) {
     var contentHtml = renderMessageContent(msg.content, isSent);
     bubbleHtml += contentHtml;
 
-    bubbleHtml += '<div class="message-time">' + formatTime(msg.created_at) + '</div>';
+    // Time + status
+    var timeHtml = '<div class="message-time">' + formatTime(msg.created_at);
+    if (isSent) {
+        timeHtml += ' ' + getStatusIcon(msg.status || 'sent');
+    }
+    timeHtml += '</div>';
+    bubbleHtml += timeHtml;
     bubbleHtml += '</div>';
 
     row.innerHTML = bubbleHtml;
     container.appendChild(row);
     scrollToBottom();
+}
+
+function getStatusIcon(status) {
+    switch(status) {
+        case 'seen': return '<span class="msg-status seen" title="Seen">👁</span>';
+        case 'delivered': return '<span class="msg-status delivered" title="Delivered">✓✓</span>';
+        case 'sent': default: return '<span class="msg-status sent-icon" title="Sent">✓</span>';
+    }
 }
 
 function renderMessageContent(content, isSent) {

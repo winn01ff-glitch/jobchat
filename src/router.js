@@ -22,7 +22,7 @@ const Router = {
 
     navigateTo(page, params = [], pushHash = true) {
         // Valid pages
-        const validPages = ['landing', 'register', 'chat', 'admin-login', 'admin-dashboard', 'admin-chat'];
+        const validPages = ['landing', 'register', 'chat', 'admin-login', 'admin-dashboard', 'admin-chat', 'jobs'];
         if (!validPages.includes(page)) {
             page = 'landing';
         }
@@ -52,6 +52,19 @@ const Router = {
             backBtn.classList.toggle('hidden', page === 'landing' || page === 'admin-dashboard');
         }
 
+        // Show/hide admin login button (hide on admin pages and chat)
+        const adminLoginBtn = document.getElementById('btn-admin-login');
+        if (adminLoginBtn) {
+            const hideOnPages = ['admin-login', 'admin-dashboard', 'admin-chat', 'chat'];
+            adminLoginBtn.classList.toggle('hidden', hideOnPages.includes(page));
+        }
+
+        // Show/hide chat logout button (only on chat page)
+        const chatLogoutBtn = document.getElementById('btn-chat-logout');
+        if (chatLogoutBtn) {
+            chatLogoutBtn.classList.toggle('hidden', page !== 'chat');
+        }
+
         // Trigger page-specific init
         this.onPageEnter(page, params);
     },
@@ -75,6 +88,9 @@ const Router = {
                 break;
             case 'admin-chat':
                 if (typeof renderAdminChat === 'function') renderAdminChat(params[0]);
+                break;
+            case 'jobs':
+                if (typeof renderJobs === 'function') renderJobs();
                 break;
         }
     }

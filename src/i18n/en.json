@@ -12,6 +12,7 @@
         "feature4": "Share Location",
         "feature4Desc": "Send your current location",
         "cta": "Apply Now",
+        "viewJobs": "View Jobs",
         "adminLink": "Admin Login"
     },
     "register": {
@@ -53,7 +54,10 @@
         "fileTooLarge": "File exceeds 10MB limit",
         "locationNotSupported": "Location not supported in this browser",
         "gettingLocation": "Getting location...",
-        "locationError": "Failed to get location"
+        "locationError": "Failed to get location",
+        "sent": "Just now",
+        "typing": "typing...",
+        "logout": "Logout"
     },
     "admin": {
         "loginTitle": "Admin Login",
@@ -70,7 +74,20 @@
         "selectConversation": "Select a conversation",
         "newApplicant": "New Applicant",
         "noConversations": "No conversations yet",
-        "conversationStarted": "Started:"
+        "conversationStarted": "Started:",
+        "jobPosts": "Job Posts",
+        "createJob": "Create New",
+        "editJob": "Edit",
+        "deleteJob": "Delete",
+        "jobTitle": "Title",
+        "jobContent": "Content",
+        "jobSalary": "Salary",
+        "jobLocation": "Location",
+        "jobPosition": "Position",
+        "saveDraft": "Save Draft",
+        "publish": "Publish",
+        "noJobPosts": "No job posts yet",
+        "confirmDelete": "Are you sure you want to delete?"
     },
     "common": {
         "error": "An error occurred"
@@ -78,5 +95,14 @@
     "notification": {
         "newMessage": "New message",
         "newApplicant": "New applicant"
+    },
+    "jobs": {
+        "title": "Job Openings",
+        "subtitle": "Find the perfect job for you",
+        "viewDetail": "View Details",
+        "salary": "Salary",
+        "location": "Location",
+        "applyNow": "Apply for this position",
+        "noJobs": "No job openings available"
     }
 }

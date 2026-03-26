@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="src/styles/form.css">
     <link rel="stylesheet" href="src/styles/chat.css">
     <link rel="stylesheet" href="src/styles/admin.css">
+    <link rel="stylesheet" href="src/styles/jobs.css">
 
     <!-- Manifest for PWA -->
     <link rel="manifest" href="manifest.json">
@@ -37,18 +38,24 @@
                 <h1 class="logo">Job<span class="logo-accent">Chat</span></h1>
             </div>
             <div class="header-right">
-                <div id="lang-switcher" class="lang-switcher">
-                    <button class="lang-btn active" data-lang="ja">JP</button>
-                    <button class="lang-btn" data-lang="vi">VN</button>
-                    <button class="lang-btn" data-lang="en">EN</button>
-                    <button class="lang-btn" data-lang="my">MM</button>
-                    <button class="lang-btn" data-lang="pt">BR</button>
+                <div id="lang-switcher" class="lang-dropdown-wrapper">
+                    <select id="lang-select" class="lang-select" onchange="I18n.setLanguage(this.value)">
+                        <option value="ja">🇯🇵 JP</option>
+                        <option value="vi">🇻🇳 VN</option>
+                        <option value="en">🇬🇧 EN</option>
+                        <option value="my">🇲🇲 MM</option>
+                        <option value="pt">🇧🇷 BR</option>
+                    </select>
                 </div>
+                <button id="btn-admin-login" class="btn-admin-login" onclick="Router.navigateTo('admin-login')" data-i18n="landing.adminLink">Admin</button>
                 <div id="admin-header-controls" class="admin-header-controls hidden">
                     <span id="admin-header-name" class="admin-header-name"></span>
                     <button class="btn-settings" onclick="openAdminSettings()" title="Settings" style="background:none;border:none;cursor:pointer;font-size:16px;padding:4px">⚙️</button>
-                    <button class="btn-logout" onclick="handleAdminLogout()" id="admin-header-logout">Logout</button>
                 </div>
+                <button id="btn-chat-logout" class="btn-chat-logout hidden" onclick="handleApplicantLogout()">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span data-i18n="chat.logout">Logout</span>
+                </button>
             </div>
         </header>
 
@@ -66,6 +73,8 @@
             <section id="page-admin-dashboard" class="page"></section>
             <!-- Admin Chat Page -->
             <section id="page-admin-chat" class="page"></section>
+            <!-- Jobs Page -->
+            <section id="page-jobs" class="page"></section>
         </main>
     </div>
 
@@ -87,7 +96,8 @@
     <script src="src/pages/chat.js?v=9"></script>
     <script src="src/pages/admin-login.js?v=9"></script>
     <script src="src/pages/admin-dashboard.js?v=9"></script>
-    <script src="src/pages/admin-chat.js?v=9"></script>
-    <script src="src/main.js?v=9"></script>
+    <script src="src/pages/admin-chat.js?v=10"></script>
+    <script src="src/pages/jobs.js?v=10"></script>
+    <script src="src/main.js?v=10"></script>
 </body>
 </html>

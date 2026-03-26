@@ -166,6 +166,9 @@ async function loadAdminMessages(applicantId) {
         });
         scrollAdminToBottom();
 
+        // Mark applicant messages as seen by admin
+        await DB.markMessagesAsSeen(applicantId, 'applicant');
+
         // Unsubscribe old
         if (adminChatState.subscription) {
             DB.unsubscribe(adminChatState.subscription);
@@ -178,6 +181,12 @@ async function loadAdminMessages(applicantId) {
 
             appendAdminMessageBubble(msg);
             scrollAdminToBottom();
+
+            // Auto mark applicant messages as seen
+            if (msg.sender_type === 'applicant') {
+                DB.markMessagesAsSeen(applicantId, 'applicant');
+            }
+
             NotificationManager.showNotification(msg.sender_name, parseMessagePreview(msg.content));
         });
     } catch(e) {
@@ -193,6 +202,7 @@ function appendAdminMessageBubble(msg) {
     var isSent = msg.sender_type === 'admin' && admin && msg.sender_id === admin.user.id;
     var row = document.createElement('div');
     row.className = 'message-row ' + (isSent ? 'sent' : 'received');
+    if (msg.id) row.dataset.messageId = msg.id;
 
     var html = '';
     if (!isSent) {
@@ -203,7 +213,13 @@ function appendAdminMessageBubble(msg) {
         html += '<div class="message-sender">' + escapeHtml(msg.sender_name || '') + '</div>';
     }
     html += renderMessageContent(msg.content, isSent);
-    html += '<div class="message-time">' + formatTime(msg.created_at) + '</div>';
+    // Time + status
+    var timeHtml = '<div class="message-time">' + formatTime(msg.created_at);
+    if (isSent) {
+        timeHtml += ' ' + getStatusIcon(msg.status || 'sent');
+    }
+    timeHtml += '</div>';
+    html += timeHtml;
     html += '</div>';
 
     row.innerHTML = html;

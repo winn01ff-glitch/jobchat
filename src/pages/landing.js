@@ -39,7 +39,9 @@ function renderLanding() {
                 '<button class="btn-primary" onclick="Router.navigateTo(\'register\')" data-i18n="landing.cta">' +
                     '💬 ' + t('landing.cta') +
                 '</button>' +
-                '<a class="admin-link" onclick="Router.navigateTo(\'admin-login\')" data-i18n="landing.adminLink">' + t('landing.adminLink') + '</a>' +
+                '<button class="btn-secondary" onclick="Router.navigateTo(\'jobs\')" data-i18n="landing.viewJobs">' +
+                    '📋 ' + t('landing.viewJobs') +
+                '</button>' +
             '</div>' +
         '</div>' +
     '</div>';

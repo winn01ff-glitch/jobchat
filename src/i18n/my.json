@@ -12,6 +12,7 @@
         "feature4": "တည်နေရာ မျှဝေပါ",
         "feature4Desc": "လက်ရှိတည်နေရာ ပို့ပါ",
         "cta": "အခုပဲ လျှောက်ထားပါ",
+        "viewJobs": "အလုပ်များကြည့်ပါ",
         "adminLink": "စီမံခန့်ခွဲသူ ဝင်ရောက်ပါ"
     },
     "register": {
@@ -53,7 +54,10 @@
         "fileTooLarge": "ဖိုင် 10MB ကျော်နေသည်",
         "locationNotSupported": "တည်နေရာ မပံ့ပိုးပါ",
         "gettingLocation": "တည်နေရာရယူနေသည်...",
-        "locationError": "တည်နေရာ ရယူ၍မရပါ"
+        "locationError": "တည်နေရာ ရယူ၍မရပါ",
+        "sent": "ယခုတင်",
+        "typing": "ရိုက်နေသည်...",
+        "logout": "ထွက်"
     },
     "admin": {
         "loginTitle": "စီမံခန့်ခွဲသူ ဝင်ရောက်ခြင်း",
@@ -70,7 +74,20 @@
         "selectConversation": "ချတ်ရွေးပါ",
         "newApplicant": "လျှောက်ထားသူအသစ်",
         "noConversations": "ချတ်မရှိသေးပါ",
-        "conversationStarted": "စတင်:"
+        "conversationStarted": "စတင်:",
+        "jobPosts": "အလုပ်ကြော်နာများ",
+        "createJob": "အသစ်ဖန်တီးပါ",
+        "editJob": "ပြင်ဆင်",
+        "deleteJob": "ဖျက်",
+        "jobTitle": "ခေါင်းစဥ်",
+        "jobContent": "အကြောင်းအရာ",
+        "jobSalary": "လစာ",
+        "jobLocation": "နေရာ",
+        "jobPosition": "ရာထူး",
+        "saveDraft": "မူကြမ်းေသိမ်းပါ",
+        "publish": "ထုတ်လွှင့်မည်",
+        "noJobPosts": "အလုပ်ကြော်နာမရှိသေးပါ",
+        "confirmDelete": "ဖျက်မည်မှာ သေချာပါသလား"
     },
     "common": {
         "error": "အမှားတစ်ခုဖြစ်ပွားခဲ့သည်"
@@ -78,5 +95,14 @@
     "notification": {
         "newMessage": "မက်ဆေ့ချ်အသစ်",
         "newApplicant": "လျှောက်ထားသူအသစ်"
+    },
+    "jobs": {
+        "title": "အလုပ်အကိုင်များ",
+        "subtitle": "သင့်အတွက် အလုပ်ရှာပါ",
+        "viewDetail": "အသေးစိတ်ကြည့်ပါ",
+        "salary": "လစာ",
+        "location": "နေရာ",
+        "applyNow": "ဒီရာထူးကို လျှောက်ထားပါ",
+        "noJobs": "အလုပ်မရှိသေးပါ"
     }
 }

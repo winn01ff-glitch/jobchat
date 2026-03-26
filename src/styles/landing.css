@@ -124,6 +124,26 @@
     box-shadow: 0 6px 20px rgba(0,132,255,0.35);
 }
 
+.landing-cta .btn-secondary {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px 24px;
+    font-size: var(--font-md);
+    background: white;
+    color: var(--messenger-blue);
+    border: 2px solid var(--messenger-blue);
+    border-radius: var(--radius-xl);
+    font-weight: 600;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.landing-cta .btn-secondary:hover {
+    background: rgba(0,132,255,0.06);
+    transform: translateY(-1px);
+}
+
 .admin-link {
     color: var(--text-muted);
     font-size: var(--font-sm);

@@ -12,6 +12,7 @@
         "feature4": "Chia sẻ vị trí",
         "feature4Desc": "Gửi vị trí hiện tại",
         "cta": "Ứng tuyển ngay",
+        "viewJobs": "Xem việc làm",
         "adminLink": "Đăng nhập quản lý"
     },
     "register": {
@@ -53,7 +54,10 @@
         "fileTooLarge": "File vượt quá 10MB",
         "locationNotSupported": "Trình duyệt không hỗ trợ vị trí",
         "gettingLocation": "Đang lấy vị trí...",
-        "locationError": "Không thể lấy vị trí"
+        "locationError": "Không thể lấy vị trí",
+        "sent": "Vừa xong",
+        "typing": "đang nhập...",
+        "logout": "Đăng xuất"
     },
     "admin": {
         "loginTitle": "Đăng nhập quản lý",
@@ -70,7 +74,20 @@
         "selectConversation": "Chọn một cuộc trò chuyện",
         "newApplicant": "Ứng viên mới",
         "noConversations": "Chưa có cuộc trò chuyện",
-        "conversationStarted": "Bắt đầu:"
+        "conversationStarted": "Bắt đầu:",
+        "jobPosts": "Quản lý việc làm",
+        "createJob": "Thêm bài mới",
+        "editJob": "Sửa",
+        "deleteJob": "Xóa",
+        "jobTitle": "Tiêu đề",
+        "jobContent": "Nội dung",
+        "jobSalary": "Mức lương",
+        "jobLocation": "Địa điểm",
+        "jobPosition": "Vị trí",
+        "saveDraft": "Lưu nháp",
+        "publish": "Đăng bài",
+        "noJobPosts": "Chưa có bài đăng",
+        "confirmDelete": "Bạn có chắc muốn xóa?"
     },
     "common": {
         "error": "Đã xảy ra lỗi"
@@ -78,5 +95,14 @@
     "notification": {
         "newMessage": "Tin nhắn mới",
         "newApplicant": "Ứng viên mới"
+    },
+    "jobs": {
+        "title": "Việc làm",
+        "subtitle": "Tìm công việc phù hợp cho bạn",
+        "viewDetail": "Xem chi tiết",
+        "salary": "Mức lương",
+        "location": "Địa điểm",
+        "applyNow": "Ứng tuyển vị trí này",
+        "noJobs": "Chưa có việc làm nào"
     }
 }

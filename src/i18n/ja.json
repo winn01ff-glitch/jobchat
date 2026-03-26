@@ -12,6 +12,7 @@
         "feature4": "位置情報共有",
         "feature4Desc": "現在位置を送信",
         "cta": "今すぐ応募する",
+        "viewJobs": "求人を見る",
         "adminLink": "管理者ログイン"
     },
     "register": {
@@ -53,7 +54,10 @@
         "fileTooLarge": "ファイルサイズが10MBを超えています",
         "locationNotSupported": "位置情報がサポートされていません",
         "gettingLocation": "現在位置を取得中...",
-        "locationError": "位置情報の取得に失敗しました"
+        "locationError": "位置情報の取得に失敗しました",
+        "sent": "たった今",
+        "typing": "入力中...",
+        "logout": "ログアウト"
     },
     "admin": {
         "loginTitle": "管理者ログイン",
@@ -70,7 +74,20 @@
         "selectConversation": "チャットを選択してください",
         "newApplicant": "新規応募者",
         "noConversations": "会話がありません",
-        "conversationStarted": "会話開始："
+        "conversationStarted": "会話開始：",
+        "jobPosts": "求人管理",
+        "createJob": "新規作成",
+        "editJob": "編集",
+        "deleteJob": "削除",
+        "jobTitle": "タイトル",
+        "jobContent": "内容",
+        "jobSalary": "給与",
+        "jobLocation": "勤務地",
+        "jobPosition": "職種",
+        "saveDraft": "下書き保存",
+        "publish": "公開する",
+        "noJobPosts": "求人がありません",
+        "confirmDelete": "削除してもよろしいですか？"
     },
     "common": {
         "error": "エラーが発生しました"
@@ -78,5 +95,14 @@
     "notification": {
         "newMessage": "新しいメッセージ",
         "newApplicant": "新しい応募者"
+    },
+    "jobs": {
+        "title": "求人情報",
+        "subtitle": "あなたにぴったりの仕事を見つけましょう",
+        "viewDetail": "詳細を見る",
+        "salary": "給与",
+        "location": "勤務地",
+        "applyNow": "この求人に応募する",
+        "noJobs": "現在、求人情報はありません"
     }
 }

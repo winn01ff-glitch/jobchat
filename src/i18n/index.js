@@ -29,12 +29,14 @@ const I18n = {
         this.updateActiveLangBtn();
         this.translatePage();
 
-        // Bind language switcher
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.setLanguage(btn.dataset.lang);
+        // Bind language switcher (dropdown)
+        var langSelect = document.getElementById('lang-select');
+        if (langSelect) {
+            langSelect.value = this.currentLang;
+            langSelect.addEventListener('change', () => {
+                this.setLanguage(langSelect.value);
             });
-        });
+        }
     },
 
     async loadAllLanguages() {
@@ -68,9 +70,8 @@ const I18n = {
     },
 
     updateActiveLangBtn() {
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.lang === this.currentLang);
-        });
+        var langSelect = document.getElementById('lang-select');
+        if (langSelect) langSelect.value = this.currentLang;
     },
 
     t(key, params) {

@@ -140,34 +140,37 @@ body {
     background-clip: text;
 }
 
-/* Language Switcher */
-.lang-switcher {
-    display: flex;
-    gap: 2px;
-    background: var(--bg-input);
-    border-radius: var(--radius-full);
-    padding: 2px;
+/* Language Dropdown */
+.lang-dropdown-wrapper {
+    position: relative;
 }
 
-.lang-btn {
-    padding: 4px 10px;
-    height: 30px;
-    border: none;
-    background: transparent;
+.lang-select {
+    padding: 5px 28px 5px 10px;
+    border: 1px solid var(--border-light);
     border-radius: var(--radius-full);
-    cursor: pointer;
-    font-size: 12px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: var(--font-sm);
     font-weight: 600;
     font-family: var(--font-family);
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2365676b' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
     transition: var(--transition-fast);
 }
 
-.lang-btn:hover { color: var(--text-primary); background: rgba(0,0,0,0.05); }
-.lang-btn.active { color: var(--messenger-blue); background: rgba(0,132,255,0.12); }
+.lang-select:hover {
+    border-color: var(--messenger-blue);
+}
+
+.lang-select:focus {
+    border-color: var(--messenger-blue);
+    box-shadow: 0 0 0 2px rgba(0,132,255,0.15);
+}
 
 /* Admin Header Controls */
 .admin-header-controls {
@@ -182,6 +185,50 @@ body {
     font-size: var(--font-sm);
     font-weight: 600;
     color: var(--text-primary);
+}
+
+/* Admin Login Button in Header */
+.btn-admin-login {
+    padding: 5px 14px;
+    background: transparent;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-full);
+    color: var(--text-muted);
+    font-size: var(--font-xs);
+    font-weight: 600;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    margin-left: 4px;
+}
+.btn-admin-login:hover {
+    color: var(--messenger-blue);
+    border-color: var(--messenger-blue);
+    background: rgba(0,132,255,0.06);
+}
+
+/* Chat Logout Button in Header */
+.btn-chat-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    background: transparent;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-full);
+    color: var(--text-muted);
+    font-size: var(--font-xs);
+    font-weight: 600;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    margin-left: 4px;
+}
+.btn-chat-logout svg { flex-shrink: 0; }
+.btn-chat-logout:hover {
+    color: var(--error);
+    border-color: var(--error);
+    background: rgba(240,40,73,0.06);
 }
 
 /* ============ PAGES ============ */
@@ -387,6 +434,6 @@ body {
 
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
-    .lang-btn { width: 26px; height: 26px; font-size: 12px; }
+    .lang-select { font-size: 12px; padding: 4px 24px 4px 8px; }
     .logo { font-size: var(--font-lg); }
 }

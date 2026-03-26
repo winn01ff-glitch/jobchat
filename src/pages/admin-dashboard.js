@@ -6,7 +6,10 @@ var dashboardState = {
     applicants: [],
     selectedId: null,
     subscriptions: [],
-    filter: 'all'
+    filter: 'all',
+    activeTab: 'chats',
+    jobs: [],
+    editingJob: null
 };
 
 function renderAdminDashboard() {
@@ -20,18 +23,32 @@ function renderAdminDashboard() {
             '<div class="sidebar-header">' +
                 '<h2 class="sidebar-title" data-i18n="admin.chats">' + t('admin.chats') + '</h2>' +
             '</div>' +
-            '<div class="sidebar-search">' +
-                '<div class="search-wrapper">' +
-                    '<span class="search-icon">🔍</span>' +
-                    '<input type="text" id="search-input" placeholder="' + t('admin.search') + '" oninput="filterConversations()">' +
+            '<div class="admin-tab-bar">' +
+                '<button class="admin-tab active" data-tab="chats" onclick="switchAdminTab(\'chats\')">' +
+                    '💬 ' + t('admin.chats') +
+                '</button>' +
+                '<button class="admin-tab" data-tab="jobs" onclick="switchAdminTab(\'jobs\')">' +
+                    '📝 ' + t('admin.jobPosts') +
+                '</button>' +
+            '</div>' +
+            '<div id="tab-content-chats">' +
+                '<div class="sidebar-search">' +
+                    '<div class="search-wrapper">' +
+                        '<span class="search-icon">🔍</span>' +
+                        '<input type="text" id="search-input" placeholder="' + t('admin.search') + '" oninput="filterConversations()">' +
+                    '</div>' +
                 '</div>' +
+                '<div class="sidebar-filters">' +
+                    '<button class="filter-tab active" data-filter="all" onclick="setFilter(\'all\')" data-i18n="admin.filterAll">' + t('admin.filterAll') + '</button>' +
+                    '<button class="filter-tab" data-filter="active" onclick="setFilter(\'active\')" data-i18n="admin.filterActive">' + t('admin.filterActive') + '</button>' +
+                    '<button class="filter-tab" data-filter="new" onclick="setFilter(\'new\')" data-i18n="admin.filterNew">' + t('admin.filterNew') + '</button>' +
+                '</div>' +
+                '<div class="conversation-list" id="conversation-list"></div>' +
             '</div>' +
-            '<div class="sidebar-filters">' +
-                '<button class="filter-tab active" data-filter="all" onclick="setFilter(\'all\')" data-i18n="admin.filterAll">' + t('admin.filterAll') + '</button>' +
-                '<button class="filter-tab" data-filter="active" onclick="setFilter(\'active\')" data-i18n="admin.filterActive">' + t('admin.filterActive') + '</button>' +
-                '<button class="filter-tab" data-filter="new" onclick="setFilter(\'new\')" data-i18n="admin.filterNew">' + t('admin.filterNew') + '</button>' +
+            '<div id="tab-content-jobs" class="hidden">' +
+                '<button class="btn-add-job" onclick="openJobForm()">+ ' + t('admin.createJob') + '</button>' +
+                '<div class="job-post-list" id="job-post-list"></div>' +
             '</div>' +
-            '<div class="conversation-list" id="conversation-list"></div>' +
         '</div>' +
         '<div class="admin-chat-area" id="admin-chat-area">' +
             '<div class="admin-empty-state">' +
@@ -71,11 +88,16 @@ function renderAdminDashboard() {
                     '<button onclick="closeAdminSettings()" style="padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:white;cursor:pointer">Cancel</button>' +
                     '<button onclick="saveAdminSettings()" style="padding:8px 20px;border:none;border-radius:8px;background:var(--primary);color:white;cursor:pointer;font-weight:600">Save</button>' +
                 '</div>' +
+                '<hr style="border:none;border-top:1px solid var(--border-light);margin:16px 0 12px">' +
+                '<button onclick="handleAdminLogout()" style="width:100%;padding:10px;border:1px solid var(--error);border-radius:8px;background:rgba(240,40,73,0.06);color:var(--error);cursor:pointer;font-weight:600;font-family:var(--font-family);font-size:var(--font-sm);transition:var(--transition-fast)" onmouseover="this.style.background=\'rgba(240,40,73,0.12)\'" onmouseout="this.style.background=\'rgba(240,40,73,0.06)\'">' +
+                    '🚪 ' + t('admin.logout') +
+                '</button>' +
             '</div>' +
         '</div>' +
     '</div>';
 
     loadApplicants();
+    loadAdminJobs();
     subscribeToUpdates();
     showAdminHeaderControls();
 }
@@ -224,17 +246,18 @@ async function handleAdminLogout() {
 function showAdminHeaderControls() {
     var controls = document.getElementById('admin-header-controls');
     var nameEl = document.getElementById('admin-header-name');
-    var logoutBtn = document.getElementById('admin-header-logout');
+    var adminLoginBtn = document.getElementById('btn-admin-login');
     if (controls && window.adminSession) {
         nameEl.textContent = window.adminSession.profile.display_name;
-        logoutBtn.textContent = I18n.t('admin.logout');
         controls.classList.remove('hidden');
+        if (adminLoginBtn) adminLoginBtn.classList.add('hidden');
     }
 }
 
 function hideAdminHeaderControls() {
     var controls = document.getElementById('admin-header-controls');
     if (controls) controls.classList.add('hidden');
+    // Don't auto-show admin login btn here; the router handles it
 }
 
 // ============ Admin Settings ============
@@ -328,5 +351,248 @@ function toggleSettingsPw() {
     } else {
         pw.type = 'password';
         btn.textContent = '👁️';
+    }
+}
+
+// ============ Tab Switching ============
+
+function switchAdminTab(tab) {
+    dashboardState.activeTab = tab;
+    document.querySelectorAll('.admin-tab').forEach(function(btn) {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    var chatsContent = document.getElementById('tab-content-chats');
+    var jobsContent = document.getElementById('tab-content-jobs');
+    if (chatsContent) chatsContent.classList.toggle('hidden', tab !== 'chats');
+    if (jobsContent) jobsContent.classList.toggle('hidden', tab !== 'jobs');
+    if (tab === 'jobs') {
+        loadAdminJobs();
+        renderJobPreviewPanel();
+    } else {
+        // Reset right panel to chat empty state
+        var chatArea = document.getElementById('admin-chat-area');
+        if (chatArea && !dashboardState.selectedId) {
+            var t = I18n.t.bind(I18n);
+            chatArea.innerHTML = '<div class="admin-empty-state">' +
+                '<div class="admin-empty-icon">💬</div>' +
+                '<p data-i18n="admin.selectConversation">' + t('admin.selectConversation') + '</p>' +
+            '</div>';
+        }
+    }
+}
+
+// ============ Job Post Management ============
+
+async function loadAdminJobs() {
+    try {
+        dashboardState.jobs = await DB.getAllJobs();
+        renderJobPostList();
+        // Also update right panel if jobs tab is active
+        if (dashboardState.activeTab === 'jobs') {
+            renderJobPreviewPanel();
+        }
+    } catch(e) {
+        console.error('Failed to load jobs:', e);
+    }
+}
+
+function renderJobPreviewPanel() {
+    var chatArea = document.getElementById('admin-chat-area');
+    if (!chatArea) return;
+    var t = I18n.t.bind(I18n);
+    var publishedJobs = dashboardState.jobs.filter(function(j) { return j.status === 'published'; });
+    var draftJobs = dashboardState.jobs.filter(function(j) { return j.status !== 'published'; });
+
+    if (dashboardState.jobs.length === 0) {
+        chatArea.innerHTML = '<div class="admin-empty-state">' +
+            '<div class="admin-empty-icon">📋</div>' +
+            '<p>' + t('admin.noJobPosts') + '</p>' +
+        '</div>';
+        return;
+    }
+
+    var html = '<div class="job-preview-panel">';
+    html += '<h3 class="job-preview-title">📝 ' + t('admin.jobPosts') + '</h3>';
+
+    if (publishedJobs.length > 0) {
+        html += '<div class="job-preview-section">';
+        html += '<h4 class="job-preview-label">✅ Published (' + publishedJobs.length + ')</h4>';
+        publishedJobs.forEach(function(job) {
+            var posLabel = t('register.positions.' + job.position) || job.position || '';
+            html += '<div class="job-preview-card published" onclick="editJob(\'' + job.id + '\')">'+
+                '<div class="job-preview-card-title">' + escapeHtml(job.title) + '</div>' +
+                '<div class="job-preview-card-meta">' +
+                    (posLabel ? '🏢 ' + escapeHtml(posLabel) : '') +
+                    (job.salary ? ' · 💰 ' + escapeHtml(job.salary) : '') +
+                    (job.location ? ' · 📍 ' + escapeHtml(job.location) : '') +
+                '</div>' +
+                '<div class="job-preview-card-content">' + escapeHtml(job.content || '').substring(0, 120) + (job.content && job.content.length > 120 ? '...' : '') + '</div>' +
+            '</div>';
+        });
+        html += '</div>';
+    }
+
+    if (draftJobs.length > 0) {
+        html += '<div class="job-preview-section">';
+        html += '<h4 class="job-preview-label">📝 Drafts (' + draftJobs.length + ')</h4>';
+        draftJobs.forEach(function(job) {
+            html += '<div class="job-preview-card draft" onclick="editJob(\'' + job.id + '\')">'+
+                '<div class="job-preview-card-title">' + escapeHtml(job.title) + '</div>' +
+                '<div class="job-preview-card-content">' + escapeHtml(job.content || '').substring(0, 80) + '...</div>' +
+            '</div>';
+        });
+        html += '</div>';
+    }
+
+    html += '</div>';
+    chatArea.innerHTML = html;
+}
+
+function renderJobPostList() {
+    var list = document.getElementById('job-post-list');
+    if (!list) return;
+    var t = I18n.t.bind(I18n);
+
+    if (dashboardState.jobs.length === 0) {
+        list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted)">' +
+            '<p>📋 ' + t('admin.noJobPosts') + '</p></div>';
+        return;
+    }
+
+    list.innerHTML = '';
+    dashboardState.jobs.forEach(function(job) {
+        var item = document.createElement('div');
+        item.className = 'job-post-item';
+        var posLabel = t('register.positions.' + job.position) || job.position || '';
+        var statusClass = job.status === 'published' ? 'published' : 'draft';
+        var statusText = job.status === 'published' ? '✅ Published' : '📝 Draft';
+
+        item.innerHTML =
+            '<div class="job-post-item-header">' +
+                '<span class="job-post-item-title">' + escapeHtml(job.title) + '</span>' +
+                '<span class="job-post-item-status ' + statusClass + '">' + statusText + '</span>' +
+            '</div>' +
+            '<div class="job-post-item-meta">' +
+                (posLabel ? '🏢 ' + escapeHtml(posLabel) + ' · ' : '') +
+                (job.salary ? '💰 ' + escapeHtml(job.salary) + ' · ' : '') +
+                (job.location ? '📍 ' + escapeHtml(job.location) : '') +
+            '</div>' +
+            '<div class="job-post-item-actions">' +
+                '<button onclick="editJob(\'' + job.id + '\')">' + t('admin.editJob') + '</button>' +
+                '<button class="btn-delete" onclick="deleteJob(\'' + job.id + '\')">' + t('admin.deleteJob') + '</button>' +
+            '</div>';
+        list.appendChild(item);
+    });
+}
+
+function openJobForm(job) {
+    var t = I18n.t.bind(I18n);
+    dashboardState.editingJob = job || null;
+
+    var modal = document.createElement('div');
+    modal.className = 'job-form-modal';
+    modal.id = 'job-form-modal';
+    modal.onclick = function(e) { if (e.target === modal) closeJobForm(); };
+
+    modal.innerHTML =
+        '<div class="job-form-card">' +
+            '<div class="job-form-header">' +
+                '<h3>' + (job ? t('admin.editJob') : t('admin.createJob')) + '</h3>' +
+                '<button class="job-form-close" onclick="closeJobForm()">✕</button>' +
+            '</div>' +
+            '<div class="job-form-body">' +
+                '<div class="form-group" style="margin-bottom:12px">' +
+                    '<label class="form-label">' + t('admin.jobTitle') + ' *</label>' +
+                    '<input type="text" class="form-input" id="job-title" value="' + (job ? escapeHtml(job.title) : '') + '">' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom:12px">' +
+                    '<label class="form-label">' + t('admin.jobPosition') + '</label>' +
+                    '<select class="form-select" id="job-position">' +
+                        '<option value="">' + t('register.positionPlaceholder') + '</option>' +
+                        '<option value="factory"' + (job && job.position === 'factory' ? ' selected' : '') + '>' + t('register.positions.factory') + '</option>' +
+                        '<option value="restaurant"' + (job && job.position === 'restaurant' ? ' selected' : '') + '>' + t('register.positions.restaurant') + '</option>' +
+                        '<option value="construction"' + (job && job.position === 'construction' ? ' selected' : '') + '>' + t('register.positions.construction') + '</option>' +
+                        '<option value="office"' + (job && job.position === 'office' ? ' selected' : '') + '>' + t('register.positions.office') + '</option>' +
+                        '<option value="it"' + (job && job.position === 'it' ? ' selected' : '') + '>' + t('register.positions.it') + '</option>' +
+                        '<option value="other"' + (job && job.position === 'other' ? ' selected' : '') + '>' + t('register.positions.other') + '</option>' +
+                    '</select>' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom:12px">' +
+                    '<label class="form-label">' + t('admin.jobSalary') + '</label>' +
+                    '<input type="text" class="form-input" id="job-salary" placeholder="例: ¥250,000/月" value="' + (job ? escapeHtml(job.salary || '') : '') + '">' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom:12px">' +
+                    '<label class="form-label">' + t('admin.jobLocation') + '</label>' +
+                    '<input type="text" class="form-input" id="job-location" placeholder="例: 東京" value="' + (job ? escapeHtml(job.location || '') : '') + '">' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom:12px">' +
+                    '<label class="form-label">' + t('admin.jobContent') + ' *</label>' +
+                    '<textarea class="form-input" id="job-content" rows="8" style="min-height:150px;resize:vertical" placeholder="Nhập nội dung bài tuyển dụng...">' + (job ? escapeHtml(job.content) : '') + '</textarea>' +
+                '</div>' +
+            '</div>' +
+            '<div class="job-form-footer">' +
+                '<button class="btn-job-cancel" onclick="closeJobForm()">✕ Cancel</button>' +
+                '<button class="btn-job-draft" onclick="saveJob(\'draft\')">' + t('admin.saveDraft') + '</button>' +
+                '<button class="btn-job-publish" onclick="saveJob(\'published\')">' + t('admin.publish') + '</button>' +
+            '</div>' +
+        '</div>';
+
+    document.body.appendChild(modal);
+}
+
+function closeJobForm() {
+    var modal = document.getElementById('job-form-modal');
+    if (modal) modal.remove();
+    dashboardState.editingJob = null;
+}
+
+async function saveJob(status) {
+    var title = document.getElementById('job-title').value.trim();
+    var content = document.getElementById('job-content').value.trim();
+    var position = document.getElementById('job-position').value;
+    var salary = document.getElementById('job-salary').value.trim();
+    var location = document.getElementById('job-location').value.trim();
+
+    if (!title || !content) {
+        showToast(I18n.t('register.fillAll'), 'error');
+        return;
+    }
+
+    var admin = window.adminSession;
+    var data = {
+        title: title, content: content, position: position,
+        salary: salary, location: location, status: status,
+        author_id: admin ? admin.user.id : '',
+        author_name: admin ? admin.profile.display_name : ''
+    };
+
+    try {
+        if (dashboardState.editingJob) {
+            await DB.updateJob(dashboardState.editingJob.id, data);
+        } else {
+            await DB.createJob(data);
+        }
+        closeJobForm();
+        loadAdminJobs();
+        showToast(status === 'published' ? '✅ Published!' : '📝 Saved as draft', 'success');
+    } catch(e) {
+        console.error('Save job failed:', e);
+        showToast(I18n.t('common.error'), 'error');
+    }
+}
+
+function editJob(jobId) {
+    var job = dashboardState.jobs.find(function(j) { return j.id === jobId; });
+    if (job) openJobForm(job);
+}
+
+async function deleteJob(jobId) {
+    if (!confirm(I18n.t('admin.confirmDelete'))) return;
+    try {
+        await DB.deleteJob(jobId);
+        loadAdminJobs();
+        showToast('Deleted ✓', 'success');
+    } catch(e) {
+        showToast(I18n.t('common.error'), 'error');
     }
 }
