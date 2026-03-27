@@ -90,6 +90,7 @@
         "saveDraft": "Save Draft",
         "publish": "Publish",
         "noJobPosts": "No job posts yet",
+        "selectJobPreview": "Select a post to view details",
         "confirmDelete": "Are you sure you want to delete?"
     },
     "common": {

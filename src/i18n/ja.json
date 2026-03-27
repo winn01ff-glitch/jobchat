@@ -90,6 +90,7 @@
         "saveDraft": "下書き保存",
         "publish": "公開する",
         "noJobPosts": "求人がありません",
+        "selectJobPreview": "投稿を選択して詳細を表示",
         "confirmDelete": "削除してもよろしいですか？"
     },
     "common": {

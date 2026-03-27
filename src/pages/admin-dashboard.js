@@ -398,16 +398,6 @@ function renderJobPreviewPanel() {
     var chatArea = document.getElementById('admin-chat-area');
     if (!chatArea) return;
     var t = I18n.t.bind(I18n);
-    var publishedJobs = dashboardState.jobs.filter(function(j) { return j.status === 'published'; });
-    var draftJobs = dashboardState.jobs.filter(function(j) { return j.status !== 'published'; });
-
-    if (dashboardState.jobs.length === 0) {
-        chatArea.innerHTML = '<div class="admin-empty-state">' +
-            '<div class="admin-empty-icon">📋</div>' +
-            '<p>' + t('admin.noJobPosts') + '</p>' +
-        '</div>';
-        return;
-    }
 
     // If a specific job is selected, show its applicant-view preview
     if (dashboardState.previewJobId) {
@@ -418,42 +408,11 @@ function renderJobPreviewPanel() {
         }
     }
 
-    // Otherwise show the list with clickable cards
-    var html = '<div class="job-preview-panel">';
-    html += '<h3 class="job-preview-title">📝 ' + t('admin.jobPosts') + '</h3>';
-
-    if (publishedJobs.length > 0) {
-        html += '<div class="job-preview-section">';
-        html += '<h4 class="job-preview-label">✅ Published (' + publishedJobs.length + ')</h4>';
-        publishedJobs.forEach(function(job) {
-            var posLabel = t('register.positions.' + job.position) || job.position || '';
-            html += '<div class="job-preview-card published" onclick="selectJobPreview(\'' + job.id + '\')">'+
-                '<div class="job-preview-card-title">' + escapeHtml(job.title) + '</div>' +
-                '<div class="job-preview-card-meta">' +
-                    (posLabel ? '🏢 ' + escapeHtml(posLabel) : '') +
-                    (job.salary ? ' · 💰 ' + escapeHtml(job.salary) : '') +
-                    (job.location ? ' · 📍 ' + escapeHtml(job.location) : '') +
-                '</div>' +
-                '<div class="job-preview-card-content">' + escapeHtml(job.content || '').substring(0, 120) + (job.content && job.content.length > 120 ? '...' : '') + '</div>' +
-            '</div>';
-        });
-        html += '</div>';
-    }
-
-    if (draftJobs.length > 0) {
-        html += '<div class="job-preview-section">';
-        html += '<h4 class="job-preview-label">📝 Drafts (' + draftJobs.length + ')</h4>';
-        draftJobs.forEach(function(job) {
-            html += '<div class="job-preview-card draft" onclick="selectJobPreview(\'' + job.id + '\')">'+
-                '<div class="job-preview-card-title">' + escapeHtml(job.title) + '</div>' +
-                '<div class="job-preview-card-content">' + escapeHtml(job.content || '').substring(0, 80) + '...</div>' +
-            '</div>';
-        });
-        html += '</div>';
-    }
-
-    html += '</div>';
-    chatArea.innerHTML = html;
+    // No job selected — show empty state like chat
+    chatArea.innerHTML = '<div class="admin-empty-state">' +
+        '<div class="admin-empty-icon">📋</div>' +
+        '<p>' + (dashboardState.jobs.length === 0 ? t('admin.noJobPosts') : t('admin.selectJobPreview')) + '</p>' +
+    '</div>';
 }
 
 function selectJobPreview(jobId) {
@@ -549,7 +508,7 @@ function renderJobPostList() {
 
     // Auto-select first job if none selected
     if (!dashboardState.previewJobId && dashboardState.jobs.length > 0) {
-        dashboardState.previewJobId = dashboardState.jobs[0].id;
+        // Don't auto-select, show empty state
     }
     renderJobPreviewPanel();
 }
