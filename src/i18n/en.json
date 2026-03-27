@@ -36,7 +36,9 @@
             "other": "Other"
         },
         "submit": "Start Chat",
-        "fillAll": "Please fill in name, email and position",
+        "fillAll": "Please enter your email",
+        "enterName": "Enter your display name",
+        "nameHint": "This name will be shown in the chat.",
         "welcomeBack": "Welcome back!"
     },
     "chat": {

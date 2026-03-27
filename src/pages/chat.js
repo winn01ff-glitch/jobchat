@@ -65,8 +65,8 @@ function handleApplicantLogout() {
         chatState.subscription = null;
     }
     // Clear session data
-    localStorage.removeItem('jobchat_session');
-    localStorage.removeItem('jobchat_email');
+    localStorage.removeItem('uphill_session');
+    localStorage.removeItem('uphill_email');
     chatState.applicantId = null;
     chatState.applicantName = '';
     // Navigate to landing
@@ -218,7 +218,7 @@ function sendLocation() {
 
 function getApplicantSession() {
     try {
-        return JSON.parse(localStorage.getItem('jobchat_session'));
+        return JSON.parse(localStorage.getItem('uphill_session'));
     } catch(e) { return null; }
 }
 

@@ -36,7 +36,9 @@
             "other": "Khác"
         },
         "submit": "Bắt đầu chat",
-        "fillAll": "Vui lòng điền tên, email và vị trí",
+        "fillAll": "Vui lòng nhập email",
+        "enterName": "Nhập tên hiển thị",
+        "nameHint": "Nhập tên sẽ hiển thị trong cuộc trò chuyện.",
         "welcomeBack": "Chào mừng bạn quay lại!"
     },
     "chat": {

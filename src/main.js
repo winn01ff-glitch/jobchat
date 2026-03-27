@@ -16,11 +16,27 @@ async function initApp() {
         // Initialize notifications
         await NotificationManager.init();
 
-        // Check for existing applicant session (token-based or email-based)
-        var sessionStr = localStorage.getItem('jobchat_session');
+        // Check for existing applicant session
+        var sessionStr = localStorage.getItem('uphill_session');
         if (sessionStr) {
             try {
                 var parsed = JSON.parse(sessionStr);
+                // Try email-based recovery (primary)
+                if (parsed && parsed.email) {
+                    var byEmail = await DB.getApplicantByEmail(parsed.email);
+                    if (byEmail) {
+                        localStorage.setItem('uphill_session', JSON.stringify({
+                            id: byEmail.id, name: byEmail.name,
+                            email: byEmail.email, token: byEmail.session_token
+                        }));
+                        chatState.applicantId = byEmail.id;
+                        chatState.applicantName = byEmail.name;
+                        Router.init();
+                        Router.navigateTo('chat', [byEmail.id]);
+                        return;
+                    }
+                }
+                // Fallback: try token-based
                 if (parsed && parsed.id && parsed.token) {
                     var applicant = await DB.getApplicantByToken(parsed.token);
                     if (applicant) {
@@ -29,21 +45,8 @@ async function initApp() {
                         return;
                     }
                 }
-                // Fallback: try email-based recovery
-                if (parsed && parsed.email) {
-                    var byEmail = await DB.getApplicantByEmail(parsed.email);
-                    if (byEmail) {
-                        localStorage.setItem('jobchat_session', JSON.stringify({
-                            id: byEmail.id, name: byEmail.name,
-                            email: byEmail.email, token: byEmail.session_token
-                        }));
-                        Router.init();
-                        Router.navigateTo('chat', [byEmail.id]);
-                        return;
-                    }
-                }
             } catch (e) {
-                localStorage.removeItem('jobchat_session');
+                localStorage.removeItem('uphill_session');
             }
         }
 
