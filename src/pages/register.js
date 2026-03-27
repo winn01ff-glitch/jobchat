@@ -106,6 +106,14 @@ function showDisplayNameModal(email) {
                             'placeholder="' + t('register.namePlaceholder') + '" autofocus>' +
                     '</div>' +
                 '</div>' +
+                '<div class="form-group">' +
+                    '<label class="form-label">' + t('register.phone') + ' <span style="color:var(--text-muted);font-weight:400;font-size:var(--font-xs)">(' + t('register.optional') + ')</span></label>' +
+                    '<div class="input-with-icon">' +
+                        '<span class="input-icon">📱</span>' +
+                        '<input type="tel" class="form-input" id="modal-phone" ' +
+                            'placeholder="' + t('register.phonePlaceholder') + '">' +
+                    '</div>' +
+                '</div>' +
             '</div>' +
             '<div class="job-form-footer">' +
                 '<button class="btn-job-publish" id="btn-confirm-name" onclick="confirmDisplayName(\'' + escapeHtml(email) + '\')">' +
@@ -133,7 +141,9 @@ function showDisplayNameModal(email) {
 
 async function confirmDisplayName(email) {
     var nameInput = document.getElementById('modal-display-name');
+    var phoneInput = document.getElementById('modal-phone');
     var name = nameInput ? nameInput.value.trim() : '';
+    var phone = phoneInput ? phoneInput.value.trim() : '';
     if (!name) {
         nameInput.style.borderColor = 'var(--error)';
         nameInput.focus();
@@ -146,7 +156,7 @@ async function confirmDisplayName(email) {
 
     try {
         var applicant = await DB.createApplicant({
-            name: name, email: email, phone: '', position: ''
+            name: name, email: email, phone: phone, position: ''
         });
 
         // Cache session

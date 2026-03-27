@@ -322,10 +322,17 @@
     border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     transition: var(--transition-fast);
+    cursor: pointer;
 }
 
 .job-post-item:hover {
     border-color: var(--messenger-blue);
+}
+
+.job-post-item.selected {
+    border-color: var(--messenger-blue);
+    background: rgba(0, 132, 255, 0.06);
+    border-left: 3px solid var(--messenger-blue);
 }
 
 .job-post-item-header {

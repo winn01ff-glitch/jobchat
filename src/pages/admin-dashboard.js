@@ -458,6 +458,19 @@ function renderJobPreviewPanel() {
 
 function selectJobPreview(jobId) {
     dashboardState.previewJobId = jobId;
+    // Update highlight on left sidebar items
+    var items = document.querySelectorAll('.job-post-item');
+    items.forEach(function(el) { el.classList.remove('selected'); });
+    // Find and highlight the selected one
+    var list = document.getElementById('job-post-list');
+    if (list) {
+        var cards = list.children;
+        for (var i = 0; i < dashboardState.jobs.length; i++) {
+            if (dashboardState.jobs[i].id === jobId && cards[i]) {
+                cards[i].classList.add('selected');
+            }
+        }
+    }
     renderJobPreviewPanel();
 }
 
@@ -509,9 +522,10 @@ function renderJobPostList() {
     }
 
     list.innerHTML = '';
-    dashboardState.jobs.forEach(function(job) {
+    dashboardState.jobs.forEach(function(job, index) {
         var item = document.createElement('div');
-        item.className = 'job-post-item';
+        item.className = 'job-post-item' + (dashboardState.previewJobId === job.id ? ' selected' : '');
+        item.onclick = function() { selectJobPreview(job.id); };
         var posLabel = t('register.positions.' + job.position) || job.position || '';
         var statusClass = job.status === 'published' ? 'published' : 'draft';
         var statusText = job.status === 'published' ? '✅ Published' : '📝 Draft';
@@ -527,11 +541,17 @@ function renderJobPostList() {
                 (job.location ? '📍 ' + escapeHtml(job.location) : '') +
             '</div>' +
             '<div class="job-post-item-actions">' +
-                '<button onclick="editJob(\'' + job.id + '\')">' + t('admin.editJob') + '</button>' +
-                '<button class="btn-delete" onclick="deleteJob(\'' + job.id + '\')">' + t('admin.deleteJob') + '</button>' +
+                '<button onclick="event.stopPropagation();editJob(\'' + job.id + '\')">' + t('admin.editJob') + '</button>' +
+                '<button class="btn-delete" onclick="event.stopPropagation();deleteJob(\'' + job.id + '\')">' + t('admin.deleteJob') + '</button>' +
             '</div>';
         list.appendChild(item);
     });
+
+    // Auto-select first job if none selected
+    if (!dashboardState.previewJobId && dashboardState.jobs.length > 0) {
+        dashboardState.previewJobId = dashboardState.jobs[0].id;
+    }
+    renderJobPreviewPanel();
 }
 
 function openJobForm(job) {
