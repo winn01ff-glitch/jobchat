@@ -580,6 +580,105 @@
     color: var(--text-secondary);
     line-height: 1.5;
 }
+/* ============ Job Applicant Preview (Admin Right Panel) ============ */
+.job-applicant-preview {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.job-ap-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-xl);
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+    background: var(--bg-primary);
+}
+
+.job-ap-back {
+    background: none;
+    border: none;
+    color: var(--messenger-blue);
+    font-weight: 600;
+    font-size: var(--font-sm);
+    font-family: var(--font-family);
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    transition: var(--transition-fast);
+}
+.job-ap-back:hover { background: rgba(0,132,255,0.08); }
+
+.job-ap-edit {
+    background: none;
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    font-size: var(--font-xs);
+    font-weight: 600;
+    font-family: var(--font-family);
+    padding: 5px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+.job-ap-edit:hover { border-color: var(--messenger-blue); color: var(--messenger-blue); }
+
+.job-ap-card {
+    padding: var(--space-xl) var(--space-xl) var(--space-lg);
+    max-width: 640px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.job-ap-status { margin-bottom: var(--space-md); }
+
+.job-ap-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-md);
+    line-height: 1.3;
+}
+
+.job-ap-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+}
+
+.job-ap-meta-item {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    background: var(--bg-input);
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+}
+
+.job-ap-content {
+    font-size: var(--font-md);
+    color: var(--text-primary);
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.job-ap-apply-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--messenger-gradient);
+    border: none;
+    border-radius: var(--radius-lg);
+    color: white;
+    font-size: var(--font-md);
+    font-weight: 700;
+    font-family: var(--font-family);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
 
 @media (max-width: 480px) {
     .jobs-container { padding: var(--space-md); }

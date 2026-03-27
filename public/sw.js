@@ -1,7 +1,7 @@
 // Service Worker for notifications
 self.addEventListener('push', function(event) {
     const data = event.data ? event.data.json() : {};
-    const title = data.title || 'JobChat';
+    const title = data.title || 'Uphill';
     const options = {
         body: data.body || 'New message',
         icon: data.icon || '💬',

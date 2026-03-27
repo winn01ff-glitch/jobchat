@@ -1,6 +1,6 @@
 {
-    "name": "JobChat",
-    "short_name": "JobChat",
+    "name": "Uphill",
+    "short_name": "Uphill",
     "description": "Job recruitment chat platform",
     "start_url": "/",
     "display": "standalone",

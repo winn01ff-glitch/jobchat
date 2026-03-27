@@ -34,7 +34,7 @@ const NotificationManager = {
                     body: body,
                     icon: options.icon || '💬',
                     badge: '💬',
-                    tag: options.tag || 'jobchat-msg',
+                    tag: options.tag || 'uphill-msg',
                     renotify: true,
                     ...options
                 });
@@ -73,7 +73,7 @@ const NotificationManager = {
 
     // Update document title with unread count
     updateBadge(count) {
-        const baseTitle = 'JobChat';
+        const baseTitle = 'Uphill';
         if (count > 0) {
             document.title = `(${count}) ${baseTitle}`;
         } else {

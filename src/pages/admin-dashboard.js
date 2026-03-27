@@ -9,7 +9,8 @@ var dashboardState = {
     filter: 'all',
     activeTab: 'chats',
     jobs: [],
-    editingJob: null
+    editingJob: null,
+    previewJobId: null
 };
 
 function renderAdminDashboard() {
@@ -20,9 +21,6 @@ function renderAdminDashboard() {
 
     page.innerHTML = '<div class="admin-container">' +
         '<div class="admin-sidebar" id="admin-sidebar">' +
-            '<div class="sidebar-header">' +
-                '<h2 class="sidebar-title" data-i18n="admin.chats">' + t('admin.chats') + '</h2>' +
-            '</div>' +
             '<div class="admin-tab-bar">' +
                 '<button class="admin-tab active" data-tab="chats" onclick="switchAdminTab(\'chats\')">' +
                     '💬 ' + t('admin.chats') +
@@ -411,6 +409,16 @@ function renderJobPreviewPanel() {
         return;
     }
 
+    // If a specific job is selected, show its applicant-view preview
+    if (dashboardState.previewJobId) {
+        var job = dashboardState.jobs.find(function(j) { return j.id === dashboardState.previewJobId; });
+        if (job) {
+            showJobApplicantPreview(job);
+            return;
+        }
+    }
+
+    // Otherwise show the list with clickable cards
     var html = '<div class="job-preview-panel">';
     html += '<h3 class="job-preview-title">📝 ' + t('admin.jobPosts') + '</h3>';
 
@@ -419,7 +427,7 @@ function renderJobPreviewPanel() {
         html += '<h4 class="job-preview-label">✅ Published (' + publishedJobs.length + ')</h4>';
         publishedJobs.forEach(function(job) {
             var posLabel = t('register.positions.' + job.position) || job.position || '';
-            html += '<div class="job-preview-card published" onclick="editJob(\'' + job.id + '\')">'+
+            html += '<div class="job-preview-card published" onclick="selectJobPreview(\'' + job.id + '\')">'+
                 '<div class="job-preview-card-title">' + escapeHtml(job.title) + '</div>' +
                 '<div class="job-preview-card-meta">' +
                     (posLabel ? '🏢 ' + escapeHtml(posLabel) : '') +
@@ -436,7 +444,7 @@ function renderJobPreviewPanel() {
         html += '<div class="job-preview-section">';
         html += '<h4 class="job-preview-label">📝 Drafts (' + draftJobs.length + ')</h4>';
         draftJobs.forEach(function(job) {
-            html += '<div class="job-preview-card draft" onclick="editJob(\'' + job.id + '\')">'+
+            html += '<div class="job-preview-card draft" onclick="selectJobPreview(\'' + job.id + '\')">'+
                 '<div class="job-preview-card-title">' + escapeHtml(job.title) + '</div>' +
                 '<div class="job-preview-card-content">' + escapeHtml(job.content || '').substring(0, 80) + '...</div>' +
             '</div>';
@@ -446,6 +454,47 @@ function renderJobPreviewPanel() {
 
     html += '</div>';
     chatArea.innerHTML = html;
+}
+
+function selectJobPreview(jobId) {
+    dashboardState.previewJobId = jobId;
+    renderJobPreviewPanel();
+}
+
+function showJobApplicantPreview(job) {
+    var chatArea = document.getElementById('admin-chat-area');
+    if (!chatArea) return;
+    var t = I18n.t.bind(I18n);
+    var posLabel = t('register.positions.' + job.position) || job.position || '';
+    var statusBadge = job.status === 'published'
+        ? '<span style="background:rgba(52,199,89,0.12);color:var(--success);padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600">✅ Published</span>'
+        : '<span style="background:rgba(255,149,0,0.12);color:#ff9500;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600">📝 Draft</span>';
+
+    chatArea.innerHTML =
+        '<div class="job-applicant-preview">' +
+            '<div class="job-ap-toolbar">' +
+                '<button onclick="dashboardState.previewJobId=null;renderJobPreviewPanel()" class="job-ap-back">← ' + t('admin.jobPosts') + '</button>' +
+                '<div style="display:flex;gap:6px">' +
+                    '<button onclick="editJob(\'' + job.id + '\')" class="job-ap-edit">✏️ ' + t('admin.editJob') + '</button>' +
+                '</div>' +
+            '</div>' +
+            '<div class="job-ap-card">' +
+                '<div class="job-ap-status">' + statusBadge + '</div>' +
+                '<h2 class="job-ap-title">' + escapeHtml(job.title) + '</h2>' +
+                '<div class="job-ap-meta">' +
+                    (posLabel ? '<div class="job-ap-meta-item">🏢 ' + escapeHtml(posLabel) + '</div>' : '') +
+                    (job.salary ? '<div class="job-ap-meta-item">💰 ' + escapeHtml(job.salary) + '</div>' : '') +
+                    (job.location ? '<div class="job-ap-meta-item">📍 ' + escapeHtml(job.location) + '</div>' : '') +
+                '</div>' +
+                '<hr style="border:none;border-top:1px solid var(--border-light);margin:16px 0">' +
+                '<div class="job-ap-content">' + escapeHtml(job.content || '').replace(/\n/g, '<br>') + '</div>' +
+                '<hr style="border:none;border-top:1px solid var(--border-light);margin:16px 0">' +
+                '<button class="job-ap-apply-btn" disabled>' +
+                    '💬 ' + t('jobs.applyNow') +
+                '</button>' +
+                '<p style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:8px">👆 ' + t('jobs.viewDetail') + ' — Applicant View Preview</p>' +
+            '</div>' +
+        '</div>';
 }
 
 function renderJobPostList() {
