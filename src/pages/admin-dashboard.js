@@ -21,32 +21,17 @@ function renderAdminDashboard() {
 
     page.innerHTML = '<div class="admin-container">' +
         '<div class="admin-sidebar" id="admin-sidebar">' +
-            '<div class="admin-tab-bar">' +
-                '<button class="admin-tab active" data-tab="chats" onclick="switchAdminTab(\'chats\')">' +
-                    '💬 ' + t('admin.chats') +
-                '</button>' +
-                '<button class="admin-tab" data-tab="jobs" onclick="switchAdminTab(\'jobs\')">' +
-                    '📝 ' + t('admin.jobPosts') +
-                '</button>' +
-            '</div>' +
-            '<div id="tab-content-chats">' +
-                '<div class="sidebar-search">' +
-                    '<div class="search-wrapper">' +
-                        '<span class="search-icon">🔍</span>' +
-                        '<input type="text" id="search-input" placeholder="' + t('admin.search') + '" oninput="filterConversations()">' +
-                    '</div>' +
+            '<div class="sidebar-search">' +
+                '<div class="search-wrapper">' +
+                    '<span class="search-icon">🔍</span>' +
+                    '<input type="text" id="search-input" placeholder="' + t('admin.search') + '" oninput="filterConversations()">' +
                 '</div>' +
-                '<div class="sidebar-filters">' +
-                    '<button class="filter-tab active" data-filter="all" onclick="setFilter(\'all\')" data-i18n="admin.filterAll">' + t('admin.filterAll') + '</button>' +
-                    '<button class="filter-tab" data-filter="active" onclick="setFilter(\'active\')" data-i18n="admin.filterActive">' + t('admin.filterActive') + '</button>' +
-                    '<button class="filter-tab" data-filter="new" onclick="setFilter(\'new\')" data-i18n="admin.filterNew">' + t('admin.filterNew') + '</button>' +
-                '</div>' +
-                '<div class="conversation-list" id="conversation-list"></div>' +
             '</div>' +
-            '<div id="tab-content-jobs" class="hidden">' +
-                '<button class="btn-add-job" onclick="openJobForm()">+ ' + t('admin.createJob') + '</button>' +
-                '<div class="job-post-list" id="job-post-list"></div>' +
+            '<div class="sidebar-filters">' +
+                '<button class="filter-tab active" data-filter="all" onclick="setFilter(\'all\')" data-i18n="admin.filterAll">' + t('admin.filterAll') + '</button>' +
+                '<button class="filter-tab" data-filter="unread" onclick="setFilter(\'unread\')" data-i18n="admin.filterUnread">' + t('admin.filterUnread') + '</button>' +
             '</div>' +
+            '<div class="conversation-list" id="conversation-list"></div>' +
         '</div>' +
         '<div class="admin-chat-area" id="admin-chat-area">' +
             '<div class="admin-empty-state">' +
@@ -58,33 +43,43 @@ function renderAdminDashboard() {
         '<div id="admin-settings-modal" class="settings-modal hidden">' +
             '<div class="settings-overlay" onclick="closeAdminSettings()"></div>' +
             '<div class="settings-card">' +
-                '<h3 style="margin:0 0 16px;font-size:18px">⚙️ Settings</h3>' +
+                '<h3 style="margin:0 0 16px;font-size:18px">⚙️ ' + t('admin.settings') + '</h3>' +
                 '<div style="text-align:center;margin-bottom:16px">' +
                     '<div id="settings-avatar-preview" class="settings-avatar" onclick="document.getElementById(\'avatar-input\').click()">' +
                         getAdminAvatar() +
                     '</div>' +
-                    '<p style="font-size:var(--font-xs);color:var(--text-muted);margin:6px 0 0">Click to change avatar</p>' +
+                    '<p style="font-size:var(--font-xs);color:var(--text-muted);margin:6px 0 0">' + t('admin.clickToChangeAvatar') + '</p>' +
                     '<input type="file" id="avatar-input" accept="image/*" hidden onchange="handleAvatarChange(event)">' +
                 '</div>' +
                 '<div class="form-group" style="margin-bottom:12px">' +
-                    '<label class="form-label">Display Name</label>' +
+                    '<label class="form-label">' + t('admin.displayName') + '</label>' +
                     '<input type="text" class="form-input" id="settings-display-name" value="' + (window.adminSession ? escapeHtml(window.adminSession.profile.display_name) : '') + '">' +
                 '</div>' +
                 '<hr style="border:none;border-top:1px solid var(--border-light);margin:12px 0">' +
                 '<div class="form-group" style="margin-bottom:12px">' +
-                    '<label class="form-label">🔑 New Password</label>' +
+                    '<label class="form-label">🔑 ' + t('admin.currentPassword') + '</label>' +
                     '<div style="position:relative">' +
-                        '<input type="password" class="form-input" id="settings-new-password" placeholder="Leave blank to keep current" style="padding-right:40px">' +
-                        '<button type="button" onclick="toggleSettingsPw()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted)">👁️</button>' +
+                        '<input type="password" class="form-input" id="settings-current-password" placeholder="' + t('admin.currentPasswordPlaceholder') + '" style="padding-right:40px">' +
+                        '<button type="button" onclick="togglePwField(\'settings-current-password\', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted)">👁️</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom:12px">' +
+                    '<label class="form-label">🔐 ' + t('admin.newPassword') + '</label>' +
+                    '<div style="position:relative">' +
+                        '<input type="password" class="form-input" id="settings-new-password" placeholder="' + t('admin.newPasswordPlaceholder') + '" style="padding-right:40px">' +
+                        '<button type="button" onclick="togglePwField(\'settings-new-password\', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted)">👁️</button>' +
                     '</div>' +
                 '</div>' +
                 '<div class="form-group" style="margin-bottom:16px">' +
-                    '<label class="form-label">Confirm Password</label>' +
-                    '<input type="password" class="form-input" id="settings-confirm-password" placeholder="Confirm new password">' +
+                    '<label class="form-label">' + t('admin.confirmPassword') + '</label>' +
+                    '<div style="position:relative">' +
+                        '<input type="password" class="form-input" id="settings-confirm-password" placeholder="' + t('admin.confirmPasswordPlaceholder') + '" style="padding-right:40px">' +
+                        '<button type="button" onclick="togglePwField(\'settings-confirm-password\', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted)">👁️</button>' +
+                    '</div>' +
                 '</div>' +
                 '<div style="display:flex;gap:8px;justify-content:flex-end">' +
-                    '<button onclick="closeAdminSettings()" style="padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:white;cursor:pointer">Cancel</button>' +
-                    '<button onclick="saveAdminSettings()" style="padding:8px 20px;border:none;border-radius:8px;background:var(--primary);color:white;cursor:pointer;font-weight:600">Save</button>' +
+                    '<button onclick="closeAdminSettings()" style="padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:white;cursor:pointer">' + t('admin.cancel') + '</button>' +
+                    '<button onclick="saveAdminSettings()" style="padding:8px 20px;border:none;border-radius:8px;background:var(--primary);color:white;cursor:pointer;font-weight:600">' + t('admin.save') + '</button>' +
                 '</div>' +
                 '<hr style="border:none;border-top:1px solid var(--border-light);margin:16px 0 12px">' +
                 '<button onclick="handleAdminLogout()" style="width:100%;padding:10px;border:1px solid var(--error);border-radius:8px;background:rgba(240,40,73,0.06);color:var(--error);cursor:pointer;font-weight:600;font-family:var(--font-family);font-size:var(--font-sm);transition:var(--transition-fast)" onmouseover="this.style.background=\'rgba(240,40,73,0.12)\'" onmouseout="this.style.background=\'rgba(240,40,73,0.06)\'">' +
@@ -95,7 +90,6 @@ function renderAdminDashboard() {
     '</div>';
 
     loadApplicants();
-    loadAdminJobs();
     subscribeToUpdates();
     showAdminHeaderControls();
 }
@@ -103,6 +97,12 @@ function renderAdminDashboard() {
 async function loadApplicants() {
     try {
         dashboardState.applicants = await DB.getAllApplicants();
+        // Compute unread status for each applicant
+        for (var i = 0; i < dashboardState.applicants.length; i++) {
+            var a = dashboardState.applicants[i];
+            var lastMsg = await DB.getLastMessage(a.id);
+            a._hasUnread = lastMsg && lastMsg.sender_type === 'applicant' && (lastMsg.status === 'sent' || lastMsg.status === 'delivered');
+        }
         renderConversationList();
     } catch(e) {
         console.error('Failed to load applicants:', e);
@@ -120,11 +120,8 @@ function renderConversationList() {
         if (search && a.name.toLowerCase().indexOf(search) === -1 && (a.phone || '').indexOf(search) === -1) {
             return false;
         }
-        if (dashboardState.filter === 'active') return a.status === 'active';
-        if (dashboardState.filter === 'new') {
-            var created = new Date(a.created_at);
-            var dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-            return created > dayAgo;
+        if (dashboardState.filter === 'unread') {
+            return a._hasUnread === true;
         }
         return true;
     });
@@ -143,22 +140,21 @@ function renderConversationList() {
 
 async function addConversationItem(list, applicant) {
     var item = document.createElement('div');
-    item.className = 'conversation-item' + (dashboardState.selectedId === applicant.id ? ' active' : '');
+    item.className = 'conversation-item' + (dashboardState.selectedId === applicant.id ? ' active' : '') + (applicant._hasUnread ? ' unread' : '');
     item.onclick = function() { selectConversation(applicant.id); };
 
     var initials = applicant.name.charAt(0).toUpperCase();
     var lastMsg = await DB.getLastMessage(applicant.id);
     var lastMsgText = lastMsg ? parseMessagePreview(lastMsg.content) : I18n.t('admin.newApplicant');
     var timeStr = lastMsg ? formatTime(lastMsg.created_at) : formatTime(applicant.created_at);
-    var posLabel = I18n.t('register.positions.' + applicant.position) || applicant.position;
+    var phoneStr = applicant.phone ? '📱 ' + escapeHtml(applicant.phone) : '';
 
-    item.innerHTML = '<div class="conv-avatar">' + initials +
-            '<span class="online-dot"></span></div>' +
+    item.innerHTML = '<div class="conv-avatar">' + initials + '</div>' +
         '<div class="conv-info">' +
             '<div class="conv-name">' + escapeHtml(applicant.name) +
                 '<span class="conv-time">' + timeStr + '</span></div>' +
+            (phoneStr ? '<div class="conv-phone">' + phoneStr + '</div>' : '') +
             '<div class="conv-last-msg">' + escapeHtml(lastMsgText) + '</div>' +
-            '<div class="conv-position">🏢 ' + escapeHtml(posLabel) + '</div>' +
         '</div>';
 
     list.appendChild(item);
@@ -296,27 +292,41 @@ function handleAvatarChange(e) {
 function saveAdminSettings() {
     var nameInput = document.getElementById('settings-display-name');
     var preview = document.getElementById('settings-avatar-preview');
+    var currentPw = document.getElementById('settings-current-password');
     var newPw = document.getElementById('settings-new-password');
     var confirmPw = document.getElementById('settings-confirm-password');
+    var t = I18n.t.bind(I18n);
 
     var newName = nameInput ? nameInput.value.trim() : '';
     var newAvatar = preview ? preview.dataset.newAvatar || '' : '';
+    var currentPassword = currentPw ? currentPw.value : '';
     var password = newPw ? newPw.value : '';
     var confirm = confirmPw ? confirmPw.value : '';
 
     if (!newName) {
-        showToast('Name cannot be empty', 'error');
+        showToast(t('admin.nameRequired'), 'error');
         return;
     }
 
-    if (password && password !== confirm) {
-        showToast('Passwords do not match', 'error');
-        return;
-    }
-
-    if (password && password.length < 4) {
-        showToast('Password must be at least 4 characters', 'error');
-        return;
+    // Password change validation
+    if (password || confirm || currentPassword) {
+        if (!currentPassword) {
+            showToast(t('admin.enterCurrentPassword'), 'error');
+            return;
+        }
+        // Verify current password
+        if (window.adminSession && currentPassword !== window.adminSession.profile.password_hash) {
+            showToast(t('admin.currentPasswordWrong'), 'error');
+            return;
+        }
+        if (password !== confirm) {
+            showToast(t('admin.passwordMismatch'), 'error');
+            return;
+        }
+        if (password.length < 4) {
+            showToast(t('admin.passwordTooShort'), 'error');
+            return;
+        }
     }
 
     // Build update data
@@ -336,13 +346,13 @@ function saveAdminSettings() {
     }
 
     closeAdminSettings();
-    showToast('Settings saved ✓', 'success');
+    showToast(t('admin.settingsSaved'), 'success');
     renderAdminDashboard();
 }
 
-function toggleSettingsPw() {
-    var pw = document.getElementById('settings-new-password');
-    var btn = pw.parentElement.querySelector('button');
+function togglePwField(fieldId, btn) {
+    var pw = document.getElementById(fieldId);
+    if (!pw) return;
     if (pw.type === 'password') {
         pw.type = 'text';
         btn.textContent = '🙈';
@@ -352,32 +362,7 @@ function toggleSettingsPw() {
     }
 }
 
-// ============ Tab Switching ============
-
-function switchAdminTab(tab) {
-    dashboardState.activeTab = tab;
-    document.querySelectorAll('.admin-tab').forEach(function(btn) {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
-    });
-    var chatsContent = document.getElementById('tab-content-chats');
-    var jobsContent = document.getElementById('tab-content-jobs');
-    if (chatsContent) chatsContent.classList.toggle('hidden', tab !== 'chats');
-    if (jobsContent) jobsContent.classList.toggle('hidden', tab !== 'jobs');
-    if (tab === 'jobs') {
-        loadAdminJobs();
-        renderJobPreviewPanel();
-    } else {
-        // Reset right panel to chat empty state
-        var chatArea = document.getElementById('admin-chat-area');
-        if (chatArea && !dashboardState.selectedId) {
-            var t = I18n.t.bind(I18n);
-            chatArea.innerHTML = '<div class="admin-empty-state">' +
-                '<div class="admin-empty-icon">💬</div>' +
-                '<p data-i18n="admin.selectConversation">' + t('admin.selectConversation') + '</p>' +
-            '</div>';
-        }
-    }
-}
+// ============ Tab Switching (removed — jobs tab no longer exists) ============
 
 // ============ Job Post Management ============
 

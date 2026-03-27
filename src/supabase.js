@@ -146,6 +146,11 @@ var DemoDB = {
         return changed;
     },
 
+    deleteMessage: function(messageId) {
+        this.data.messages = this.data.messages.filter(function(m) { return m.id !== messageId; });
+        this.save();
+    },
+
     getMessages: function(conversationId) {
         return this.data.messages.filter(function(m) { return m.conversation_id === conversationId; });
     },
@@ -319,6 +324,11 @@ var DB = {
         if (!supabaseClient) return DemoDB.markMessagesAsSeen(conversationId, senderType);
         await supabaseClient.from('messages').update({ status: 'seen' })
             .eq('conversation_id', conversationId).eq('sender_type', senderType).in('status', ['sent', 'delivered']);
+    },
+
+    deleteMessage: async function(messageId) {
+        if (!supabaseClient) return DemoDB.deleteMessage(messageId);
+        await supabaseClient.from('messages').delete().eq('id', messageId);
     },
 
     getMessages: async function(conversationId) {

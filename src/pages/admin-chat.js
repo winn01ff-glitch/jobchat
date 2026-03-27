@@ -4,7 +4,8 @@
 
 var adminChatState = {
     applicant: null,
-    subscription: null
+    subscription: null,
+    contextMenuMsg: null
 };
 
 async function renderAdminChatView(applicantId) {
@@ -22,15 +23,16 @@ async function renderAdminChatView(applicantId) {
     var applicant = adminChatState.applicant;
     if (!applicant) return;
     var initials = applicant.name.charAt(0).toUpperCase();
+    var phoneInfo = applicant.phone ? '📱 ' + escapeHtml(applicant.phone) + ' · ' : '';
 
     chatArea.innerHTML =
         '<div class="chat-header-bar">' +
             '<div class="chat-header-info">' +
-                '<div class="chat-avatar">' + initials + '<span class="avatar-status"></span></div>' +
+                '<div class="chat-avatar">' + initials + '</div>' +
                 '<div>' +
                     '<div class="chat-header-name">' + escapeHtml(applicant.name) + '</div>' +
-                    '<div class="chat-header-status">📱 ' + escapeHtml(applicant.phone || '') + ' · 🏢 ' +
-                        escapeHtml(I18n.t('register.positions.' + applicant.position) || applicant.position) + '</div>' +
+                    '<div class="chat-header-status">' + phoneInfo +
+                        '🏢 ' + escapeHtml(I18n.t('register.positions.' + applicant.position) || applicant.position) + '</div>' +
                 '</div>' +
             '</div>' +
             '<div style="display:flex;gap:6px">' +
@@ -39,7 +41,7 @@ async function renderAdminChatView(applicantId) {
                     : '') +
             '</div>' +
         '</div>' +
-        '<div id="admin-chat-messages" class="chat-messages">' +
+        '<div id="admin-chat-messages" class="chat-messages" onclick="dismissAdminContextMenu(); blurAdminChatInput(event)">' +
             '<div class="chat-welcome">' +
                 '<div class="chat-welcome-icon">' + initials + '</div>' +
                 '<h3>' + escapeHtml(applicant.name) + '</h3>' +
@@ -66,7 +68,8 @@ async function renderAdminChatView(applicantId) {
             '</button>' +
         '</div>' +
         '<input type="file" id="admin-file-input" multiple hidden>' +
-        '<input type="file" id="admin-image-input" accept="image/*" multiple hidden>';
+        '<input type="file" id="admin-image-input" accept="image/*" multiple hidden>' +
+        '<div id="admin-msg-context-menu" class="msg-context-menu hidden"></div>';
 
     // Setup handlers
     var chatInput = document.getElementById('admin-chat-input');
@@ -83,110 +86,96 @@ async function renderAdminChatView(applicantId) {
         });
     }
 
-    // File handlers
     document.getElementById('admin-file-input').addEventListener('change', function(e) {
-        for (var i = 0; i < e.target.files.length; i++) {
-            sendAdminFile(e.target.files[i], 'file');
-        }
+        for (var i = 0; i < e.target.files.length; i++) sendAdminFile(e.target.files[i], 'file');
         e.target.value = '';
     });
-
     document.getElementById('admin-image-input').addEventListener('change', function(e) {
-        for (var i = 0; i < e.target.files.length; i++) {
-            sendAdminFile(e.target.files[i], 'image');
-        }
+        for (var i = 0; i < e.target.files.length; i++) sendAdminFile(e.target.files[i], 'image');
         e.target.value = '';
     });
 
-    // Load messages
     loadAdminMessages(applicantId);
 }
 
-function sendAdminFile(file, type) {
-    if (file.size > 10 * 1024 * 1024) {
-        showToast(I18n.t('chat.fileTooLarge'), 'error');
-        return;
+function blurAdminChatInput(e) {
+    if (e.target.classList.contains('chat-messages') || e.target.closest('.chat-welcome')) {
+        var input = document.getElementById('admin-chat-input');
+        if (input) input.blur();
     }
+}
+
+function sendAdminFile(file, type) {
+    if (file.size > 10 * 1024 * 1024) { showToast(I18n.t('chat.fileTooLarge'), 'error'); return; }
     var reader = new FileReader();
     reader.onload = function(e) {
-        var content = JSON.stringify({
-            type: type,
-            data: e.target.result,
-            name: file.name,
-            size: file.size,
-            mimeType: file.type
-        });
+        var content = JSON.stringify({ type: type, data: e.target.result, name: file.name, size: file.size, mimeType: file.type });
         var admin = window.adminSession;
         if (!admin || !adminChatState.applicant) return;
         DB.sendMessage(adminChatState.applicant.id, 'admin', admin.profile.display_name, admin.user.id, content);
-        appendAdminMessageBubble({
-            sender_type: 'admin',
-            sender_name: admin.profile.display_name,
-            sender_id: admin.user.id,
-            content: content,
-            created_at: new Date().toISOString()
-        });
+        appendAdminMessageBubble({ sender_type: 'admin', sender_name: admin.profile.display_name, sender_id: admin.user.id, content: content, created_at: new Date().toISOString() }, true, true);
     };
     reader.readAsDataURL(file);
 }
 
 function sendAdminLocation() {
-    if (!navigator.geolocation) {
-        showToast(I18n.t('chat.locationNotSupported'), 'error');
-        return;
-    }
+    if (!navigator.geolocation) { showToast(I18n.t('chat.locationNotSupported'), 'error'); return; }
     showToast(I18n.t('chat.gettingLocation'), 'info');
     navigator.geolocation.getCurrentPosition(function(pos) {
-        var content = JSON.stringify({
-            type: 'location',
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy: pos.coords.accuracy
-        });
+        var content = JSON.stringify({ type: 'location', lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
         var admin = window.adminSession;
         if (!admin || !adminChatState.applicant) return;
         DB.sendMessage(adminChatState.applicant.id, 'admin', admin.profile.display_name, admin.user.id, content);
-        appendAdminMessageBubble({
-            sender_type: 'admin',
-            sender_name: admin.profile.display_name,
-            sender_id: admin.user.id,
-            content: content,
-            created_at: new Date().toISOString()
-        });
-    }, function(err) {
-        showToast(I18n.t('chat.locationError'), 'error');
-    });
+        appendAdminMessageBubble({ sender_type: 'admin', sender_name: admin.profile.display_name, sender_id: admin.user.id, content: content, created_at: new Date().toISOString() }, true, true);
+    }, function() { showToast(I18n.t('chat.locationError'), 'error'); });
+}
+
+var _adminLastDateLabel = '';
+function insertAdminDateSeparator(container, dateStr) {
+    var d = new Date(dateStr);
+    var today = new Date();
+    var label;
+    if (d.toDateString() === today.toDateString()) label = I18n.t('chat.today') || 'Today';
+    else {
+        var yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+        if (d.toDateString() === yesterday.toDateString()) label = I18n.t('chat.yesterday') || 'Yesterday';
+        else label = d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+    }
+    if (label !== _adminLastDateLabel) {
+        _adminLastDateLabel = label;
+        var sep = document.createElement('div');
+        sep.className = 'date-separator';
+        sep.innerHTML = '<span>' + label + '</span>';
+        container.appendChild(sep);
+    }
 }
 
 async function loadAdminMessages(applicantId) {
     try {
         var messages = await DB.getMessages(applicantId);
-        messages.forEach(function(msg) {
-            appendAdminMessageBubble(msg);
+        var container = document.getElementById('admin-chat-messages');
+        if (!container) return;
+
+        _adminLastDateLabel = '';
+        messages.forEach(function(msg, idx) {
+            insertAdminDateSeparator(container, msg.created_at);
+            appendAdminMessageBubble(msg, false, idx === messages.length - 1);
         });
         scrollAdminToBottom();
 
-        // Mark applicant messages as seen by admin
         await DB.markMessagesAsSeen(applicantId, 'applicant');
 
-        // Unsubscribe old
-        if (adminChatState.subscription) {
-            DB.unsubscribe(adminChatState.subscription);
-        }
-
-        // Subscribe to new messages
+        if (adminChatState.subscription) DB.unsubscribe(adminChatState.subscription);
         adminChatState.subscription = DB.subscribeToMessages(applicantId, function(msg) {
             var admin = window.adminSession;
             if (admin && msg.sender_type === 'admin' && msg.sender_id === admin.user.id) return;
 
-            appendAdminMessageBubble(msg);
+            insertAdminDateSeparator(document.getElementById('admin-chat-messages'), msg.created_at);
+            hideAdminPreviousLastStatus();
+            appendAdminMessageBubble(msg, false, true);
             scrollAdminToBottom();
 
-            // Auto mark applicant messages as seen
-            if (msg.sender_type === 'applicant') {
-                DB.markMessagesAsSeen(applicantId, 'applicant');
-            }
-
+            if (msg.sender_type === 'applicant') DB.markMessagesAsSeen(applicantId, 'applicant');
             NotificationManager.showNotification(msg.sender_name, parseMessagePreview(msg.content));
         });
     } catch(e) {
@@ -194,7 +183,12 @@ async function loadAdminMessages(applicantId) {
     }
 }
 
-function appendAdminMessageBubble(msg) {
+function hideAdminPreviousLastStatus() {
+    var rows = document.querySelectorAll('#admin-chat-messages .message-row.sent .message-status-wrap');
+    rows.forEach(function(el) { el.style.display = 'none'; });
+}
+
+function appendAdminMessageBubble(msg, isNewSent, isLast) {
     var container = document.getElementById('admin-chat-messages');
     if (!container) return;
 
@@ -203,6 +197,15 @@ function appendAdminMessageBubble(msg) {
     var row = document.createElement('div');
     row.className = 'message-row ' + (isSent ? 'sent' : 'received');
     if (msg.id) row.dataset.messageId = msg.id;
+
+    // Long press / right-click context menu
+    var pressTimer;
+    row.addEventListener('contextmenu', function(e) { e.preventDefault(); showAdminContextMenu(e, msg, row); });
+    row.addEventListener('touchstart', function(e) {
+        pressTimer = setTimeout(function() { showAdminContextMenu(e.touches[0], msg, row); }, 500);
+    }, { passive: true });
+    row.addEventListener('touchend', function() { clearTimeout(pressTimer); }, { passive: true });
+    row.addEventListener('touchmove', function() { clearTimeout(pressTimer); }, { passive: true });
 
     var html = '';
     if (!isSent) {
@@ -213,17 +216,91 @@ function appendAdminMessageBubble(msg) {
         html += '<div class="message-sender">' + escapeHtml(msg.sender_name || '') + '</div>';
     }
     html += renderMessageContent(msg.content, isSent);
-    // Time + status
-    var timeHtml = '<div class="message-time">' + formatTime(msg.created_at);
-    if (isSent) {
-        timeHtml += ' ' + getStatusIcon(msg.status || 'sent');
+
+    // Time — hidden, toggle on click
+    html += '<div class="message-time msg-time-toggle" style="display:none">' + formatTime(msg.created_at) + '</div>';
+
+    // Status on last sent only
+    if (isSent && isLast) {
+        html += '<div class="message-status-wrap" style="text-align:right;padding:0 12px">' + getStatusIcon(msg.status || 'sent') + '</div>';
     }
-    timeHtml += '</div>';
-    html += timeHtml;
     html += '</div>';
 
     row.innerHTML = html;
+
+    row.addEventListener('click', function(e) {
+        if (e.target.closest('.message-file') || e.target.closest('.message-image') || e.target.closest('.message-location')) return;
+        var timeEl = row.querySelector('.msg-time-toggle');
+        if (timeEl) timeEl.style.display = timeEl.style.display === 'none' ? '' : 'none';
+    });
+
     container.appendChild(row);
+    if (isNewSent) {
+        hideAdminPreviousLastStatus();
+        var content = row.querySelector('.message-content');
+        if (content && isSent) {
+            var statusDiv = document.createElement('div');
+            statusDiv.className = 'message-status-wrap';
+            statusDiv.style.textAlign = 'right';
+            statusDiv.style.padding = '0 12px';
+            statusDiv.innerHTML = getStatusIcon('sent');
+            content.appendChild(statusDiv);
+        }
+        scrollAdminToBottom();
+    }
+}
+
+// ============ Admin Context Menu ============
+function showAdminContextMenu(e, msg, row) {
+    dismissAdminContextMenu();
+    var menu = document.getElementById('admin-msg-context-menu');
+    if (!menu) return;
+    var t = I18n.t.bind(I18n);
+
+    var items = '<button onclick="copyAdminMessageText()">' + '📋 ' + (t('chat.copy') || 'Copy') + '</button>';
+    if (msg.id) {
+        items += '<button onclick="deleteAdminMessageById(\'' + msg.id + '\')" class="ctx-danger">' + '🗑 ' + (t('chat.deleteMsg') || 'Delete') + '</button>';
+    }
+
+    menu.innerHTML = items;
+    menu.classList.remove('hidden');
+    var x = e.clientX || e.pageX || 100;
+    var y = e.clientY || e.pageY || 100;
+    menu.style.left = Math.min(x, window.innerWidth - 160) + 'px';
+    menu.style.top = Math.min(y, window.innerHeight - 100) + 'px';
+    adminChatState.contextMenuMsg = msg;
+}
+
+function dismissAdminContextMenu() {
+    var menu = document.getElementById('admin-msg-context-menu');
+    if (menu) { menu.classList.add('hidden'); menu.innerHTML = ''; }
+}
+
+function copyAdminMessageText() {
+    dismissAdminContextMenu();
+    var msg = adminChatState.contextMenuMsg;
+    if (!msg) return;
+    var text = msg.content;
+    try {
+        var parsed = JSON.parse(text);
+        if (parsed.type === 'location') text = parsed.lat + ', ' + parsed.lng;
+        else if (parsed.type === 'file' || parsed.type === 'image') text = parsed.name;
+    } catch(e) {}
+    navigator.clipboard.writeText(text).then(function() {
+        showToast(I18n.t('chat.copied') || 'Copied!', 'success');
+    }).catch(function() {});
+}
+
+async function deleteAdminMessageById(msgId) {
+    dismissAdminContextMenu();
+    try {
+        await DB.deleteMessage(msgId);
+        var row = document.querySelector('#admin-chat-messages [data-message-id="' + msgId + '"]');
+        if (row) row.remove();
+        showToast(I18n.t('chat.deleted') || 'Deleted', 'success');
+    } catch(e) {
+        showToast(I18n.t('common.error'), 'error');
+    }
 }
 
 async function sendAdminMessage() {
@@ -239,20 +316,12 @@ async function sendAdminMessage() {
     input.style.height = 'auto';
 
     try {
-        await DB.sendMessage(
-            adminChatState.applicant.id,
-            'admin',
-            admin.profile.display_name,
-            admin.user.id,
-            text
-        );
+        await DB.sendMessage(adminChatState.applicant.id, 'admin', admin.profile.display_name, admin.user.id, text);
+        insertAdminDateSeparator(document.getElementById('admin-chat-messages'), new Date().toISOString());
         appendAdminMessageBubble({
-            sender_type: 'admin',
-            sender_name: admin.profile.display_name,
-            sender_id: admin.user.id,
-            content: text,
-            created_at: new Date().toISOString()
-        });
+            sender_type: 'admin', sender_name: admin.profile.display_name,
+            sender_id: admin.user.id, content: text, created_at: new Date().toISOString()
+        }, true, true);
         scrollAdminToBottom();
     } catch(e) {
         showToast(I18n.t('common.error'), 'error');

@@ -6,7 +6,8 @@ var chatState = {
     applicantId: null,
     applicantName: '',
     subscription: null,
-    pendingFiles: []
+    pendingFiles: [],
+    contextMenuMsg: null
 };
 
 function renderChat(params) {
@@ -15,7 +16,7 @@ function renderChat(params) {
     chatState.applicantId = params && params[0] ? params[0] : null;
 
     page.innerHTML = '<div class="chat-container">' +
-        '<div id="chat-messages" class="chat-messages">' +
+        '<div id="chat-messages" class="chat-messages" onclick="dismissContextMenu(); blurChatInput(event)">' +
             '<div class="chat-welcome">' +
                 '<div class="chat-welcome-icon">💬</div>' +
                 '<h3 data-i18n="chat.welcomeTitle">' + t('chat.welcomeTitle') + '</h3>' +
@@ -44,32 +45,34 @@ function renderChat(params) {
         '</div>' +
         '<input type="file" id="file-input" multiple hidden>' +
         '<input type="file" id="image-input" accept="image/*" multiple hidden>' +
-    '</div>';
+    '</div>' +
+    '<div id="msg-context-menu" class="msg-context-menu hidden"></div>';
 
-    // Setup handlers
     setupChatHandlers();
-
-    // Hide back button on chat page (use logout instead)
     document.getElementById('btn-back').classList.add('hidden');
 
-    // Load existing messages
     if (chatState.applicantId) {
         loadChatMessages();
     }
 }
 
+function blurChatInput(e) {
+    // On mobile, tap empty space to dismiss keyboard
+    if (e.target.classList.contains('chat-messages') || e.target.closest('.chat-welcome')) {
+        var input = document.getElementById('chat-input');
+        if (input) input.blur();
+    }
+}
+
 function handleApplicantLogout() {
-    // Unsubscribe from realtime
     if (chatState.subscription) {
         DB.unsubscribe(chatState.subscription);
         chatState.subscription = null;
     }
-    // Clear session data
     localStorage.removeItem('uphill_session');
     localStorage.removeItem('uphill_email');
     chatState.applicantId = null;
     chatState.applicantName = '';
-    // Navigate to landing
     Router.navigateTo('landing');
 }
 
@@ -78,7 +81,6 @@ function setupChatHandlers() {
     var fileInput = document.getElementById('file-input');
     var imageInput = document.getElementById('image-input');
 
-    // Auto-resize textarea
     if (chatInput) {
         chatInput.addEventListener('input', function() {
             this.style.height = 'auto';
@@ -92,27 +94,20 @@ function setupChatHandlers() {
         });
     }
 
-    // File attach
     document.getElementById('btn-attach').addEventListener('click', function() {
         fileInput.click();
     });
-
-    // Image attach
     document.getElementById('btn-image').addEventListener('click', function() {
         imageInput.click();
     });
-
-    // Location
     document.getElementById('btn-location').addEventListener('click', function() {
         sendLocation();
     });
 
-    // File input change
     fileInput.addEventListener('change', function(e) {
         handleFileSelect(e.target.files, 'file');
         e.target.value = '';
     });
-
     imageInput.addEventListener('change', function(e) {
         handleFileSelect(e.target.files, 'image');
         e.target.value = '';
@@ -126,36 +121,19 @@ function handleFileSelect(files, type) {
             showToast(I18n.t('chat.fileTooLarge'), 'error');
             continue;
         }
-
-        if (type === 'image') {
-            // Send image directly
-            sendImageMessage(file);
-        } else {
-            sendFileMessage(file);
-        }
+        if (type === 'image') sendImageMessage(file);
+        else sendFileMessage(file);
     }
 }
 
 function sendImageMessage(file) {
     var reader = new FileReader();
     reader.onload = function(e) {
-        var content = JSON.stringify({
-            type: 'image',
-            data: e.target.result,
-            name: file.name,
-            size: file.size
-        });
-
+        var content = JSON.stringify({ type: 'image', data: e.target.result, name: file.name, size: file.size });
         var session = getApplicantSession();
         if (!session) return;
-
         DB.sendMessage(chatState.applicantId, 'applicant', session.name || 'Applicant', session.id, content);
-        appendMessageBubble({
-            sender_type: 'applicant',
-            sender_name: session.name,
-            content: content,
-            created_at: new Date().toISOString()
-        });
+        appendMessageBubble({ sender_type: 'applicant', sender_name: session.name, content: content, created_at: new Date().toISOString() }, true);
     };
     reader.readAsDataURL(file);
 }
@@ -163,24 +141,11 @@ function sendImageMessage(file) {
 function sendFileMessage(file) {
     var reader = new FileReader();
     reader.onload = function(e) {
-        var content = JSON.stringify({
-            type: 'file',
-            data: e.target.result,
-            name: file.name,
-            size: file.size,
-            mimeType: file.type
-        });
-
+        var content = JSON.stringify({ type: 'file', data: e.target.result, name: file.name, size: file.size, mimeType: file.type });
         var session = getApplicantSession();
         if (!session) return;
-
         DB.sendMessage(chatState.applicantId, 'applicant', session.name || 'Applicant', session.id, content);
-        appendMessageBubble({
-            sender_type: 'applicant',
-            sender_name: session.name,
-            content: content,
-            created_at: new Date().toISOString()
-        });
+        appendMessageBubble({ sender_type: 'applicant', sender_name: session.name, content: content, created_at: new Date().toISOString() }, true);
     };
     reader.readAsDataURL(file);
 }
@@ -190,36 +155,45 @@ function sendLocation() {
         showToast(I18n.t('chat.locationNotSupported'), 'error');
         return;
     }
-
     showToast(I18n.t('chat.gettingLocation'), 'info');
-
     navigator.geolocation.getCurrentPosition(function(pos) {
-        var content = JSON.stringify({
-            type: 'location',
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy: pos.coords.accuracy
-        });
-
+        var content = JSON.stringify({ type: 'location', lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
         var session = getApplicantSession();
         if (!session) return;
-
         DB.sendMessage(chatState.applicantId, 'applicant', session.name || 'Applicant', session.id, content);
-        appendMessageBubble({
-            sender_type: 'applicant',
-            sender_name: session.name,
-            content: content,
-            created_at: new Date().toISOString()
-        });
+        appendMessageBubble({ sender_type: 'applicant', sender_name: session.name, content: content, created_at: new Date().toISOString() }, true);
     }, function(err) {
         showToast(I18n.t('chat.locationError'), 'error');
     }, { enableHighAccuracy: true, timeout: 10000 });
 }
 
 function getApplicantSession() {
-    try {
-        return JSON.parse(localStorage.getItem('uphill_session'));
-    } catch(e) { return null; }
+    try { return JSON.parse(localStorage.getItem('uphill_session')); } catch(e) { return null; }
+}
+
+// ============ Date Separator ============
+var _lastDateLabel = '';
+function insertDateSeparatorIfNeeded(container, dateStr) {
+    var d = new Date(dateStr);
+    var today = new Date();
+    var label;
+    if (d.toDateString() === today.toDateString()) {
+        label = I18n.t('chat.today') || 'Today';
+    } else {
+        var yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+        if (d.toDateString() === yesterday.toDateString()) {
+            label = I18n.t('chat.yesterday') || 'Yesterday';
+        } else {
+            label = d.getFullYear() + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + String(d.getDate()).padStart(2,'0');
+        }
+    }
+    if (label !== _lastDateLabel) {
+        _lastDateLabel = label;
+        var sep = document.createElement('div');
+        sep.className = 'date-separator';
+        sep.innerHTML = '<span>' + label + '</span>';
+        container.appendChild(sep);
+    }
 }
 
 async function loadChatMessages() {
@@ -228,43 +202,41 @@ async function loadChatMessages() {
         var container = document.getElementById('chat-messages');
         if (!container) return;
 
-        // Keep welcome, add messages after
-        messages.forEach(function(msg) {
-            appendMessageBubble(msg);
+        _lastDateLabel = '';
+        messages.forEach(function(msg, idx) {
+            insertDateSeparatorIfNeeded(container, msg.created_at);
+            var isLast = idx === messages.length - 1;
+            appendMessageBubble(msg, false, isLast);
         });
-
         scrollToBottom();
 
-        // Mark admin messages as seen by applicant
         await DB.markMessagesAsSeen(chatState.applicantId, 'admin');
-        // Mark admin messages as delivered too
         await DB.markMessagesAsDelivered(chatState.applicantId, 'admin');
 
-        // Subscribe to new messages
-        if (chatState.subscription) {
-            DB.unsubscribe(chatState.subscription);
-        }
+        if (chatState.subscription) DB.unsubscribe(chatState.subscription);
         chatState.subscription = DB.subscribeToMessages(chatState.applicantId, function(msg) {
             var session = getApplicantSession();
-            // Don't show own messages
             if (msg.sender_type === 'applicant' && session && msg.sender_id === session.id) return;
 
-            appendMessageBubble(msg);
+            insertDateSeparatorIfNeeded(document.getElementById('chat-messages'), msg.created_at);
+            // Hide status on previous last sent message
+            hidePreviousLastStatus();
+            appendMessageBubble(msg, false, true);
             scrollToBottom();
 
-            // Auto mark admin messages as seen since chat is open
             if (msg.sender_type === 'admin') {
                 DB.markMessagesAsSeen(chatState.applicantId, 'admin');
             }
-
-            NotificationManager.showNotification(
-                msg.sender_name,
-                parseMessageContent(msg.content)
-            );
+            NotificationManager.showNotification(msg.sender_name, parseMessageContent(msg.content));
         });
     } catch(e) {
         console.error('Failed to load messages:', e);
     }
+}
+
+function hidePreviousLastStatus() {
+    var rows = document.querySelectorAll('.message-row.sent .message-status-wrap');
+    rows.forEach(function(el) { el.style.display = 'none'; });
 }
 
 function parseMessageContent(content) {
@@ -274,12 +246,10 @@ function parseMessageContent(content) {
         if (parsed.type === 'file') return '📎 ' + parsed.name;
         if (parsed.type === 'location') return '📍 ' + I18n.t('chat.location');
         return content;
-    } catch(e) {
-        return content;
-    }
+    } catch(e) { return content; }
 }
 
-function appendMessageBubble(msg) {
+function appendMessageBubble(msg, isNewSent, isLast) {
     var container = document.getElementById('chat-messages');
     if (!container) return;
 
@@ -288,32 +258,127 @@ function appendMessageBubble(msg) {
     row.className = 'message-row ' + (isSent ? 'sent' : 'received');
     if (msg.id) row.dataset.messageId = msg.id;
 
+    // Long press / right-click for context menu
+    var pressTimer;
+    row.addEventListener('contextmenu', function(e) { e.preventDefault(); showContextMenu(e, msg, row); });
+    row.addEventListener('touchstart', function(e) {
+        pressTimer = setTimeout(function() { showContextMenu(e.touches[0], msg, row); }, 500);
+    }, { passive: true });
+    row.addEventListener('touchend', function() { clearTimeout(pressTimer); }, { passive: true });
+    row.addEventListener('touchmove', function() { clearTimeout(pressTimer); }, { passive: true });
+
     var bubbleHtml = '';
     if (!isSent) {
         bubbleHtml += '<div class="message-avatar">' + (msg.sender_name || 'A').charAt(0).toUpperCase() + '</div>';
     }
-
     bubbleHtml += '<div class="message-content">';
     if (!isSent && msg.sender_name) {
         bubbleHtml += '<div class="message-sender">' + escapeHtml(msg.sender_name) + '</div>';
     }
 
-    // Parse content for special types
     var contentHtml = renderMessageContent(msg.content, isSent);
     bubbleHtml += contentHtml;
 
-    // Time + status
-    var timeHtml = '<div class="message-time">' + formatTime(msg.created_at);
-    if (isSent) {
-        timeHtml += ' ' + getStatusIcon(msg.status || 'sent');
-    }
+    // Time — hidden by default, toggle on click
+    var timeHtml = '<div class="message-time msg-time-toggle" style="display:none">' + formatTime(msg.created_at);
     timeHtml += '</div>';
     bubbleHtml += timeHtml;
-    bubbleHtml += '</div>';
 
+    // Status — only on last sent message
+    if (isSent && isLast) {
+        bubbleHtml += '<div class="message-status-wrap" style="text-align:right;padding:0 12px">' + getStatusIcon(msg.status || 'sent') + '</div>';
+    }
+
+    bubbleHtml += '</div>';
     row.innerHTML = bubbleHtml;
+
+    // Click to toggle timestamp
+    row.addEventListener('click', function(e) {
+        if (e.target.closest('.message-file') || e.target.closest('.message-image') || e.target.closest('.message-location')) return;
+        var timeEl = row.querySelector('.msg-time-toggle');
+        if (timeEl) {
+            timeEl.style.display = timeEl.style.display === 'none' ? '' : 'none';
+        }
+    });
+
     container.appendChild(row);
-    scrollToBottom();
+    if (isNewSent) {
+        hidePreviousLastStatus();
+        // Add status to the new sent message
+        var content = row.querySelector('.message-content');
+        if (content && isSent) {
+            var statusDiv = document.createElement('div');
+            statusDiv.className = 'message-status-wrap';
+            statusDiv.style.textAlign = 'right';
+            statusDiv.style.padding = '0 12px';
+            statusDiv.innerHTML = getStatusIcon('sent');
+            content.appendChild(statusDiv);
+        }
+        scrollToBottom();
+    }
+}
+
+// ============ Context Menu ============
+function showContextMenu(e, msg, row) {
+    dismissContextMenu();
+    var menu = document.getElementById('msg-context-menu');
+    if (!menu) return;
+    var t = I18n.t.bind(I18n);
+
+    var items = '';
+    // Copy
+    items += '<button onclick="copyMessageText(\'' + (msg.id || '') + '\')">📋 ' + (t('chat.copy') || 'Copy') + '</button>';
+    // Delete (only own messages)
+    var session = getApplicantSession();
+    if (msg.sender_type === 'applicant' && session && msg.id) {
+        items += '<button onclick="deleteMessageById(\'' + msg.id + '\')" class="ctx-danger">🗑 ' + (t('chat.deleteMsg') || 'Delete') + '</button>';
+    }
+
+    menu.innerHTML = items;
+    menu.classList.remove('hidden');
+
+    // Position near touch/click
+    var x = e.clientX || e.pageX || 100;
+    var y = e.clientY || e.pageY || 100;
+    menu.style.left = Math.min(x, window.innerWidth - 160) + 'px';
+    menu.style.top = Math.min(y, window.innerHeight - 100) + 'px';
+
+    chatState.contextMenuMsg = msg;
+    // Store text content for copy
+    menu.dataset.content = msg.content;
+}
+
+function dismissContextMenu() {
+    var menu = document.getElementById('msg-context-menu');
+    if (menu) { menu.classList.add('hidden'); menu.innerHTML = ''; }
+}
+
+function copyMessageText(msgId) {
+    dismissContextMenu();
+    var msg = chatState.contextMenuMsg;
+    if (!msg) return;
+    var text = msg.content;
+    try {
+        var parsed = JSON.parse(text);
+        if (parsed.type === 'location') text = parsed.lat + ', ' + parsed.lng;
+        else if (parsed.type === 'file') text = parsed.name;
+        else if (parsed.type === 'image') text = parsed.name;
+    } catch(e) {}
+    navigator.clipboard.writeText(text).then(function() {
+        showToast(I18n.t('chat.copied') || 'Copied!', 'success');
+    }).catch(function() {});
+}
+
+async function deleteMessageById(msgId) {
+    dismissContextMenu();
+    try {
+        await DB.deleteMessage(msgId);
+        var row = document.querySelector('[data-message-id="' + msgId + '"]');
+        if (row) row.remove();
+        showToast(I18n.t('chat.deleted') || 'Deleted', 'success');
+    } catch(e) {
+        showToast(I18n.t('common.error'), 'error');
+    }
 }
 
 function getStatusIcon(status) {
@@ -345,8 +410,6 @@ function renderMessageContent(content, isSent) {
                 '<small>' + parsed.lat.toFixed(4) + ', ' + parsed.lng.toFixed(4) + '</small></div></a>';
         }
     } catch(e) {}
-
-    // Regular text
     return '<div class="message-bubble">' + escapeHtml(content) + '</div>';
 }
 
@@ -385,12 +448,11 @@ async function sendApplicantMessage() {
 
     try {
         await DB.sendMessage(chatState.applicantId, 'applicant', session.name || 'Applicant', session.id, text);
+        insertDateSeparatorIfNeeded(document.getElementById('chat-messages'), new Date().toISOString());
         appendMessageBubble({
-            sender_type: 'applicant',
-            sender_name: session.name,
-            content: text,
-            created_at: new Date().toISOString()
-        });
+            sender_type: 'applicant', sender_name: session.name,
+            content: text, created_at: new Date().toISOString()
+        }, true, true);
     } catch(e) {
         showToast(I18n.t('common.error'), 'error');
     }
@@ -398,7 +460,10 @@ async function sendApplicantMessage() {
 
 function scrollToBottom() {
     var container = document.getElementById('chat-messages');
-    if (container) {
-        container.scrollTop = container.scrollHeight;
-    }
+    if (container) container.scrollTop = container.scrollHeight;
 }
+
+// Close context menu on scroll or outside click
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.msg-context-menu')) dismissContextMenu();
+});
