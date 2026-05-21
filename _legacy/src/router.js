@@ -36,6 +36,12 @@ const Router = {
             targetPage.classList.add('active');
         }
 
+        // Restore app header visibility on navigation
+        const appHeader = document.getElementById('app-header');
+        if (appHeader) appHeader.classList.remove('hidden-mobile');
+        const pageContainer = document.getElementById('page-container');
+        if (pageContainer) pageContainer.classList.remove('chat-active-mobile');
+
         // Update hash
         if (pushHash) {
             const hashValue = params.length > 0 ? `${page}/${params.join('/')}` : page;
@@ -78,16 +84,16 @@ const Router = {
                 if (typeof renderRegister === 'function') renderRegister();
                 break;
             case 'chat':
-                if (typeof renderChat === 'function') renderChat(params[0]);
+                if (typeof renderChat === 'function') renderChat(params);
                 break;
             case 'admin-login':
                 if (typeof renderAdminLogin === 'function') renderAdminLogin();
                 break;
             case 'admin-dashboard':
-                if (typeof renderAdminDashboard === 'function') renderAdminDashboard();
+                if (typeof renderAdminDashboard === 'function') renderAdminDashboard(params);
                 break;
             case 'admin-chat':
-                if (typeof renderAdminChat === 'function') renderAdminChat(params[0]);
+                if (typeof renderAdminChat === 'function') renderAdminChat(params);
                 break;
             case 'jobs':
                 if (typeof renderJobs === 'function') renderJobs();

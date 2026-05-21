@@ -1,6 +1,6 @@
 /* ============ JOBS - Job Listings Page ============ */
 .jobs-container {
-    max-width: 980px;
+    max-width: 680px;
     margin: 0 auto;
     padding: var(--space-lg);
     min-height: calc(100dvh - var(--header-height));
@@ -687,18 +687,8 @@
     opacity: 0.6;
 }
 
-@media (max-width: 768px) {
-    .jobs-container { padding: 0; }
-    .jobs-header { padding: var(--space-lg) var(--space-md) 0; margin-bottom: var(--space-md); }
-    .jobs-list { gap: 0; }
-    .job-card { 
-        border-radius: 0; 
-        border-left: none; 
-        border-right: none; 
-        border-top: 1px solid var(--border-light);
-        border-bottom: 1px solid var(--border-light);
-        margin-bottom: -1px; /* collapse borders */
-    }
+@media (max-width: 480px) {
+    .jobs-container { padding: var(--space-md); }
     .job-detail-card { margin: var(--space-sm); }
     .job-form-card { margin: var(--space-sm); }
 }

@@ -18,8 +18,8 @@
     padding: 8px var(--space-lg);
     border-bottom: 1px solid var(--border-light);
     background: var(--bg-primary);
-    height: 60px;
-    min-height: 60px;
+    min-height: 52px;
+    box-shadow: var(--shadow-sm);
 }
 
 .chat-header-info {

@@ -42,11 +42,10 @@
         "welcomeBack": "おかえりなさい！"
     },
     "chat": {
-        "adminName": "採用チーム",
-        "systemConnected": "接続しました。チャットを開始できます。",
+        "loadMore": "過去のメッセージを読み込む",
+        "teamName": "採用チーム",
         "online": "オンライン",
         "placeholder": "メッセージを入力...",
-        "loadMore": "過去のメッセージを読み込む",
         "welcomeTitle": "チャットへようこそ！",
         "welcomeMsg": "採用チームがあなたのメッセージをお待ちしています。お気軽にご質問ください。",
         "attachFile": "ファイルを添付",
@@ -68,9 +67,7 @@
         "copied": "コピーしました",
         "deleted": "削除しました",
         "logout": "ログアウト",
-        "confirmLogout": "ログアウトしてもよろしいですか？",
-        "confirmLogoutTitle": "退出の確認",
-        "confirmLogoutText": "このチャットセッションを終了してもよろしいですか？このデバイスのメッセージ履歴は消去されます。"
+        "confirmLogout": "ログアウトしてもよろしいですか？"
     },
     "admin": {
         "loginTitle": "管理者ログイン",
@@ -114,15 +111,6 @@
         "jobSalary": "給与",
         "jobLocation": "勤務地",
         "jobPosition": "職種",
-        "jobStatus": "ステータス",
-        "statusDraft": "下書き",
-        "statusPublished": "公開済み",
-        "jobContentPlaceholder": "仕事の詳細な説明...",
-        "salaryExample": "例：月給 250,000円",
-        "locationExample": "例：東京都",
-        "confirmDeleteJobTitle": "求人を削除",
-        "confirmDeleteJobText": "この求人を削除してもよろしいですか？",
-        "delete": "削除",
         "saveDraft": "下書き保存",
         "publish": "公開する",
         "noJobPosts": "求人がありません",

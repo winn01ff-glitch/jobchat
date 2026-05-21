@@ -42,11 +42,10 @@
         "welcomeBack": "Welcome back!"
     },
     "chat": {
-        "adminName": "Recruitment Team",
-        "systemConnected": "Connected successfully. You can start chatting.",
+        "loadMore": "Load older messages",
+        "teamName": "Recruitment Team",
         "online": "Online",
         "placeholder": "Type a message...",
-        "loadMore": "Load older messages",
         "welcomeTitle": "Welcome to the chat!",
         "welcomeMsg": "Our recruitment team is ready to help. Feel free to ask any questions!",
         "attachFile": "Attach file",
@@ -68,9 +67,7 @@
         "copied": "Copied!",
         "deleted": "Deleted",
         "logout": "Logout",
-        "confirmLogout": "Are you sure you want to log out?",
-        "confirmLogoutTitle": "Confirm exit",
-        "confirmLogoutText": "Are you sure you want to end this chat session? Message history will be cleared on this device."
+        "confirmLogout": "Are you sure you want to log out?"
     },
     "admin": {
         "loginTitle": "Admin Login",

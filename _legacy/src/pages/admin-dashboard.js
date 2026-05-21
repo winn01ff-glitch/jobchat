@@ -13,18 +13,28 @@ var dashboardState = {
     previewJobId: null
 };
 
-function renderAdminDashboard() {
+function renderAdminDashboard(params) {
     var page = document.getElementById('page-admin-dashboard');
     var t = I18n.t.bind(I18n);
 
     document.getElementById('btn-back').classList.add('hidden');
+
+    if (!window.adminSession) {
+        Router.navigateTo('landing');
+        setTimeout(function() { showAdminLoginModal(); }, 100);
+        return;
+    }
+
+    if (params && params.length > 0) {
+        dashboardState.selectedId = isNaN(params[0]) ? params[0] : parseInt(params[0], 10);
+    }
 
     page.innerHTML = '<div class="admin-container">' +
         '<div class="admin-sidebar" id="admin-sidebar">' +
             '<div class="sidebar-search">' +
                 '<div class="search-wrapper">' +
                     '<span class="search-icon">🔍</span>' +
-                    '<input type="text" id="search-input" placeholder="' + t('admin.search') + '" oninput="filterConversations()">' +
+                    '<input type="text" id="search-input" name="search_conversation" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="' + t('admin.search') + '" oninput="filterConversations()">' +
                 '</div>' +
             '</div>' +
             '<div class="sidebar-filters">' +
@@ -33,7 +43,7 @@ function renderAdminDashboard() {
             '</div>' +
             '<div class="conversation-list" id="conversation-list"></div>' +
         '</div>' +
-        '<div class="admin-chat-area" id="admin-chat-area">' +
+        '<div class="admin-chat-area hidden-mobile" id="admin-chat-area">' +
             '<div class="admin-empty-state">' +
                 '<div class="admin-empty-icon">💬</div>' +
                 '<p data-i18n="admin.selectConversation">' + t('admin.selectConversation') + '</p>' +
@@ -43,48 +53,47 @@ function renderAdminDashboard() {
         '<div id="admin-settings-modal" class="settings-modal hidden">' +
             '<div class="settings-overlay" onclick="closeAdminSettings()"></div>' +
             '<div class="settings-card">' +
-                '<h3 style="margin:0 0 16px;font-size:18px">⚙️ ' + t('admin.settings') + '</h3>' +
-                '<div style="text-align:center;margin-bottom:16px">' +
+                '<button onclick="handleAdminLogout()" data-i18n-title="admin.logout" title="' + t('admin.logout') + '" style="position:absolute;top:16px;right:16px;background:none;border:none;cursor:pointer;color:var(--error);padding:4px;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:background 0.2s" onmouseover="this.style.background=\'rgba(240,40,73,0.1)\'" onmouseout="this.style.background=\'none\'">' +
+                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>' +
+                '</button>' +
+                '<h3 style="margin:0 0 12px;font-size:18px">⚙️ <span data-i18n="admin.settings">' + t('admin.settings') + '</span></h3>' +
+                '<div style="text-align:center;margin-bottom:12px">' +
                     '<div id="settings-avatar-preview" class="settings-avatar" onclick="document.getElementById(\'avatar-input\').click()">' +
                         getAdminAvatar() +
                     '</div>' +
-                    '<p style="font-size:var(--font-xs);color:var(--text-muted);margin:6px 0 0">' + t('admin.clickToChangeAvatar') + '</p>' +
+                    '<p style="font-size:var(--font-xs);color:var(--text-muted);margin:4px 0 0" data-i18n="admin.clickToChangeAvatar">' + t('admin.clickToChangeAvatar') + '</p>' +
                     '<input type="file" id="avatar-input" accept="image/*" hidden onchange="handleAvatarChange(event)">' +
                 '</div>' +
-                '<div class="form-group" style="margin-bottom:12px">' +
-                    '<label class="form-label">' + t('admin.displayName') + '</label>' +
+                '<div class="form-group" style="margin-bottom:8px">' +
+                    '<label class="form-label" data-i18n="admin.displayName">' + t('admin.displayName') + '</label>' +
                     '<input type="text" class="form-input" id="settings-display-name" value="' + (window.adminSession ? escapeHtml(window.adminSession.profile.display_name) : '') + '">' +
                 '</div>' +
-                '<hr style="border:none;border-top:1px solid var(--border-light);margin:12px 0">' +
-                '<div class="form-group" style="margin-bottom:12px">' +
-                    '<label class="form-label">🔑 ' + t('admin.currentPassword') + '</label>' +
+                '<hr style="border:none;border-top:1px solid var(--border-light);margin:8px 0">' +
+                '<div class="form-group" style="margin-bottom:8px">' +
+                    '<label class="form-label">🔑 <span data-i18n="admin.currentPassword">' + t('admin.currentPassword') + '</span></label>' +
                     '<div style="position:relative">' +
-                        '<input type="password" class="form-input" id="settings-current-password" placeholder="' + t('admin.currentPasswordPlaceholder') + '" style="padding-right:40px">' +
+                        '<input type="password" class="form-input" id="settings-current-password" data-i18n-placeholder="admin.currentPasswordPlaceholder" placeholder="' + t('admin.currentPasswordPlaceholder') + '" style="padding-right:40px">' +
                         '<button type="button" onclick="togglePwField(\'settings-current-password\', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted)">👁️</button>' +
                     '</div>' +
                 '</div>' +
-                '<div class="form-group" style="margin-bottom:12px">' +
-                    '<label class="form-label">🔐 ' + t('admin.newPassword') + '</label>' +
+                '<div class="form-group" style="margin-bottom:8px">' +
+                    '<label class="form-label">🔐 <span data-i18n="admin.newPassword">' + t('admin.newPassword') + '</span></label>' +
                     '<div style="position:relative">' +
-                        '<input type="password" class="form-input" id="settings-new-password" placeholder="' + t('admin.newPasswordPlaceholder') + '" style="padding-right:40px">' +
+                        '<input type="password" class="form-input" id="settings-new-password" data-i18n-placeholder="admin.newPasswordPlaceholder" placeholder="' + t('admin.newPasswordPlaceholder') + '" style="padding-right:40px">' +
                         '<button type="button" onclick="togglePwField(\'settings-new-password\', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted)">👁️</button>' +
                     '</div>' +
                 '</div>' +
-                '<div class="form-group" style="margin-bottom:16px">' +
-                    '<label class="form-label">' + t('admin.confirmPassword') + '</label>' +
+                '<div class="form-group" style="margin-bottom:12px">' +
+                    '<label class="form-label" data-i18n="admin.confirmPassword">' + t('admin.confirmPassword') + '</label>' +
                     '<div style="position:relative">' +
-                        '<input type="password" class="form-input" id="settings-confirm-password" placeholder="' + t('admin.confirmPasswordPlaceholder') + '" style="padding-right:40px">' +
+                        '<input type="password" class="form-input" id="settings-confirm-password" data-i18n-placeholder="admin.confirmPasswordPlaceholder" placeholder="' + t('admin.confirmPasswordPlaceholder') + '" style="padding-right:40px">' +
                         '<button type="button" onclick="togglePwField(\'settings-confirm-password\', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted)">👁️</button>' +
                     '</div>' +
                 '</div>' +
-                '<div style="display:flex;gap:8px;justify-content:flex-end">' +
-                    '<button onclick="closeAdminSettings()" style="padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:white;cursor:pointer">' + t('admin.cancel') + '</button>' +
-                    '<button onclick="saveAdminSettings()" style="padding:8px 20px;border:none;border-radius:8px;background:var(--primary);color:white;cursor:pointer;font-weight:600">' + t('admin.save') + '</button>' +
+                '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">' +
+                    '<button onclick="closeAdminSettings()" style="padding:8px 20px;border:1px solid var(--border-light);border-radius:8px;background:white;cursor:pointer" data-i18n="admin.cancel">' + t('admin.cancel') + '</button>' +
+                    '<button onclick="saveAdminSettings()" style="padding:8px 20px;border:none;border-radius:8px;background:var(--messenger-blue);color:white;cursor:pointer;font-weight:600" data-i18n="admin.save">' + t('admin.save') + '</button>' +
                 '</div>' +
-                '<hr style="border:none;border-top:1px solid var(--border-light);margin:16px 0 12px">' +
-                '<button onclick="handleAdminLogout()" style="width:100%;padding:10px;border:1px solid var(--error);border-radius:8px;background:rgba(240,40,73,0.06);color:var(--error);cursor:pointer;font-weight:600;font-family:var(--font-family);font-size:var(--font-sm);transition:var(--transition-fast)" onmouseover="this.style.background=\'rgba(240,40,73,0.12)\'" onmouseout="this.style.background=\'rgba(240,40,73,0.06)\'">' +
-                    '🚪 ' + t('admin.logout') +
-                '</button>' +
             '</div>' +
         '</div>' +
     '</div>';
@@ -97,21 +106,35 @@ function renderAdminDashboard() {
 async function loadApplicants() {
     try {
         dashboardState.applicants = await DB.getAllApplicants();
+        // Deduplicate by ID
+        var seenIds = {};
+        dashboardState.applicants = dashboardState.applicants.filter(function(a) {
+            if (seenIds[a.id]) return false;
+            seenIds[a.id] = true;
+            return true;
+        });
         // Compute unread status for each applicant
         for (var i = 0; i < dashboardState.applicants.length; i++) {
             var a = dashboardState.applicants[i];
             var lastMsg = await DB.getLastMessage(a.id);
             a._hasUnread = lastMsg && lastMsg.sender_type === 'applicant' && (lastMsg.status === 'sent' || lastMsg.status === 'delivered');
         }
-        renderConversationList();
+        await renderConversationList();
+        if (dashboardState.selectedId) {
+            selectConversation(dashboardState.selectedId);
+        }
     } catch(e) {
         console.error('Failed to load applicants:', e);
     }
 }
 
-function renderConversationList() {
+var _renderCounter = 0;
+
+async function renderConversationList() {
     var list = document.getElementById('conversation-list');
     if (!list) return;
+
+    var renderId = ++_renderCounter; // Cancel stale renders
 
     var search = (document.getElementById('search-input') || {}).value || '';
     search = search.toLowerCase();
@@ -132,13 +155,21 @@ function renderConversationList() {
         return;
     }
 
+    // Build all items asynchronously, then render at once
+    var items = [];
+    for (var i = 0; i < filtered.length; i++) {
+        if (renderId !== _renderCounter) return; // Stale render — abort
+        var item = await buildConversationItem(filtered[i]);
+        items.push(item);
+    }
+
+    if (renderId !== _renderCounter) return; // Stale render — abort
+
     list.innerHTML = '';
-    filtered.forEach(function(applicant) {
-        addConversationItem(list, applicant);
-    });
+    items.forEach(function(item) { list.appendChild(item); });
 }
 
-async function addConversationItem(list, applicant) {
+async function buildConversationItem(applicant) {
     var item = document.createElement('div');
     item.className = 'conversation-item' + (dashboardState.selectedId === applicant.id ? ' active' : '') + (applicant._hasUnread ? ' unread' : '');
     item.onclick = function() { selectConversation(applicant.id); };
@@ -157,7 +188,7 @@ async function addConversationItem(list, applicant) {
             '<div class="conv-last-msg">' + escapeHtml(lastMsgText) + '</div>' +
         '</div>';
 
-    list.appendChild(item);
+    return item;
 }
 
 function parseMessagePreview(content) {
@@ -179,13 +210,23 @@ function selectConversation(applicantId) {
     if (window.innerWidth <= 768) {
         sidebar.classList.add('hidden-mobile');
         chatArea.classList.remove('hidden-mobile');
+        var appHeader = document.getElementById('app-header');
+        if (appHeader) appHeader.classList.add('hidden-mobile');
+        var pageContainer = document.getElementById('page-container');
+        if (pageContainer) pageContainer.classList.add('chat-active-mobile');
     }
 
     // Update active state
     document.querySelectorAll('.conversation-item').forEach(function(item) {
         item.classList.remove('active');
     });
-    event.currentTarget.classList.add('active');
+    // Find and highlight the selected item
+    var items = document.querySelectorAll('.conversation-item');
+    items.forEach(function(item, idx) {
+        if (dashboardState.applicants[idx] && dashboardState.applicants[idx].id === applicantId) {
+            item.classList.add('active');
+        }
+    });
 
     renderAdminChatView(applicantId);
 }
@@ -209,32 +250,45 @@ function subscribeToUpdates() {
 
     // Subscribe to new applicants
     var sub1 = DB.subscribeToNewApplicants(function(applicant) {
-        dashboardState.applicants.unshift(applicant);
+        // Check for duplicate before adding
+        var exists = dashboardState.applicants.some(function(a) { return a.id === applicant.id; });
+        if (!exists) {
+            dashboardState.applicants.unshift(applicant);
+        }
         renderConversationList();
-        NotificationManager.showNotification(
-            I18n.t('admin.newApplicant'),
-            applicant.name + ' - ' + applicant.position
-        );
+        if (Router.currentPage === 'admin-dashboard' || Router.currentPage === 'admin-chat') {
+            NotificationManager.showNotification(
+                I18n.t('admin.newApplicant'),
+                applicant.name + (applicant.position ? ' - ' + applicant.position : '')
+            );
+        }
     });
     if (sub1) dashboardState.subscriptions.push(sub1);
 
-    // Subscribe to all messages
+    // Subscribe to all messages — debounced reload to stay in sync
+    var _reloadTimer = null;
     var sub2 = DB.subscribeToAllMessages(function(msg) {
-        renderConversationList();
+        clearTimeout(_reloadTimer);
+        _reloadTimer = setTimeout(function() { loadApplicants(); }, 300);
     });
     if (sub2) dashboardState.subscriptions.push(sub2);
 }
 
-async function handleAdminLogout() {
-    try {
-        await DB.adminLogout();
-        window.adminSession = null;
-        dashboardState.subscriptions.forEach(function(sub) { DB.unsubscribe(sub); });
-        hideAdminHeaderControls();
-        Router.navigateTo('landing');
-    } catch(e) {
-        console.error('Logout failed:', e);
-    }
+function handleAdminLogout() {
+    var title = (typeof I18n !== 'undefined' && I18n.t('admin.logout')) || 'Đăng xuất';
+    var msg = (typeof I18n !== 'undefined' && I18n.t('chat.confirmLogout')) || 'Bạn có chắc chắn muốn đăng xuất?';
+
+    showConfirmModal(title, msg, async function() {
+        try {
+            await DB.adminLogout();
+            window.adminSession = null;
+            dashboardState.subscriptions.forEach(function(sub) { DB.unsubscribe(sub); });
+            hideAdminHeaderControls();
+            Router.navigateTo('landing');
+        } catch(e) {
+            console.error('Logout failed:', e);
+        }
+    }, title);
 }
 
 function showAdminHeaderControls() {
@@ -264,6 +318,13 @@ function getAdminAvatar() {
     }
     return window.adminSession.profile.display_name.charAt(0).toUpperCase();
 }
+
+window.toggleSidebar = function() {
+    var sidebar = document.getElementById('admin-sidebar');
+    if (sidebar) {
+        sidebar.classList.toggle('collapsed');
+    }
+};
 
 function openAdminSettings() {
     var modal = document.getElementById('admin-settings-modal');
@@ -310,8 +371,8 @@ function saveAdminSettings() {
 
     // Password change validation
     if (password || confirm || currentPassword) {
-        if (!currentPassword) {
-            showToast(t('admin.enterCurrentPassword'), 'error');
+        if (!currentPassword || currentPassword.length < 4) {
+            showToast(t('admin.enterCurrentPassword') || 'Mật khẩu hiện tại phải có ít nhất 4 ký tự', 'error');
             return;
         }
         // Verify current password
@@ -324,7 +385,7 @@ function saveAdminSettings() {
             return;
         }
         if (password.length < 4) {
-            showToast(t('admin.passwordTooShort'), 'error');
+            showToast(t('admin.passwordTooShort') || 'Mật khẩu mới phải có ít nhất 4 ký tự', 'error');
             return;
         }
     }

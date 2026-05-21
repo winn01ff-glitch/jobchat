@@ -1,0 +1,22 @@
+{
+    "buildCommand": "",
+    "outputDirectory": ".",
+    "cleanUrls": true,
+    "rewrites": [
+        { "source": "/(.*)", "destination": "/index.html" }
+    ],
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+            ]
+        }
+    ],
+    "crons": [
+        {
+            "path": "/api/keep-alive",
+            "schedule": "0 0 */5 * *"
+        }
+    ]
+}

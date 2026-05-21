@@ -7,7 +7,10 @@ var chatState = {
     applicantName: '',
     subscription: null,
     pendingFiles: [],
-    contextMenuMsg: null
+    contextMenuMsg: null,
+    offset: 0,
+    hasMore: true,
+    isLoading: false
 };
 
 function renderChat(params) {
@@ -36,8 +39,9 @@ function renderChat(params) {
                     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
                 '</button>' +
             '</div>' +
-            '<div class="chat-input-wrapper">' +
-                '<textarea id="chat-input" class="chat-input" rows="1" placeholder="' + t('chat.placeholder') + '" data-i18n-placeholder="chat.placeholder"></textarea>' +
+            '<div class="chat-input-wrapper" style="flex:1; display:flex; align-items:center; background:var(--bg-input); border-radius:20px; padding-right:4px">' +
+                '<textarea id="chat-input" class="chat-input" rows="1" placeholder="' + t('chat.placeholder') + '" data-i18n-placeholder="chat.placeholder" style="background:transparent; margin:0; flex:1"></textarea>' +
+                '<button class="emoji-toggle-btn" onclick="EmojiPicker.toggle(\'chat-input\', this)">😊</button>' +
             '</div>' +
             '<button class="btn-send" id="btn-send" onclick="sendApplicantMessage()">' +
                 '<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>' +
@@ -65,15 +69,20 @@ function blurChatInput(e) {
 }
 
 function handleApplicantLogout() {
-    if (chatState.subscription) {
-        DB.unsubscribe(chatState.subscription);
-        chatState.subscription = null;
-    }
-    localStorage.removeItem('uphill_session');
-    localStorage.removeItem('uphill_email');
-    chatState.applicantId = null;
-    chatState.applicantName = '';
-    Router.navigateTo('landing');
+    var title = (typeof I18n !== 'undefined' && I18n.t('chat.logout')) || 'Đăng xuất';
+    var msg = (typeof I18n !== 'undefined' && I18n.t('chat.confirmLogout')) || 'Bạn có chắc chắn muốn đăng xuất?';
+    
+    showConfirmModal(title, msg, function() {
+        if (chatState.subscription) {
+            DB.unsubscribe(chatState.subscription);
+            chatState.subscription = null;
+        }
+        localStorage.removeItem('uphill_session');
+        localStorage.removeItem('uphill_email');
+        chatState.applicantId = null;
+        chatState.applicantName = '';
+        Router.navigateTo('landing');
+    }, title);
 }
 
 function setupChatHandlers() {
@@ -198,9 +207,27 @@ function insertDateSeparatorIfNeeded(container, dateStr) {
 
 async function loadChatMessages() {
     try {
-        var messages = await DB.getMessages(chatState.applicantId);
+        chatState.offset = 0;
+        chatState.hasMore = true;
+        var messages = await DB.getMessages(chatState.applicantId, chatState.offset, 20);
         var container = document.getElementById('chat-messages');
         if (!container) return;
+
+        // Keep the welcome message, remove old message bubbles and load more btn
+        var welcomeMsg = container.querySelector('.chat-welcome');
+        container.innerHTML = '';
+        if (welcomeMsg) container.appendChild(welcomeMsg);
+
+        if (messages.length < 20) chatState.hasMore = false;
+
+        if (chatState.hasMore) {
+            var loadMoreBtn = document.createElement('div');
+            loadMoreBtn.id = 'chat-load-more-btn';
+            loadMoreBtn.className = 'load-more-btn';
+            loadMoreBtn.innerHTML = '<button onclick="loadMoreChatMessages()" style="background:none;border:none;color:var(--messenger-blue);cursor:pointer;font-size:14px;padding:8px">↑ <span data-i18n="chat.loadMore">' + (I18n.t('chat.loadMore') || 'Tải thêm tin nhắn cũ') + '</span></button>';
+            loadMoreBtn.style.textAlign = 'center';
+            container.appendChild(loadMoreBtn);
+        }
 
         _lastDateLabel = '';
         messages.forEach(function(msg, idx) {
@@ -234,6 +261,53 @@ async function loadChatMessages() {
     }
 }
 
+window.loadMoreChatMessages = async function() {
+    if (chatState.isLoading || !chatState.hasMore || !chatState.applicantId) return;
+    chatState.isLoading = true;
+    
+    var container = document.getElementById('chat-messages');
+    var loadMoreBtn = document.getElementById('chat-load-more-btn');
+    if (loadMoreBtn) loadMoreBtn.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">Loading...</span>';
+
+    var oldHeight = container.scrollHeight;
+    chatState.offset += 20;
+
+    try {
+        var messages = await DB.getMessages(chatState.applicantId, chatState.offset, 20);
+        if (messages.length < 20) chatState.hasMore = false;
+
+        var tempDiv = document.createElement('div');
+        _lastDateLabel = '';
+        messages.forEach(function(msg) {
+            insertDateSeparatorIfNeeded(tempDiv, msg.created_at);
+            var session = getApplicantSession();
+            var isSent = msg.sender_type === 'applicant' && session && msg.sender_id === session.id;
+            var row = createMessageBubbleDOM(msg, isSent, false);
+            tempDiv.appendChild(row);
+        });
+
+        if (loadMoreBtn) {
+            while (tempDiv.firstChild) {
+                container.insertBefore(tempDiv.firstChild, loadMoreBtn.nextSibling);
+            }
+        }
+
+        if (!chatState.hasMore && loadMoreBtn) {
+            loadMoreBtn.remove();
+        } else if (loadMoreBtn) {
+            loadMoreBtn.innerHTML = '<button onclick="loadMoreChatMessages()" style="background:none;border:none;color:var(--messenger-blue);cursor:pointer;font-size:14px;padding:8px">↑ <span data-i18n="chat.loadMore">' + (I18n.t('chat.loadMore') || 'Tải thêm tin nhắn cũ') + '</span></button>';
+        }
+
+        var newHeight = container.scrollHeight;
+        container.scrollTop += (newHeight - oldHeight);
+
+    } catch(e) {
+        console.error('Failed to load more messages:', e);
+    } finally {
+        chatState.isLoading = false;
+    }
+};
+
 function hidePreviousLastStatus() {
     var rows = document.querySelectorAll('.message-row.sent .message-status-wrap');
     rows.forEach(function(el) { el.style.display = 'none'; });
@@ -249,11 +323,7 @@ function parseMessageContent(content) {
     } catch(e) { return content; }
 }
 
-function appendMessageBubble(msg, isNewSent, isLast) {
-    var container = document.getElementById('chat-messages');
-    if (!container) return;
-
-    var isSent = msg.sender_type === 'applicant';
+function createMessageBubbleDOM(msg, isSent, isLast) {
     var row = document.createElement('div');
     row.className = 'message-row ' + (isSent ? 'sent' : 'received');
     if (msg.id) row.dataset.messageId = msg.id;
@@ -269,7 +339,17 @@ function appendMessageBubble(msg, isNewSent, isLast) {
 
     var bubbleHtml = '';
     if (!isSent) {
-        bubbleHtml += '<div class="message-avatar">' + (msg.sender_name || 'A').charAt(0).toUpperCase() + '</div>';
+        var avatarId = 'avatar-' + (msg.id || Math.random().toString(36).substr(2, 9));
+        bubbleHtml += '<div class="message-avatar" id="' + avatarId + '">' + (msg.sender_name || 'A').charAt(0).toUpperCase() + '</div>';
+        
+        if (msg.sender_type === 'admin' && msg.sender_id) {
+            DB.getAdminProfile(msg.sender_id).then(function(profile) {
+                if (profile && profile.avatar) {
+                    var el = document.getElementById(avatarId);
+                    if (el) el.innerHTML = '<img src="' + escapeHtml(profile.avatar) + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+                }
+            }).catch(function(){});
+        }
     }
     bubbleHtml += '<div class="message-content">';
     if (!isSent && msg.sender_name) {
@@ -301,6 +381,16 @@ function appendMessageBubble(msg, isNewSent, isLast) {
         }
     });
 
+    return row;
+}
+
+function appendMessageBubble(msg, isNewSent, isLast) {
+    var container = document.getElementById('chat-messages');
+    if (!container) return;
+
+    var isSent = msg.sender_type === 'applicant';
+    var row = createMessageBubbleDOM(msg, isSent, isLast);
+
     container.appendChild(row);
     if (isNewSent) {
         hidePreviousLastStatus();
@@ -309,9 +399,8 @@ function appendMessageBubble(msg, isNewSent, isLast) {
         if (content && isSent) {
             var statusDiv = document.createElement('div');
             statusDiv.className = 'message-status-wrap';
-            statusDiv.style.textAlign = 'right';
-            statusDiv.style.padding = '0 12px';
-            statusDiv.innerHTML = getStatusIcon('sent');
+            statusDiv.style.cssText = 'text-align:right;padding:0 12px';
+            statusDiv.innerHTML = getStatusIcon(msg.status || 'sent');
             content.appendChild(statusDiv);
         }
         scrollToBottom();
@@ -460,7 +549,16 @@ async function sendApplicantMessage() {
 
 function scrollToBottom() {
     var container = document.getElementById('chat-messages');
-    if (container) container.scrollTop = container.scrollHeight;
+    if (container) {
+        setTimeout(function() {
+            container.scrollTop = container.scrollHeight;
+        }, 50);
+        // Also scroll after images load
+        var images = container.querySelectorAll('img');
+        images.forEach(function(img) {
+            img.onload = function() { container.scrollTop = container.scrollHeight; };
+        });
+    }
 }
 
 // Close context menu on scroll or outside click

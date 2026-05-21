@@ -93,6 +93,7 @@ function showDisplayNameModal(email) {
         '<div class="job-form-card" style="max-width:420px">' +
             '<div class="job-form-header">' +
                 '<h3>👋 ' + t('register.enterName') + '</h3>' +
+                '<button class="job-form-close" onclick="closeDisplayNameModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);padding:4px 8px;line-height:1">✕</button>' +
             '</div>' +
             '<div class="job-form-body">' +
                 '<p style="color:var(--text-secondary);margin:0 0 16px;font-size:var(--font-sm)">' +
@@ -116,6 +117,7 @@ function showDisplayNameModal(email) {
                 '</div>' +
             '</div>' +
             '<div class="job-form-footer">' +
+                '<button class="btn-job-cancel" onclick="closeDisplayNameModal()">' + (t('admin.cancel') || 'Cancel') + '</button>' +
                 '<button class="btn-job-publish" id="btn-confirm-name" onclick="confirmDisplayName(\'' + escapeHtml(email) + '\')">' +
                     t('register.submit') +
                 '</button>' +
@@ -137,6 +139,11 @@ function showDisplayNameModal(email) {
             });
         }
     }, 100);
+}
+
+function closeDisplayNameModal() {
+    var modal = document.getElementById('display-name-modal');
+    if (modal) modal.remove();
 }
 
 async function confirmDisplayName(email) {

@@ -5,7 +5,10 @@
 var adminChatState = {
     applicant: null,
     subscription: null,
-    contextMenuMsg: null
+    contextMenuMsg: null,
+    offset: 0,
+    hasMore: true,
+    isLoading: false
 };
 
 async function renderAdminChatView(applicantId) {
@@ -28,17 +31,18 @@ async function renderAdminChatView(applicantId) {
     chatArea.innerHTML =
         '<div class="chat-header-bar">' +
             '<div class="chat-header-info">' +
+                (window.innerWidth <= 768 ?
+                    '<button class="btn-icon" onclick="backToSidebar()" style="margin-right:-4px;margin-left:-8px;color:var(--messenger-blue);padding:0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>'
+                    : '<button class="btn-icon sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Sidebar" style="margin-right:12px;color:var(--text-muted);padding:4px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></button>') +
                 '<div class="chat-avatar">' + initials + '</div>' +
                 '<div>' +
                     '<div class="chat-header-name">' + escapeHtml(applicant.name) + '</div>' +
                     '<div class="chat-header-status">' + phoneInfo +
-                        '🏢 ' + escapeHtml(I18n.t('register.positions.' + applicant.position) || applicant.position) + '</div>' +
+                        (applicant.position ? '🏢 ' + escapeHtml(I18n.t('register.positions.' + applicant.position) || applicant.position) : '') + '</div>' +
                 '</div>' +
             '</div>' +
             '<div style="display:flex;gap:6px">' +
-                (window.innerWidth <= 768 ?
-                    '<button class="btn-icon" onclick="backToSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>'
-                    : '') +
+                '<button class="btn-icon" onclick="deleteCurrentConversation()" title="' + (I18n.t('common.delete') || 'Delete') + '" style="color:var(--error)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>' +
             '</div>' +
         '</div>' +
         '<div id="admin-chat-messages" class="chat-messages" onclick="dismissAdminContextMenu(); blurAdminChatInput(event)">' +
@@ -60,8 +64,9 @@ async function renderAdminChatView(applicantId) {
                     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
                 '</button>' +
             '</div>' +
-            '<div class="chat-input-wrapper">' +
-                '<textarea id="admin-chat-input" class="chat-input" rows="1" placeholder="' + t('chat.placeholder') + '"></textarea>' +
+            '<div class="chat-input-wrapper" style="flex:1; display:flex; align-items:center; background:var(--bg-input); border-radius:20px; padding-right:4px">' +
+                '<textarea id="admin-chat-input" class="chat-input" rows="1" placeholder="' + t('chat.placeholder') + '" style="background:transparent; margin:0; flex:1"></textarea>' +
+                '<button class="emoji-toggle-btn" onclick="EmojiPicker.toggle(\'admin-chat-input\', this)">😊</button>' +
             '</div>' +
             '<button class="btn-send" onclick="sendAdminMessage()">' +
                 '<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>' +
@@ -152,9 +157,23 @@ function insertAdminDateSeparator(container, dateStr) {
 
 async function loadAdminMessages(applicantId) {
     try {
-        var messages = await DB.getMessages(applicantId);
+        adminChatState.offset = 0;
+        adminChatState.hasMore = true;
+        var messages = await DB.getMessages(applicantId, adminChatState.offset, 20);
         var container = document.getElementById('admin-chat-messages');
         if (!container) return;
+
+        container.innerHTML = '';
+        if (messages.length < 20) adminChatState.hasMore = false;
+
+        if (adminChatState.hasMore) {
+            var loadMoreBtn = document.createElement('div');
+            loadMoreBtn.id = 'admin-load-more-btn';
+            loadMoreBtn.className = 'load-more-btn';
+            loadMoreBtn.innerHTML = '<button onclick="loadMoreAdminMessages()" style="background:none;border:none;color:var(--messenger-blue);cursor:pointer;font-size:14px;padding:8px">↑ <span data-i18n="chat.loadMore">' + (I18n.t('chat.loadMore') || 'Tải thêm tin nhắn cũ') + '</span></button>';
+            loadMoreBtn.style.textAlign = 'center';
+            container.appendChild(loadMoreBtn);
+        }
 
         _adminLastDateLabel = '';
         messages.forEach(function(msg, idx) {
@@ -176,29 +195,74 @@ async function loadAdminMessages(applicantId) {
             scrollAdminToBottom();
 
             if (msg.sender_type === 'applicant') DB.markMessagesAsSeen(applicantId, 'applicant');
-            NotificationManager.showNotification(msg.sender_name, parseMessagePreview(msg.content));
+            if (Router.currentPage === 'admin-chat' || Router.currentPage === 'admin-dashboard') {
+                NotificationManager.showNotification(msg.sender_name, parseMessagePreview(msg.content));
+            }
         });
     } catch(e) {
         console.error('Failed to load admin messages:', e);
     }
 }
 
+window.loadMoreAdminMessages = async function() {
+    if (adminChatState.isLoading || !adminChatState.hasMore || !adminChatState.applicant) return;
+    adminChatState.isLoading = true;
+    
+    var container = document.getElementById('admin-chat-messages');
+    var loadMoreBtn = document.getElementById('admin-load-more-btn');
+    if (loadMoreBtn) loadMoreBtn.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">Loading...</span>';
+
+    var oldHeight = container.scrollHeight;
+    adminChatState.offset += 20;
+
+    try {
+        var messages = await DB.getMessages(adminChatState.applicant.id, adminChatState.offset, 20);
+        if (messages.length < 20) adminChatState.hasMore = false;
+
+        // Render older messages temporarily to an offscreen div to avoid disrupting the current DOM too much
+        var tempDiv = document.createElement('div');
+        _adminLastDateLabel = '';
+        messages.forEach(function(msg) {
+            insertAdminDateSeparator(tempDiv, msg.created_at);
+            var isSent = msg.sender_type === 'admin' && window.adminSession && msg.sender_id === window.adminSession.user.id;
+            var row = createAdminMessageBubbleDOM(msg, isSent, false);
+            tempDiv.appendChild(row);
+        });
+
+        // Insert after the load more button
+        if (loadMoreBtn) {
+            while (tempDiv.firstChild) {
+                container.insertBefore(tempDiv.firstChild, loadMoreBtn.nextSibling);
+            }
+        }
+
+        if (!adminChatState.hasMore && loadMoreBtn) {
+            loadMoreBtn.remove();
+        } else if (loadMoreBtn) {
+            loadMoreBtn.innerHTML = '<button onclick="loadMoreAdminMessages()" style="background:none;border:none;color:var(--messenger-blue);cursor:pointer;font-size:14px;padding:8px">↑ <span data-i18n="chat.loadMore">' + (I18n.t('chat.loadMore') || 'Tải thêm tin nhắn cũ') + '</span></button>';
+        }
+
+        // Adjust scroll position so it stays where it was
+        var newHeight = container.scrollHeight;
+        container.scrollTop += (newHeight - oldHeight);
+
+    } catch(e) {
+        console.error('Failed to load more admin messages:', e);
+    } finally {
+        adminChatState.isLoading = false;
+    }
+};
+
 function hideAdminPreviousLastStatus() {
     var rows = document.querySelectorAll('#admin-chat-messages .message-row.sent .message-status-wrap');
     rows.forEach(function(el) { el.style.display = 'none'; });
 }
 
-function appendAdminMessageBubble(msg, isNewSent, isLast) {
-    var container = document.getElementById('admin-chat-messages');
-    if (!container) return;
-
-    var admin = window.adminSession;
-    var isSent = msg.sender_type === 'admin' && admin && msg.sender_id === admin.user.id;
+function createAdminMessageBubbleDOM(msg, isSent, isLast) {
     var row = document.createElement('div');
     row.className = 'message-row ' + (isSent ? 'sent' : 'received');
     if (msg.id) row.dataset.messageId = msg.id;
 
-    // Long press / right-click context menu
     var pressTimer;
     row.addEventListener('contextmenu', function(e) { e.preventDefault(); showAdminContextMenu(e, msg, row); });
     row.addEventListener('touchstart', function(e) {
@@ -217,10 +281,8 @@ function appendAdminMessageBubble(msg, isNewSent, isLast) {
     }
     html += renderMessageContent(msg.content, isSent);
 
-    // Time — hidden, toggle on click
     html += '<div class="message-time msg-time-toggle" style="display:none">' + formatTime(msg.created_at) + '</div>';
 
-    // Status on last sent only
     if (isSent && isLast) {
         html += '<div class="message-status-wrap" style="text-align:right;padding:0 12px">' + getStatusIcon(msg.status || 'sent') + '</div>';
     }
@@ -234,6 +296,17 @@ function appendAdminMessageBubble(msg, isNewSent, isLast) {
         if (timeEl) timeEl.style.display = timeEl.style.display === 'none' ? '' : 'none';
     });
 
+    return row;
+}
+
+function appendAdminMessageBubble(msg, isNewSent, isLast) {
+    var container = document.getElementById('admin-chat-messages');
+    if (!container) return;
+
+    var admin = window.adminSession;
+    var isSent = msg.sender_type === 'admin' && admin && msg.sender_id === admin.user.id;
+    var row = createAdminMessageBubbleDOM(msg, isSent, isLast);
+
     container.appendChild(row);
     if (isNewSent) {
         hideAdminPreviousLastStatus();
@@ -241,9 +314,8 @@ function appendAdminMessageBubble(msg, isNewSent, isLast) {
         if (content && isSent) {
             var statusDiv = document.createElement('div');
             statusDiv.className = 'message-status-wrap';
-            statusDiv.style.textAlign = 'right';
-            statusDiv.style.padding = '0 12px';
-            statusDiv.innerHTML = getStatusIcon('sent');
+            statusDiv.style.cssText = 'text-align:right;padding:0 12px';
+            statusDiv.innerHTML = getStatusIcon(msg.status || 'sent');
             content.appendChild(statusDiv);
         }
         scrollAdminToBottom();
@@ -336,4 +408,43 @@ function scrollAdminToBottom() {
 function backToSidebar() {
     document.getElementById('admin-sidebar').classList.remove('hidden-mobile');
     document.getElementById('admin-chat-area').classList.add('hidden-mobile');
+    var appHeader = document.getElementById('app-header');
+    if (appHeader) appHeader.classList.remove('hidden-mobile');
+    var pageContainer = document.getElementById('page-container');
+    if (pageContainer) pageContainer.classList.remove('chat-active-mobile');
+}
+
+async function deleteCurrentConversation() {
+    if (!adminChatState.applicant) return;
+    
+    var title = I18n.t('common.delete') || 'Xóa';
+    var msg = (I18n.t('admin.confirmDelete') || 'Bạn có chắc chắn muốn xóa dữ liệu này? Hành động này không thể hoàn tác.');
+
+    showConfirmModal(title, msg, async function() {
+        try {
+            await DB.deleteApplicant(adminChatState.applicant.id);
+            
+            // Return to empty state
+            var chatArea = document.getElementById('admin-chat-area');
+            if (chatArea) {
+                chatArea.innerHTML = '<div class="admin-empty-state">' +
+                    '<div class="admin-empty-icon">💬</div>' +
+                    '<p>' + (I18n.t('admin.selectConversation') || 'Select a conversation') + '</p>' +
+                '</div>';
+            }
+            
+            // Remove from dashboard state if needed or let realtime handle it
+            if (typeof dashboardState !== 'undefined') {
+                dashboardState.applicants = dashboardState.applicants.filter(function(a) { return a.id !== adminChatState.applicant.id; });
+                if (typeof renderConversationList === 'function') renderConversationList();
+            }
+            
+            adminChatState.applicant = null;
+            if (window.innerWidth <= 768) backToSidebar();
+            showToast((I18n.t('chat.deleted') || 'Deleted'), 'success');
+        } catch(e) {
+            console.error(e);
+            showToast(I18n.t('common.error'), 'error');
+        }
+    });
 }
