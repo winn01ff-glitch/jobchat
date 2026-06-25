@@ -9,11 +9,12 @@ import { NotificationProvider } from '../context/NotificationContext';
 import SupabaseProvider from '../context/SupabaseProvider';
 import Header from '../components/Header';
 import { Inter } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/react';
 
 const inter = Inter({ subsets: ['latin', 'vietnamese'], weight: ['300', '400', '500', '600', '700', '800'] });
 
 export const metadata = {
-  title: "Uphill - Job Chat",
+  title: "Job Chat",
   description: "Job Recruitment Platform",
   manifest: "/manifest.json",
 };
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
                   {children}
                 </main>
               </div>
+              <Analytics />
             </SupabaseProvider>
           </NotificationProvider>
         </LanguageProvider>

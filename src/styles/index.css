@@ -1,3 +1,9 @@
+@font-face {
+    font-family: 'Twemoji Country Flags';
+    unicode-range: U+1F1E6-1F1FF;
+    src: url('https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1/dist/TwemojiCountryFlags.woff2') format('woff2');
+}
+
 /* ============================================
    DESIGN SYSTEM - Messenger Light Theme
    ============================================ */
@@ -59,7 +65,7 @@
     --radius-full: 9999px;
 
     /* Typography */
-    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --font-family: "Twemoji Country Flags", -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     --font-xs: 11px;
     --font-sm: 13px;
     --font-md: 15px;

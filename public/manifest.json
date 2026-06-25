@@ -1,7 +1,7 @@
 {
-  "name": "Uphill - Job Chat",
-  "short_name": "Uphill Job Chat",
-  "description": "Uphill Job Recruitment Chat Platform",
+  "name": "Job Chat",
+  "short_name": "Job Chat",
+  "description": "Job Recruitment Chat Platform",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
