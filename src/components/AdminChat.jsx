@@ -5,6 +5,48 @@ import { DB } from '../lib/supabase';
 import { ChatBubble, SystemMessage } from './ChatBubble';
 import { autoResize, EmojiPicker, showConfirmModal } from '../lib/helpers';
 
+const compressImage = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1280;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            resolve(blob || file);
+          },
+          'image/webp',
+          0.8
+        );
+      };
+      img.onerror = () => resolve(file);
+    };
+    reader.onerror = () => resolve(file);
+  });
+};
+
 export default function AdminChat({ applicantId, onBack, onDelete, adminSession, isSidebarCollapsed, onToggleSidebar }) {
   const { t } = useLanguage();
   const { showToast } = useNotification();
@@ -13,6 +55,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [adminsMap, setAdminsMap] = useState({});
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editPosition, setEditPosition] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [messagesOffset, setMessagesOffset] = useState(0);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -22,6 +70,20 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        const list = await DB.getAllAdmins();
+        const map = {};
+        list.forEach(adm => {
+          map[adm.id] = adm;
+        });
+        setAdminsMap(map);
+      } catch(e) {}
+    };
+    fetchAdmins();
+  }, []);
 
   useEffect(() => {
     let sub;
@@ -96,6 +158,38 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     }
   };
 
+  useEffect(() => {
+    if (applicant) {
+      setEditName(applicant.name);
+      setEditPhone(applicant.phone || '');
+      setEditPosition(applicant.position || '');
+    }
+  }, [applicant, isEditingProfile]);
+
+  const handleSaveProfile = async () => {
+    const nameToSave = editName.trim();
+    if (!nameToSave) {
+      showToast(t('admin.nameRequired') || 'Tên không được để trống', 'error');
+      return;
+    }
+    setIsSavingProfile(true);
+    try {
+      const updated = await DB.updateApplicant(applicant.id, {
+        name: nameToSave,
+        phone: editPhone.trim(),
+        position: editPosition
+      });
+      setApplicant(updated);
+      setIsEditingProfile(false);
+      showToast(t('admin.settingsSaved') || 'Đã lưu cài đặt ✓', 'success');
+    } catch(err) {
+      console.error(err);
+      showToast(t('common.error'), 'error');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -136,23 +230,43 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     }
   };
 
-  const handleFileSelect = (e, type) => {
+  const handleFileSelect = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    const reader = new FileReader();
-    reader.onload = (ev) => {
+    showToast(t('chat.uploading') || 'Đang tải lên...', 'info');
+    
+    try {
+      let fileToUpload = file;
+      let uploadName = file.name;
+      
+      if (type === 'image') {
+        // Compress image client-side to WebP
+        const compressedBlob = await compressImage(file);
+        const baseName = file.name.includes('.') ? file.name.substring(0, file.name.lastIndexOf('.')) : file.name;
+        uploadName = `${baseName}.webp`;
+        fileToUpload = new File([compressedBlob], uploadName, { type: 'image/webp' });
+      }
+
+      // Upload file to Supabase Storage
+      const uploadResult = await DB.uploadFile(applicantId, fileToUpload, uploadName);
+      
       const content = JSON.stringify({
         type: type,
-        data: ev.target.result,
-        name: file.name,
-        size: file.size,
-        mimeType: file.type
+        url: uploadResult.url,
+        name: uploadResult.name,
+        size: fileToUpload.size,
+        mimeType: fileToUpload.type
       });
+      
       handleSend(content);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+      showToast(t('chat.uploadSuccess') || 'Tải lên thành công!', 'success');
+    } catch (err) {
+      console.error('File upload failed:', err);
+      showToast(t('chat.uploadFailed') || 'Tải lên thất bại, vui lòng thử lại.', 'error');
+    } finally {
+      e.target.value = '';
+    }
   };
 
   const handleLocationSend = () => {
@@ -238,6 +352,9 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
           </div>
         </div>
         <div style={{display:'flex', gap:'6px'}}>
+          <button className="btn-icon" onClick={() => setIsEditingProfile(true)} title={t('admin.editJob') || 'Sửa'} style={{color:'var(--messenger-blue)'}}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
           <button className="btn-icon" onClick={handleDeleteConversation} title={t('common.delete')} style={{color:'var(--error)'}}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
           </button>
@@ -312,6 +429,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 isSent={msg.sender_type === 'admin'} 
                 showSender={false} 
                 showAvatar={isLastInGroup}
+                adminInfo={adminsMap[msg.sender_id]}
                 onDelete={async (msgId) => {
                   try {
                     await DB.deleteMessage(msgId);
@@ -363,6 +481,60 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
           <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </div>
+      {isEditingProfile && (
+        <div className="confirm-modal-overlay" onClick={() => setIsEditingProfile(false)} style={{ zIndex: 1000 }}>
+          <div className="job-form-card" style={{ maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
+            <div className="job-form-header">
+              <h3>📝 {t('admin.editJob') || 'Sửa thông tin ứng viên'}</h3>
+              <button className="job-form-close" onClick={() => setIsEditingProfile(false)} style={{ background:'none', border:'none', fontSize:'20px', cursor:'pointer', color:'var(--text-muted)', padding:'4px 8px', lineHeight:1 }}>✕</button>
+            </div>
+            <div className="job-form-body">
+              <div className="form-group">
+                <label className="form-label">{t('register.name')}</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  required 
+                />
+              </div>
+              <div className="form-group" style={{ marginTop: '12px' }}>
+                <label className="form-label">{t('register.phone')}</label>
+                <input 
+                  type="tel" 
+                  className="form-input" 
+                  value={editPhone}
+                  onChange={e => setEditPhone(e.target.value)}
+                />
+              </div>
+              <div className="form-group" style={{ marginTop: '12px' }}>
+                <label className="form-label">{t('register.position')}</label>
+                <select 
+                  className="form-input" 
+                  value={editPosition}
+                  onChange={e => setEditPosition(e.target.value)}
+                  style={{ appearance: 'none', background: 'var(--bg-input)' }}
+                >
+                  <option value="">-- {t('register.positionPlaceholder') || 'Chọn vị trí'} --</option>
+                  <option value="factory">{t('register.positions.factory')}</option>
+                  <option value="restaurant">{t('register.positions.restaurant')}</option>
+                  <option value="construction">{t('register.positions.construction')}</option>
+                  <option value="office">{t('register.positions.office')}</option>
+                  <option value="it">{t('register.positions.it')}</option>
+                  <option value="other">{t('register.positions.other')}</option>
+                </select>
+              </div>
+            </div>
+            <div className="job-form-footer" style={{ marginTop: '20px' }}>
+              <button className="btn-job-cancel" onClick={() => setIsEditingProfile(false)}>{t('admin.cancel') || 'Cancel'}</button>
+              <button className="btn-job-publish" onClick={handleSaveProfile} disabled={isSavingProfile}>
+                {isSavingProfile ? <div className="spinner"></div> : t('admin.save') || 'Lưu'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

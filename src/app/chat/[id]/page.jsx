@@ -7,6 +7,48 @@ import { DB } from '../../../lib/supabase';
 import { ChatBubble, SystemMessage } from '../../../components/ChatBubble';
 import { autoResize, EmojiPicker } from '../../../lib/helpers';
 
+const compressImage = (file) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1280;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            resolve(blob || file);
+          },
+          'image/webp',
+          0.8
+        );
+      };
+      img.onerror = () => resolve(file);
+    };
+    reader.onerror = () => resolve(file);
+  });
+};
+
 export default function ChatPage({ params }) {
   const resolvedParams = use(params);
   const applicantId = resolvedParams.id;
@@ -22,7 +64,7 @@ export default function ChatPage({ params }) {
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [subscription, setSubscription] = useState(null);
-  const [adminInfo, setAdminInfo] = useState(null);
+  const [adminsMap, setAdminsMap] = useState({});
 
   const messagesEndRef = useRef(null);
   const listRef = useRef(null);
@@ -46,13 +88,17 @@ export default function ChatPage({ params }) {
       setApplicantName(session.name);
       loadInitialMessages(applicantId);
       
-      const fetchAdmin = async () => {
+      const fetchAdmins = async () => {
         try {
-          const profile = await DB.getAdminProfile();
-          setAdminInfo(profile);
+          const list = await DB.getAllAdmins();
+          const map = {};
+          list.forEach(adm => {
+            map[adm.id] = adm;
+          });
+          setAdminsMap(map);
         } catch(e) {}
       };
-      fetchAdmin();
+      fetchAdmins();
       
       const sub = DB.subscribeToMessages(applicantId, (msg) => {
         const sessionStr = localStorage.getItem('jobchat_session');
@@ -189,23 +235,43 @@ export default function ChatPage({ params }) {
     }
   };
 
-  const handleFileSelect = (e, type) => {
+  const handleFileSelect = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    const reader = new FileReader();
-    reader.onload = (ev) => {
+    showToast(t('chat.uploading') || 'Đang tải lên...', 'info');
+    
+    try {
+      let fileToUpload = file;
+      let uploadName = file.name;
+      
+      if (type === 'image') {
+        // Compress image client-side to WebP
+        const compressedBlob = await compressImage(file);
+        const baseName = file.name.includes('.') ? file.name.substring(0, file.name.lastIndexOf('.')) : file.name;
+        uploadName = `${baseName}.webp`;
+        fileToUpload = new File([compressedBlob], uploadName, { type: 'image/webp' });
+      }
+
+      // Upload file to Supabase Storage
+      const uploadResult = await DB.uploadFile(applicantId, fileToUpload, uploadName);
+      
       const content = JSON.stringify({
         type: type,
-        data: ev.target.result,
-        name: file.name,
-        size: file.size,
-        mimeType: file.type
+        url: uploadResult.url,
+        name: uploadResult.name,
+        size: fileToUpload.size,
+        mimeType: fileToUpload.type
       });
+      
       handleSend(content);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = ''; // Reset input
+      showToast(t('chat.uploadSuccess') || 'Tải lên thành công!', 'success');
+    } catch (err) {
+      console.error('File upload failed:', err);
+      showToast(t('chat.uploadFailed') || 'Tải lên thất bại, vui lòng thử lại.', 'error');
+    } finally {
+      e.target.value = ''; // Reset input
+    }
   };
 
   const handleLocationSend = () => {
@@ -301,8 +367,8 @@ export default function ChatPage({ params }) {
             }
           }
 
-          // AdminInfo is fetched from DB.getAdminProfile()
-          const msgAdminInfo = msg.sender_type === 'admin' ? adminInfo : null;
+          // AdminInfo is matched by sender_id from adminsMap
+          const msgAdminInfo = msg.sender_type === 'admin' ? (adminsMap[msg.sender_id] || { display_name: msg.sender_name || t('chat.adminName') }) : null;
 
           return (
             <React.Fragment key={msg.id}>

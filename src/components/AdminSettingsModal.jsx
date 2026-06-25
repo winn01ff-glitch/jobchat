@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useNotification } from '../context/NotificationContext';
 import { DB } from '../lib/supabase';
+import { hashPassword } from '../lib/helpers';
 
 export default function AdminSettingsModal({ isOpen, onClose }) {
   const { t } = useLanguage();
@@ -99,17 +100,14 @@ export default function AdminSettingsModal({ isOpen, onClose }) {
         showToast(t('admin.currentPasswordRequired') || 'Vui lòng nhập mật khẩu hiện tại', 'error');
         return;
       }
-      if (adminProfile && currentPassword !== adminProfile.password_hash) {
-        showToast(t('admin.wrongCurrentPassword') || 'Mật khẩu hiện tại không đúng', 'error');
-        return;
-      }
     }
 
     try {
       const updateData = { display_name: displayName };
       if (avatar !== adminProfile.avatar) updateData.avatar = avatar;
       if (newPassword) {
-        updateData.password_hash = newPassword;
+        updateData.password = newPassword;
+        updateData.currentPassword = currentPassword;
       }
       
       await DB.updateAdminProfile(adminProfile.id, updateData);
@@ -118,7 +116,7 @@ export default function AdminSettingsModal({ isOpen, onClose }) {
       window.dispatchEvent(new Event('authChange')); // trigger header update
       onClose();
     } catch (e) {
-      showToast(t('common.error') || 'Có lỗi xảy ra', 'error');
+      showToast(e.message || t('common.error') || 'Có lỗi xảy ra', 'error');
     }
   };
 

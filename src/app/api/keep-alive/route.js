@@ -1,6 +1,9 @@
 import { supabaseClient } from '@/lib/supabase';
 import { NextResponse } from 'next/server';
 
+// Force Next.js to execute this API dynamically on every request (prevent static build caching)
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
@@ -15,21 +18,25 @@ export async function GET(request) {
   }
 
   try {
-    // Perform a lightweight query on the 'applicants' table to wake/keep the DB alive
-    const { data, error } = await supabaseClient
+    // Perform an ultra-lightweight ping query using head: true
+    const { count, error } = await supabaseClient
       .from('applicants')
-      .select('id')
-      .limit(1);
+      .select('*', { count: 'exact', head: true });
 
     if (error) {
       throw error;
     }
 
+    // Call the PostgreSQL function to delete old attachments (older than 3 months)
+    const { error: rpcError } = await supabaseClient.rpc('delete_old_attachments');
+    if (rpcError) {
+      console.error('[Cron Keep-Alive] Failed to clean up old attachments:', rpcError.message);
+    }
+
     return NextResponse.json({
       status: 'success',
-      message: 'Keep-alive query executed successfully.',
       timestamp: new Date().toISOString(),
-      recordFetched: data.length > 0 ? 'yes' : 'no'
+      recordCount: count,
     });
   } catch (err) {
     console.error('[Cron Keep-Alive] Database query failed:', err.message || err);

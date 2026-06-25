@@ -87,11 +87,12 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, adminInfo
     try {
       const parsed = JSON.parse(msg.content);
       if (parsed.type === 'image') {
+        const imageUrl = parsed.url || parsed.data;
         return (
           <>
             <img 
               className="message-image" 
-              src={parsed.data} 
+              src={imageUrl} 
               alt={parsed.name} 
               onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
               style={{cursor: 'pointer'}}
@@ -109,7 +110,7 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, adminInfo
                   setLightboxOpen(false);
                 }}
               >
-                <img src={parsed.data} alt={parsed.name} style={{maxWidth: '90%', maxHeight: '90%', borderRadius: '8px'}} />
+                <img src={imageUrl} alt={parsed.name} style={{maxWidth: '90%', maxHeight: '90%', borderRadius: '8px'}} />
                 <button 
                   style={{position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', color: 'white', fontSize: '30px', cursor: 'pointer'}}
                   onClick={(e) => { e.stopPropagation(); setLightboxOpen(false); }}
@@ -120,11 +121,12 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, adminInfo
         );
       }
       if (parsed.type === 'file') {
+        const fileUrl = parsed.url || parsed.data;
         const sizeStr = parsed.size < 1024 * 1024 
           ? (parsed.size / 1024).toFixed(1) + ' KB' 
           : (parsed.size / (1024 * 1024)).toFixed(1) + ' MB';
         return (
-          <a href={parsed.data} download={parsed.name} className="message-file" style={{textDecoration:'none', color:'inherit', display:'block'}}>
+          <a href={fileUrl} download={parsed.name} className="message-file" style={{textDecoration:'none', color:'inherit', display:'block'}} target="_blank" rel="noreferrer">
             <span className="message-file-icon">📄</span>
             <div>
               <div className="message-file-name">{parsed.name}</div>

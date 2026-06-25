@@ -1,26 +1,35 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '../../context/LanguageContext';
 import { useNotification } from '../../context/NotificationContext';
 import { DB } from '../../lib/supabase';
 
-export default function RegisterPage() {
+function RegisterContent() {
   const { t } = useLanguage();
   const { showToast } = useNotification();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlPosition = searchParams ? searchParams.get('position') : '';
   
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [position, setPosition] = useState('');
   const [isModalLoading, setIsModalLoading] = useState(false);
 
   useEffect(() => {
     const cachedEmail = localStorage.getItem('uphill_email');
     if (cachedEmail) setEmail(cachedEmail);
   }, []);
+
+  useEffect(() => {
+    if (urlPosition) {
+      setPosition(urlPosition);
+    }
+  }, [urlPosition]);
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -66,7 +75,10 @@ export default function RegisterPage() {
     setIsModalLoading(true);
     try {
       const applicant = await DB.createApplicant({
-        name: cleanName, email: email.trim().toLowerCase(), phone: phone.trim(), position: ''
+        name: cleanName,
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        position: position || urlPosition || 'other'
       });
 
       localStorage.setItem('uphill_email', email.trim().toLowerCase());
@@ -161,6 +173,28 @@ export default function RegisterPage() {
                   />
                 </div>
               </div>
+              {!urlPosition && (
+                <div className="form-group">
+                  <label className="form-label">{t('register.position')}</label>
+                  <div className="input-with-icon">
+                    <span className="input-icon">🏢</span>
+                    <select 
+                      className="form-input" 
+                      value={position}
+                      onChange={e => setPosition(e.target.value)}
+                      style={{ appearance: 'none', background: 'var(--bg-input)' }}
+                    >
+                      <option value="">-- {t('register.positionPlaceholder') || 'Chọn vị trí'} --</option>
+                      <option value="factory">{t('register.positions.factory')}</option>
+                      <option value="restaurant">{t('register.positions.restaurant')}</option>
+                      <option value="construction">{t('register.positions.construction')}</option>
+                      <option value="office">{t('register.positions.office')}</option>
+                      <option value="it">{t('register.positions.it')}</option>
+                      <option value="other">{t('register.positions.other')}</option>
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="job-form-footer">
               <button className="btn-job-cancel" onClick={() => setShowModal(false)}>{t('admin.cancel') || 'Cancel'}</button>
@@ -172,5 +206,13 @@ export default function RegisterPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="form-container"><div className="spinner"></div></div>}>
+      <RegisterContent />
+    </Suspense>
   );
 }

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../../context/LanguageContext';
 import { useNotification } from '../../../context/NotificationContext';
 import { DB } from '../../../lib/supabase';
+import { hashPassword } from '../../../lib/helpers';
 
 export default function AdminLoginPage() {
   const { t } = useLanguage();
@@ -13,6 +14,7 @@ export default function AdminLoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     // Redirect if already logged in
@@ -70,16 +72,24 @@ export default function AdminLoginPage() {
           </div>
           <div className="form-group">
             <label className="form-label">{t('admin.password') || 'Mật khẩu'}</label>
-            <div className="input-with-icon">
+            <div className="input-with-icon" style={{ position: 'relative' }}>
               <span className="input-icon">🔑</span>
               <input 
-                type="password" 
+                type={showPassword ? 'text' : 'password'} 
                 className="form-input" 
                 required 
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
+                style={{ paddingRight: '40px' }}
               />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)} 
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: 'var(--text-muted)' }}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
             </div>
           </div>
           <button type="submit" className="form-submit" disabled={isLoading}>

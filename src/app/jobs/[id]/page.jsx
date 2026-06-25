@@ -15,12 +15,15 @@ export default function JobDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!id) {
+      setIsLoading(false);
+      return;
+    }
     const load = async () => {
       try {
-        const data = await DB.getPublishedJobs();
-        const found = data.find(j => j.id === id);
-        if (found) {
-          setJob(found);
+        const data = await DB.getJob(id);
+        if (data) {
+          setJob(data);
         }
       } catch (err) {
         console.error(err);
@@ -28,13 +31,11 @@ export default function JobDetailPage() {
         setIsLoading(false);
       }
     };
-    if (id) {
-      load();
-    }
+    load();
   }, [id]);
 
   const handleApply = () => {
-    router.push('/register');
+    router.push(`/register?position=${job.position || ''}`);
   };
 
   if (isLoading) {

@@ -41,11 +41,30 @@ export const DB = {
                 position: data.position,
                 language: data.language || (typeof window !== 'undefined' ? localStorage.getItem('jobchat_lang') : 'vi') || 'vi',
                 status: 'active',
-                session_token: generateToken()
+                session_token: generateToken(),
+                last_email_sent_at: new Date().toISOString()
             })
             .select()
             .single();
         if (error) throw error;
+
+        // Trigger email notification for registration
+        try {
+            fetch('/api/send-notification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'registration',
+                    applicantName: row.name,
+                    applicantEmail: row.email,
+                    applicantPhone: row.phone,
+                    applicantPosition: row.position
+                })
+            }).catch(err => console.error('[Notification] failed to trigger registration email:', err));
+        } catch (e) {
+            console.error('[Notification] error triggering registration email:', e);
+        }
+
         return row;
     },
 
@@ -88,6 +107,17 @@ export const DB = {
         return data || [];
     },
 
+    updateApplicant: async function (id, data) {
+        const { data: row, error } = await supabaseClient
+            .from('applicants')
+            .update(data)
+            .eq('id', id)
+            .select()
+            .single();
+        if (error) throw error;
+        return row;
+    },
+
     updateApplicantStatus: async function (id, status) {
         const { error } = await supabaseClient
             .from('applicants')
@@ -117,7 +147,77 @@ export const DB = {
             .select()
             .single();
         if (error) throw error;
+
+        // If message is sent by applicant, check if we need to send email alert
+        if (senderType === 'applicant') {
+            try {
+                // Fetch current applicant to check last_email_sent_at
+                const { data: applicant } = await supabaseClient
+                    .from('applicants')
+                    .select('email, phone, position, last_email_sent_at')
+                    .eq('id', conversationId)
+                    .single();
+
+                if (applicant) {
+                    const now = new Date();
+                    const lastSent = applicant.last_email_sent_at ? new Date(applicant.last_email_sent_at) : null;
+                    const oneHour = 60 * 60 * 1000;
+
+                    if (!lastSent || (now - lastSent) > oneHour) {
+                        const nowStr = now.toISOString();
+                        await supabaseClient
+                            .from('applicants')
+                            .update({ last_email_sent_at: nowStr })
+                            .eq('id', conversationId);
+
+                        // Trigger email notification
+                        fetch('/api/send-notification', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                type: 'message',
+                                applicantName: senderName,
+                                applicantEmail: applicant.email,
+                                applicantPhone: applicant.phone,
+                                applicantPosition: applicant.position,
+                                messageContent: content
+                            })
+                        }).catch(err => console.error('[Notification] failed to trigger message email:', err));
+                    }
+                }
+            } catch (e) {
+                console.error('[Notification] error in message throttling logic:', e);
+            }
+        }
+
         return data;
+    },
+
+    uploadFile: async function (conversationId, file, fileName) {
+        // Generate a unique filename to prevent overwriting
+        const extension = fileName.split('.').pop();
+        const baseName = fileName.substring(0, fileName.lastIndexOf('.'));
+        const uniqueName = `${baseName}_${Date.now()}.${extension}`;
+        const path = `${conversationId}/${uniqueName}`;
+
+        const { data, error } = await supabaseClient.storage
+            .from('chat-attachments')
+            .upload(path, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabaseClient.storage
+            .from('chat-attachments')
+            .getPublicUrl(path);
+
+        return {
+            url: publicUrl,
+            name: uniqueName
+        };
     },
 
     updateMessageStatus: async function (messageId, status) {
@@ -220,48 +320,113 @@ export const DB = {
 
     // ---- Admin Auth ----
     adminLogin: async function (username, password) {
-        const { data, error } = await supabaseClient
+        const email = `${username.trim().toLowerCase()}@uphill.com`;
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+        });
+        if (error || !data.user) {
+            throw new Error('Sai tên đăng nhập hoặc mật khẩu');
+        }
+
+        // Fetch display profile from public.admins
+        const { data: profile, error: profileError } = await supabaseClient
             .from('admins')
             .select('*')
-            .ilike('username', username)
-            .eq('password_hash', password)
+            .eq('id', data.user.id)
             .single();
-        if (error || !data) throw new Error('Sai tên đăng nhập hoặc mật khẩu');
-        localStorage.setItem('jobchat_admin', JSON.stringify(data));
-        return { user: { id: data.id }, profile: data };
+
+        const sessionData = { user: data.user, profile: profile || { id: data.user.id, username, display_name: username, avatar: '' } };
+        localStorage.setItem('jobchat_admin', JSON.stringify(sessionData));
+        return sessionData;
     },
 
     adminLogout: async function () {
+        await supabaseClient.auth.signOut();
         localStorage.removeItem('jobchat_admin');
     },
 
     getAdminSession: async function () {
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        if (!session) {
+            localStorage.removeItem('jobchat_admin');
+            return null;
+        }
         const saved = localStorage.getItem('jobchat_admin');
-        if (!saved) return null;
-        try {
-            const admin = JSON.parse(saved);
-            return { user: { id: admin.id }, profile: admin };
-        } catch (e) { return null; }
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {}
+        }
+        
+        // Fallback: Fetch profile if localStorage is empty but session is valid
+        const { data: profile } = await supabaseClient
+            .from('admins')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+        const sessionData = { user: session.user, profile: profile || { id: session.user.id, username: session.user.email.split('@')[0], display_name: session.user.email.split('@')[0], avatar: '' } };
+        localStorage.setItem('jobchat_admin', JSON.stringify(sessionData));
+        return sessionData;
     },
 
     updateAdminProfile: async function (adminId, data) {
+        const saved = localStorage.getItem('jobchat_admin');
+        let current = null;
+        if (saved) {
+            try {
+                current = JSON.parse(saved);
+            } catch (e) {}
+        }
+
+        if (data.password) {
+            if (!current || !current.profile || !current.profile.username) {
+                throw new Error('Không tìm thấy thông tin phiên làm việc');
+            }
+            // Verify current password by signing in
+            const email = `${current.profile.username.trim().toLowerCase()}@uphill.com`;
+            const { error: verifyError } = await supabaseClient.auth.signInWithPassword({
+                email,
+                password: data.currentPassword
+            });
+            if (verifyError) {
+                throw new Error('Mật khẩu hiện tại không đúng');
+            }
+
+            const { error: pwdError } = await supabaseClient.auth.updateUser({
+                password: data.password
+            });
+            if (pwdError) throw pwdError;
+        }
+
         const update = {};
         if (data.display_name !== undefined) update.display_name = data.display_name;
         if (data.avatar !== undefined) update.avatar = data.avatar;
-        if (data.password_hash !== undefined) update.password_hash = data.password_hash;
-        const { error } = await supabaseClient
-            .from('admins')
-            .update(update)
-            .eq('id', adminId);
-        if (error) throw error;
+
+        if (Object.keys(update).length > 0) {
+            const { error } = await supabaseClient
+                .from('admins')
+                .update(update)
+                .eq('id', adminId);
+            if (error) throw error;
+        }
+
         // Update local session
-        const saved = localStorage.getItem('jobchat_admin');
-        if (saved) {
-            const current = JSON.parse(saved);
-            if (current.id === adminId) {
-                localStorage.setItem('jobchat_admin', JSON.stringify({ ...current, ...update }));
+        if (current) {
+            if (current.profile && current.profile.id === adminId) {
+                current.profile = { ...current.profile, ...update };
+                localStorage.setItem('jobchat_admin', JSON.stringify(current));
             }
         }
+    },
+
+    getAllAdmins: async function () {
+        const { data, error } = await supabaseClient
+            .from('admins')
+            .select('id, display_name, avatar, username');
+        if (error) throw error;
+        return data || [];
     },
 
     getAdminProfile: async function (adminId) {
@@ -273,6 +438,16 @@ export const DB = {
     },
 
     // ---- Job Posts ----
+    getJob: async function (id) {
+        const { data, error } = await supabaseClient
+            .from('job_posts')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
     getPublishedJobs: async function () {
         const { data, error } = await supabaseClient
             .from('job_posts')

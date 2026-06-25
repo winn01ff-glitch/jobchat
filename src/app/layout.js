@@ -13,8 +13,9 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin', 'vietnamese'], weight: ['300', '400', '500', '600', '700', '800'] });
 
 export const metadata = {
-  title: "QuanLyTuyenDung",
+  title: "Uphill - Job Chat",
   description: "Job Recruitment Platform",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({ children }) {
