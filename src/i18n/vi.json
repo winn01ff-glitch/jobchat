@@ -28,18 +28,28 @@
         "position": "Vị trí mong muốn",
         "positionPlaceholder": "Chọn vị trí",
         "positions": {
-            "factory": "Nhà máy / Sản xuất",
+            "factory": "Nhà máy",
             "restaurant": "Nhà hàng / Ẩm thực",
             "construction": "Xây dựng",
             "office": "Văn phòng",
+            "nursing": "Điều dưỡng",
             "it": "IT / Kỹ thuật",
             "other": "Khác"
         },
         "submit": "Bắt đầu chat",
+        "enterOtp": "Nhập mã xác thực",
+        "otpSentHint": "Chúng tôi đã gửi mã xác thực gồm 6 chữ số đến:",
+        "verify": "Xác thực & Bắt đầu chat",
+        "changeEmail": "Thay đổi email",
+        "otpSent": "Mã xác thực đã được gửi tới email của bạn!",
+        "sendOtpFailed": "Gửi mã xác thực thất bại. Vui lòng thử lại.",
+        "invalidOtp": "Mã xác thực không chính xác hoặc đã hết hạn.",
         "fillAll": "Vui lòng nhập email",
         "enterName": "Nhập tên hiển thị",
         "nameHint": "Nhập tên sẽ hiển thị trong cuộc trò chuyện.",
-        "welcomeBack": "Chào mừng bạn quay lại!"
+        "welcomeBack": "Chào mừng bạn quay lại!",
+        "resendOtp": "Gửi lại mã OTP",
+        "resendCountdown": "Gửi lại mã sau {seconds}s"
     },
     "chat": {
         "adminName": "Đội ngũ tuyển dụng",
@@ -67,10 +77,39 @@
         "deleteMsg": "Xóa tin nhắn",
         "copied": "Đã sao chép!",
         "deleted": "Đã xóa",
+        "confirmDelete": "Bạn có chắc muốn xóa?",
+        "seen": "Đã xem",
+        "sentStatus": "Đã gửi",
+        "sending": "Đang gửi...",
+        "failed": "Gửi lỗi",
         "logout": "Đăng xuất",
+        "reply": "Trả lời",
+        "replyingTo": "Đang trả lời",
+        "replyToSelf": "chính mình",
         "confirmLogout": "Bạn có chắc chắn muốn đăng xuất?",
         "confirmLogoutTitle": "Xác nhận đăng xuất",
-        "confirmLogoutText": "Bạn có chắc chắn muốn đăng xuất khỏi phiên chat hiện tại không?"
+        "confirmLogoutText": "Bạn có chắc chắn muốn đăng xuất khỏi phiên chat hiện tại không?",
+        "networkOffline": "⚠️ Không có kết nối mạng. Vui lòng kiểm tra lại thiết bị.",
+        "networkReconnecting": "🔄 Đang kết nối lại...",
+        "networkConnected": "🟢 Đã kết nối lại thành công!",
+        "newMessages": "tin nhắn mới",
+        "scrollDown": "Cuộn xuống",
+        "cannedTitle": "Mẫu trả lời nhanh",
+        "cannedResponses": {
+            "greet": "Chào bạn, Uphill đã nhận được thông tin đăng ký ứng tuyển của bạn. Chúng tôi sẽ sớm liên hệ lại!",
+            "cv": "Bạn vui lòng gửi bản mềm CV (PDF) trực tiếp qua đây để chúng tôi tiến hành xét duyệt hồ sơ nhé.",
+            "interview": "Uphill trân trọng mời bạn tham gia buổi phỏng vấn trực tiếp tại văn phòng công ty.",
+            "askPhone": "Bạn vui lòng cung cấp số điện thoại chính xác để bộ phận nhân sự tiện liên hệ trao đổi công việc nhé.",
+            "askTime": "Thời gian sớm nhất bạn có thể bắt đầu nhận việc là khi nào?",
+            "interviewOnline": "Uphill trân trọng mời bạn tham gia buổi phỏng vấn trực tuyến qua Google Meet. Chúng tôi sẽ gửi link họp sau.",
+            "askExperience": "Bạn có thể chia sẻ thêm về kinh nghiệm làm việc hoặc các dự án nổi bật đã thực hiện ở vị trí tương đương không?",
+            "thankReject": "Cảm ơn bạn đã quan tâm đến cơ hội nghề nghiệp tại Uphill. Sau khi xem xét hồ sơ, chúng tôi nhận thấy kinh nghiệm của bạn chưa thực sự phù hợp với vị trí này tại thời điểm hiện tại. Hy vọng có dịp hợp tác cùng bạn trong tương lai."
+        },
+        "teamName": "Đội ngũ tuyển dụng",
+        "uploading": "Đang tải lên...",
+        "uploadSuccess": "Tải lên thành công!",
+        "uploadFailed": "Tải lên thất bại, vui lòng thử lại.",
+        "download": "Tải xuống"
     },
     "admin": {
         "confirmLogoutTitle": "Xác nhận đăng xuất",
@@ -141,11 +180,20 @@
         "noJobPosts": "Chưa có bài đăng",
         "selectJobPreview": "Chọn bài đăng để xem chi tiết",
         "confirmDelete": "Bạn có chắc muốn xóa?",
-        "ok": "Xóa"
+        "ok": "Xóa",
+        "sharedMedia": "Ảnh & Tập tin",
+        "noMedia": "Chưa có ảnh hoặc tập tin chia sẻ.",
+        "mediaGallery": "Kho ảnh/tập tin",
+        "mediaImages": "Hình ảnh",
+        "mediaFiles": "Tập tin & Tài liệu",
+        "noImages": "Chưa có hình ảnh chia sẻ nào.",
+        "noFiles": "Chưa có tập tin chia sẻ nào."
     },
     "common": {
         "error": "Đã xảy ra lỗi",
-        "delete": "Xóa"
+        "delete": "Xóa",
+        "other": "Khác / Nhập tay...",
+        "select": "Chọn..."
     },
     "notification": {
         "newMessage": "Tin nhắn mới",
@@ -158,6 +206,41 @@
         "salary": "Mức lương",
         "location": "Địa điểm",
         "applyNow": "Ứng tuyển vị trí này",
-        "noJobs": "Chưa có việc làm nào"
+        "noJobs": "Chưa có việc làm nào",
+        "jobList": "Danh sách việc làm",
+        "applicantViewPreview": "Bản xem trước giao diện ứng viên (Applicant View Preview)",
+        "welfare": "Chế độ & Phúc lợi",
+        "jobFields": {
+            "bonus": "Thưởng",
+            "nenkin": "Nenkin",
+            "insurance": "Bảo hiểm & Nenkin",
+            "raise": "Tăng lương",
+            "transport": "Trợ cấp đi lại",
+            "bonusOptions": {
+                "twice_a_year": "1 năm 2 lần",
+                "once_a_year": "1 năm 1 lần",
+                "performance": "Theo hiệu quả công việc",
+                "none": "Không thưởng"
+            },
+            "nenkinOptions": {
+                "full": "Đóng Nenkin đầy đủ",
+                "none": "Không hỗ trợ"
+            },
+            "insuranceOptions": {
+                "full": "Đầy đủ bảo hiểm & Nenkin",
+                "partial": "Một phần bảo hiểm & Nenkin",
+                "none": "Không hỗ trợ"
+            },
+            "raiseOptions": {
+                "once_a_year": "1 năm 1 lần",
+                "performance": "Theo đánh giá năng lực",
+                "none": "Không tăng lương"
+            },
+            "transportOptions": {
+                "full": "Chi trả đầy đủ",
+                "limited": "Hỗ trợ có giới hạn",
+                "none": "Không hỗ trợ"
+            }
+        }
     }
 }

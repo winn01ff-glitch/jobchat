@@ -9,7 +9,57 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 }
 
 
-export const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const adminClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const guestClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+    }
+});
+
+const getClient = () => {
+    if (typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        if (path.startsWith('/admin') || path.startsWith('/login')) {
+            return adminClient;
+        }
+    }
+    return guestClient;
+};
+
+export const supabaseClient = new Proxy({}, {
+    get(target, prop) {
+        const client = getClient();
+        const value = client[prop];
+        if (typeof value === 'function') {
+            return value.bind(client);
+        }
+        return value;
+    }
+});
+
+const setSessionHeader = () => {
+    if (typeof window !== 'undefined') {
+        const sessionStr = localStorage.getItem('jobchat_session');
+        if (sessionStr) {
+            try {
+                const session = JSON.parse(sessionStr);
+                if (session.token) {
+                    guestClient.rest.headers.set('x-session-token', session.token);
+                    return;
+                }
+            } catch (e) {}
+        }
+    }
+    guestClient.rest.headers.delete('x-session-token');
+};
+
+const originalFrom = guestClient.from;
+guestClient.from = function (table) {
+    setSessionHeader();
+    return originalFrom.call(this, table);
+};
 
 // Called from SupabaseProvider on app startup — just verifies connection
 export async function initSupabase() {
@@ -29,6 +79,7 @@ export async function initSupabase() {
 
 // ============ Database Operations ============
 export const DB = {
+    supabaseClient,
 
     // ---- Applicants ----
     createApplicant: async function (data) {
@@ -42,7 +93,7 @@ export const DB = {
                 language: data.language || (typeof window !== 'undefined' ? localStorage.getItem('jobchat_lang') : 'vi') || 'vi',
                 status: 'active',
                 session_token: generateToken(),
-                last_email_sent_at: new Date().toISOString()
+                last_email_sent_at: null
             })
             .select()
             .single();
@@ -89,13 +140,35 @@ export const DB = {
     },
 
     getApplicantByEmail: async function (email) {
+        const clean = (email || '').trim().toLowerCase();
         const { data, error } = await supabaseClient
             .from('applicants')
             .select('*')
-            .eq('email', email)
+            .ilike('email', clean)
             .single();
         if (error) return null;
         return data;
+    },
+
+    verifyOtp: async function (email, code) {
+        const clean = (email || '').trim().toLowerCase();
+        const { data, error } = await supabaseClient
+            .rpc('verify_otp', { email_param: clean, code_param: code });
+        if (error) throw error;
+        return data;
+    },
+
+    registerNewApplicant: async function (data) {
+        const { data: result, error } = await supabaseClient
+            .rpc('register_new_applicant', {
+                name_param: data.name,
+                email_param: data.email,
+                phone_param: data.phone || '',
+                position_param: data.position || 'other',
+                lang_param: data.language || 'vi'
+            });
+        if (error) throw error;
+        return result;
     },
 
     getAllApplicants: async function () {
@@ -133,17 +206,21 @@ export const DB = {
     },
 
     // ---- Messages ----
-    sendMessage: async function (conversationId, senderType, senderName, senderId, content) {
+    sendMessage: async function (conversationId, senderType, senderName, senderId, content, payload = null) {
+        const insertData = {
+            conversation_id: conversationId,
+            sender_type: senderType,
+            sender_name: senderName,
+            sender_id: senderId,
+            content: content,
+            status: 'sent'
+        };
+        if (payload) {
+            insertData.payload = payload;
+        }
         const { data, error } = await supabaseClient
             .from('messages')
-            .insert({
-                conversation_id: conversationId,
-                sender_type: senderType,
-                sender_name: senderName,
-                sender_id: senderId,
-                content: content,
-                status: 'sent'
-            })
+            .insert(insertData)
             .select()
             .single();
         if (error) throw error;
@@ -256,6 +333,20 @@ export const DB = {
         if (error) throw error;
     },
 
+    deleteMessageLocally: async function (messageId, userType) {
+        const updateData = {};
+        if (userType === 'admin') {
+            updateData.deleted_by_admin = true;
+        } else {
+            updateData.deleted_by_applicant = true;
+        }
+        const { error } = await supabaseClient
+            .from('messages')
+            .update(updateData)
+            .eq('id', messageId);
+        if (error) throw error;
+    },
+
     getMessages: async function (conversationId, offset = 0, limit = 20) {
         const { data, error } = await supabaseClient
             .from('messages')
@@ -281,8 +372,9 @@ export const DB = {
 
     // ---- Realtime subscriptions ----
     subscribeToMessages: function (conversationId, callback) {
+        const channelName = `messages:${conversationId}:${Math.random().toString(36).substring(2, 9)}`;
         return supabaseClient
-            .channel('messages:' + conversationId)
+            .channel(channelName)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
@@ -293,8 +385,9 @@ export const DB = {
     },
 
     subscribeToAllMessages: function (callback) {
+        const channelName = `all-messages:${Math.random().toString(36).substring(2, 9)}`;
         return supabaseClient
-            .channel('all-messages')
+            .channel(channelName)
             .on('postgres_changes', {
                 event: 'INSERT',
                 schema: 'public',
@@ -303,15 +396,25 @@ export const DB = {
             .subscribe();
     },
 
-    subscribeToNewApplicants: function (callback) {
+    subscribeToApplicants: function (callback) {
+        const channelName = `applicants-realtime:${Math.random().toString(36).substring(2, 9)}`;
         return supabaseClient
-            .channel('new-applicants')
+            .channel(channelName)
             .on('postgres_changes', {
-                event: 'INSERT',
+                event: '*',
                 schema: 'public',
                 table: 'applicants'
-            }, (payload) => callback(payload.new))
+            }, (payload) => callback(payload))
             .subscribe();
+    },
+
+    subscribeToTyping: function (conversationId, callback) {
+        const channelName = `typing:${conversationId}`;
+        const channel = supabaseClient.channel(channelName);
+        channel
+            .on('broadcast', { event: 'typing' }, ({ payload }) => callback(payload))
+            .subscribe();
+        return channel;
     },
 
     unsubscribe: function (subscription) {

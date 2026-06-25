@@ -203,3 +203,35 @@ export async function hashPassword(password) {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
+
+export async function downloadFile(url, filename) {
+    try {
+        if (!url) return;
+        
+        if (url.startsWith('data:')) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename || 'download';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            return;
+        }
+        
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename || 'download';
+        document.body.appendChild(link);
+        link.click();
+        
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+        console.error('Error downloading file, falling back to direct open:', error);
+        window.open(url, '_blank');
+    }
+}

@@ -28,18 +28,28 @@
         "position": "Posição desejada",
         "positionPlaceholder": "Selecione uma posição",
         "positions": {
-            "factory": "Fábrica / Produção",
+            "factory": "Fábrica",
             "restaurant": "Restaurante / Alimentação",
             "construction": "Construção",
             "office": "Escritório",
+            "nursing": "Enfermagem / Cuidados",
             "it": "TI / Técnico",
             "other": "Outro"
         },
         "submit": "Iniciar chat",
+        "enterOtp": "Digite o código de verificação",
+        "otpSentHint": "Enviamos um código de verificação de 6 dígitos para:",
+        "verify": "Verificar e Iniciar Chat",
+        "changeEmail": "Alterar endereço de e-mail",
+        "otpSent": "O código de verificação foi enviado para o seu e-mail!",
+        "sendOtpFailed": "Falha ao enviar o código de verificação. Por favor, tente novamente.",
+        "invalidOtp": "Código de verificação inválido ou expirado.",
         "fillAll": "Preencha o e-mail",
         "enterName": "Digite seu nome de exibição",
         "nameHint": "Este nome será exibido no chat.",
-        "welcomeBack": "Bem-vindo de volta!"
+        "welcomeBack": "Bem-vindo de volta!",
+        "resendOtp": "Reenviar código",
+        "resendCountdown": "Reenviar em {seconds}s"
     },
     "chat": {
         "teamName": "Equipe de Recrutamento",
@@ -66,7 +76,40 @@
         "copied": "Copiado!",
         "deleted": "Excluído",
         "logout": "Sair",
-        "confirmLogout": "Tem certeza que deseja sair?"
+        "confirmLogout": "Tem certeza que deseja sair?",
+        "adminName": "Equipe de Recrutamento",
+        "cannedTitle": "Respostas Rápidas",
+        "cannedResponses": {
+            "greet": "Olá! Recebemos as suas informações de inscrição. Entraremos em contato em breve!",
+            "cv": "Por favor, envie o seu CV (PDF) diretamente aqui para que possamos analisar seu perfil.",
+            "interview": "Gostaríamos de convidá-lo para uma entrevista presencial em nosso escritório.",
+            "askPhone": "Por favor, forneça o seu número de telefone correto para que o nosso departamento de RH possa entrar em contato facilmente.",
+            "askTime": "Qual é a data mais próxima em que você pode começar a trabalhar?",
+            "interviewOnline": "Gostaríamos de convidá-lo para uma entrevista online via Google Meet. Enviaremos o link da reunião mais tarde.",
+            "askExperience": "Você poderia compartilhar mais sobre a sua experiência de trabalho ou projetos notáveis que realizou em um cargo semelhante?",
+            "thankReject": "Obrigado pelo seu interesse nas oportunidades de carreira na Uphill. Após analisar o seu perfil, identificamos que a sua experiência não é adequada para esta vaga no momento. Esperamos ter a oportunidade de cooperar com você no futuro."
+        },
+        "confirmDelete": "Tem certeza de que deseja excluir?",
+        "confirmLogoutText": "Tem certeza de que deseja sair da sessão de chat atual? O histórico neste dispositivo será apagado.",
+        "confirmLogoutTitle": "Confirmar Saída",
+        "failed": "Erro ao enviar",
+        "loadMore": "Carregar mensagens anteriores",
+        "networkConnected": "🟢 Conectado com sucesso!",
+        "networkOffline": "⚠️ Sem conexão com a internet. Por favor, verifique seu dispositivo.",
+        "networkReconnecting": "🔄 Reconectando...",
+        "newMessages": "novas mensagens",
+        "reply": "Responder",
+        "replyToSelf": "si mesmo",
+        "replyingTo": "Respondendo a",
+        "scrollDown": "Rolar para baixo",
+        "seen": "Visualizado",
+        "sending": "Enviando...",
+        "sentStatus": "Enviado",
+        "systemConnected": "Conectado com sucesso. Você pode iniciar o chat.",
+        "uploading": "Enviando...",
+        "uploadSuccess": "Enviado com sucesso!",
+        "uploadFailed": "Falha no envio, tente novamente.",
+        "download": "Baixar"
     },
     "admin": {
         "loginTitle": "Login do Administrador",
@@ -114,10 +157,43 @@
         "publish": "Publicar",
         "noJobPosts": "Nenhuma vaga ainda",
         "selectJobPreview": "Selecione uma vaga para ver detalhes",
-        "confirmDelete": "Tem certeza que deseja excluir?"
+        "confirmDelete": "Tem certeza que deseja excluir?",
+        "avatarUpdated": "Foto de perfil atualizada",
+        "changePassword": "Alterar senha (opcional)",
+        "confirmDeleteJobText": "Tem certeza de que deseja excluir esta vaga?",
+        "confirmDeleteJobTitle": "Excluir Vaga",
+        "confirmLogoutText": "Tem certeza de que deseja sair do sistema de administração?",
+        "confirmLogoutTitle": "Confirmar Saída",
+        "currentPasswordRequired": "Por favor, digite sua senha atual",
+        "delete": "Excluir",
+        "fillAll": "Por favor, preencha todos os campos",
+        "invalidCredentials": "Usuário ou senha incorretos",
+        "invalidData": "Dados inválidos",
+        "jobContentPlaceholder": "Descrição detalhada da vaga...",
+        "jobStatus": "Status",
+        "locationExample": "Exemplo: Tóquio",
+        "loginBtn": "Entrar",
+        "loginSubtitle": "Faça login para gerenciar candidatos",
+        "mediaGallery": "Galeria de Mídia",
+        "noMedia": "Nenhuma foto ou arquivo compartilhado ainda.",
+        "ok": "OK",
+        "passwordsNotMatch": "A confirmação de senha não coincide",
+        "salaryExample": "Exemplo: ¥250.000/mês",
+        "sharedMedia": "Fotos e Arquivos",
+        "statusDraft": "Rascunho",
+        "statusPublished": "Publicado",
+        "username": "Nome de usuário",
+        "wrongCurrentPassword": "A senha atual está incorreta",
+        "mediaImages": "Imagens",
+        "mediaFiles": "Arquivos e Documentos",
+        "noImages": "Nenhuma imagem compartilhada ainda.",
+        "noFiles": "Nenhum arquivo compartilhado ainda."
     },
     "common": {
-        "error": "Ocorreu um erro"
+        "error": "Ocorreu um erro",
+        "delete": "Excluir",
+        "other": "Outro / Digitar...",
+        "select": "Selecionar..."
     },
     "notification": {
         "newMessage": "Nova mensagem",
@@ -130,6 +206,41 @@
         "salary": "Salário",
         "location": "Local",
         "applyNow": "Candidatar-se a esta vaga",
-        "noJobs": "Nenhuma vaga disponível"
+        "noJobs": "Nenhuma vaga disponível",
+        "jobList": "Lista de vagas",
+        "applicantViewPreview": "Visualização do Candidato (Applicant View Preview)",
+        "welfare": "Benefícios e Condições",
+        "jobFields": {
+            "bonus": "Bônus",
+            "nenkin": "Previdência (Nenkin)",
+            "insurance": "Seguro Social e Nenkin",
+            "raise": "Aumento Salarial",
+            "transport": "Vale Transporte",
+            "bonusOptions": {
+                "twice_a_year": "Duas vezes ao ano",
+                "once_a_year": "Uma vez ao ano",
+                "performance": "Baseado em desempenho",
+                "none": "Sem bônus"
+            },
+            "nenkinOptions": {
+                "full": "Totalmente coberto",
+                "none": "Não suportado"
+            },
+            "insuranceOptions": {
+                "full": "Seguro social e Nenkin completos",
+                "partial": "Cobertura parcial",
+                "none": "Não suportado"
+            },
+            "raiseOptions": {
+                "once_a_year": "Uma vez ao ano",
+                "performance": "Baseado em avaliação",
+                "none": "Sem aumento"
+            },
+            "transportOptions": {
+                "full": "Cobertura total",
+                "limited": "Cobertura limitada",
+                "none": "Não suportado"
+            }
+        }
     }
 }

@@ -61,7 +61,7 @@ export async function POST(request) {
             </tr>
           </table>
           <div style="margin-top: 30px; text-align: center;">
-            <a href="http://localhost:7070/admin/login" style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Truy cập bảng điều khiển Admin</a>
+            <a href="https://uphill-jobchat.vercel.app/admin/dashboard" style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Truy cập bảng điều khiển Admin</a>
           </div>
         </div>
       `;
@@ -89,7 +89,7 @@ export async function POST(request) {
           <p>Ứng viên <strong>${applicantName}</strong> (${applicantEmail}) vừa gửi tin nhắn mới đến admin:</p>
           <div style="background-color: #f7f9fa; padding: 15px; border-left: 4px solid #0070f3; margin: 20px 0; font-style: italic; white-space: pre-wrap; color: #333;">${displayContent}</div>
           <div style="margin-top: 30px; text-align: center;">
-            <a href="http://localhost:7070/admin/login" style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Trả lời trong phòng chat</a>
+            <a href="https://uphill-jobchat.vercel.app/admin/dashboard" style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Trả lời trong phòng chat</a>
           </div>
         </div>
       `;
@@ -97,7 +97,7 @@ export async function POST(request) {
 
     const mailOptions = {
       from: `"Uphill Jobchat" <${smtpUser}>`,
-      to: 'uphillpayslip@gmail.com',
+      to: 'winn01ff@gmail.com',
       subject: subject,
       html: htmlContent,
     };

@@ -9,7 +9,8 @@ export default function ConversationList({
   filter, 
   setFilter, 
   searchQuery, 
-  setSearchQuery 
+  setSearchQuery,
+  typingStates
 }) {
   const { t } = useLanguage();
 
@@ -71,7 +72,10 @@ export default function ConversationList({
         ) : (
           filtered.map(applicant => {
             const timeStr = applicant.lastMsg ? formatTime(applicant.lastMsg.created_at, { t }) : formatTime(applicant.created_at, { t });
-            const lastMsgText = applicant.lastMsg ? parseMessagePreview(applicant.lastMsg.content) : (t('admin.newApplicant') || 'Ứng viên mới');
+            const isTyping = typingStates && typingStates[applicant.id];
+            const lastMsgText = isTyping 
+              ? (t('chat.typing') || 'đang gõ...') 
+              : (applicant.lastMsg ? parseMessagePreview(applicant.lastMsg.content) : (t('admin.newApplicant') || 'Ứng viên mới'));
             
             return (
               <div 
@@ -81,12 +85,19 @@ export default function ConversationList({
               >
                 <div className="conv-avatar">{getInitials(applicant.name)}</div>
                 <div className="conv-info">
-                  <div className="conv-name">
+                  <div className="conv-name" style={{ fontWeight: applicant._hasUnread ? '800' : '600' }}>
                     {applicant.name}
-                    <span className="conv-time">{timeStr}</span>
+                    <span className="conv-time" style={{ fontWeight: '400' }}>{timeStr}</span>
                   </div>
-                  {applicant.phone && <div className="conv-phone">📱 {applicant.phone}</div>}
-                  <div className="conv-last-msg">{lastMsgText}</div>
+                  <div className="conv-last-msg" style={{ 
+                    fontWeight: applicant._hasUnread ? '700' : '400', 
+                    color: isTyping ? 'var(--messenger-blue)' : (applicant._hasUnread ? 'var(--text-primary)' : 'var(--text-muted)') 
+                  }}>
+                    <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', flex: 1, fontWeight: isTyping ? '600' : undefined }}>
+                      {lastMsgText}
+                    </span>
+                    {applicant._hasUnread && <span className="unread-dot-badge"></span>}
+                  </div>
                 </div>
               </div>
             );

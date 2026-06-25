@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../../context/LanguageContext';
 import { useNotification } from '../../../context/NotificationContext';
 import { DB } from '../../../lib/supabase';
-import { ChatBubble, SystemMessage } from '../../../components/ChatBubble';
+import { ChatBubble, SystemMessage, TypingIndicator } from '../../../components/ChatBubble';
 import { autoResize, EmojiPicker } from '../../../lib/helpers';
 
 const compressImage = (file) => {
@@ -35,17 +35,25 @@ const compressImage = (file) => {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
+        // Keep PNG if original is PNG, otherwise compress to JPEG (common JPG format)
+        const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        const ext = file.type === 'image/png' ? '.png' : '.jpg';
+
         canvas.toBlob(
           (blob) => {
-            resolve(blob || file);
+            resolve({
+              blob: blob || file,
+              mimeType: mimeType,
+              ext: ext
+            });
           },
-          'image/webp',
-          0.8
+          mimeType,
+          mimeType === 'image/jpeg' ? 0.85 : undefined
         );
       };
-      img.onerror = () => resolve(file);
+      img.onerror = () => resolve({ blob: file, mimeType: file.type, ext: file.name.includes('.') ? file.name.substring(file.name.lastIndexOf('.')) : '.jpg' });
     };
-    reader.onerror = () => resolve(file);
+    reader.onerror = () => resolve({ blob: file, mimeType: file.type, ext: file.name.includes('.') ? file.name.substring(file.name.lastIndexOf('.')) : '.jpg' });
   });
 };
 
@@ -59,18 +67,40 @@ export default function ChatPage({ params }) {
   const [messages, setMessages] = useState([]);
   const [applicantName, setApplicantName] = useState('');
   const [inputText, setInputText] = useState('');
+  const [replyToMessage, setReplyToMessage] = useState(null);
+  const [activeMessageId, setActiveMessageId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState('online');
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const [partnerName, setPartnerName] = useState('');
+  const [partnerAvatar, setPartnerAvatar] = useState(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
   const [messagesOffset, setMessagesOffset] = useState(0);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [adminsMap, setAdminsMap] = useState({});
 
+  const typingTimeoutRef = useRef(null);
+  const typingChannelRef = useRef(null);
+
   const messagesEndRef = useRef(null);
   const listRef = useRef(null);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+
+  const getReplyText = (msg) => {
+    if (!msg) return '';
+    try {
+      const parsed = JSON.parse(msg.content);
+      if (parsed.type === 'image') return t('chat.image') || 'Hình ảnh';
+      if (parsed.type === 'file') return parsed.name;
+      if (parsed.type === 'location') return t('chat.locationShared') || 'Đã chia sẻ vị trí';
+    } catch(e) {}
+    return msg.content;
+  };
 
   useEffect(() => {
     // Check auth
@@ -122,6 +152,91 @@ export default function ChatPage({ params }) {
     }
   }, [applicantId]);
 
+  useEffect(() => {
+    if (!applicantId) return;
+    const channelName = `typing:${applicantId}`;
+    const channel = DB.supabaseClient.channel(channelName);
+    
+    channel
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (payload.sender_type === 'admin') {
+          setIsPartnerTyping(payload.isTyping);
+          if (payload.isTyping) {
+            setPartnerName(payload.sender_name || t('chat.adminName') || 'Đội ngũ tuyển dụng');
+            const adminInfo = payload.sender_id ? adminsMap[payload.sender_id] : null;
+            setPartnerAvatar(adminInfo?.avatar || payload.avatar || null);
+          }
+        }
+      })
+      .subscribe();
+      
+    typingChannelRef.current = channel;
+    
+    return () => {
+      DB.supabaseClient.removeChannel(channel);
+    };
+  }, [applicantId]);
+
+  useEffect(() => {
+    if (isPartnerTyping) {
+      const container = listRef.current;
+      if (container) {
+        const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 250;
+        if (isAtBottom) {
+          setTimeout(scrollToBottom, 50);
+        }
+      } else {
+        setTimeout(scrollToBottom, 50);
+      }
+    }
+  }, [isPartnerTyping]);
+
+  useEffect(() => {
+    if (!applicantId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const msgs = await DB.getMessages(applicantId, 0, 20);
+        setMessages(prev => {
+          const prevIds = prev.map(m => m.id).join(',');
+          const newIds = msgs.map(m => m.id).join(',');
+          if (prevIds !== newIds) {
+            const sending = prev.filter(m => m.status === 'sending' || m.status === 'failed');
+            const merged = [...msgs];
+            sending.forEach(s => {
+              if (!merged.find(m => m.id === s.id)) {
+                merged.push(s);
+              }
+            });
+            merged.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            
+            const hasNewAdminMsg = msgs.length > 0 && 
+              msgs[msgs.length - 1].sender_type === 'admin' && 
+              !prev.find(m => m.id === msgs[msgs.length - 1].id);
+              
+            if (hasNewAdminMsg) {
+              const container = listRef.current;
+              const isAtBottom = container ? (container.scrollHeight - container.scrollTop - container.clientHeight <= 150) : true;
+              if (isAtBottom) {
+                setTimeout(scrollToBottom, 50);
+                DB.markMessagesAsSeen(applicantId, 'admin');
+              } else {
+                setNewMessagesCount(prevCount => prevCount + 1);
+              }
+            }
+            
+            return merged;
+          }
+          return prev;
+        });
+      } catch (e) {
+        console.error('Polling failed:', e);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [applicantId]);
+
   const loadInitialMessages = async (id) => {
     try {
       const msgs = await DB.getMessages(id, 0, 20);
@@ -133,7 +248,9 @@ export default function ChatPage({ params }) {
       setTimeout(() => scrollToBottom(), 100);
       DB.markMessagesAsSeen(id, 'admin');
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load initial chat state:', err);
+      localStorage.removeItem('jobchat_session');
+      router.push('/register');
     } finally {
       setIsLoading(false);
     }
@@ -181,9 +298,11 @@ export default function ChatPage({ params }) {
     // If we are at the bottom, auto scroll
     const container = listRef.current;
     if (container) {
-      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 100;
+      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
       if (isAtBottom || msg.sender_type === 'applicant') {
         setTimeout(scrollToBottom, 50);
+      } else {
+        setNewMessagesCount(prev => prev + 1);
       }
     } else {
       setTimeout(scrollToBottom, 50);
@@ -198,23 +317,87 @@ export default function ChatPage({ params }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSend = async (customContent = null) => {
-    const text = (textareaRef.current?.value || inputText).trim();
-    if (!text && !customContent) return;
+  const handleScroll = () => {
+    const container = listRef.current;
+    if (!container) return;
     
+    const isScrolledUp = container.scrollHeight - container.scrollTop - container.clientHeight > 150;
+    setShowScrollBtn(isScrolledUp);
+    
+    if (!isScrolledUp) {
+      setNewMessagesCount(0);
+    }
+  };
+
+  const handleTextChange = (val) => {
+    setInputText(val);
+    
+    // Broadcast typing state
+    if (typingChannelRef.current) {
+      typingChannelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { sender_type: 'applicant', isTyping: val.length > 0 }
+      });
+    }
+    
+    // Auto-clear typing status after 3s of inactivity
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    if (val.length > 0) {
+      typingTimeoutRef.current = setTimeout(() => {
+        if (typingChannelRef.current) {
+          typingChannelRef.current.send({
+            type: 'broadcast',
+            event: 'typing',
+            payload: { sender_type: 'applicant', isTyping: false }
+          });
+        }
+      }, 3000);
+    }
+  };
+
+  const handleSend = async (customContent = null) => {
+    const contentVal = typeof customContent === 'string' ? customContent : null;
+    const text = (textareaRef.current?.value || inputText).trim();
+    if (!text && !contentVal) return;
+    
+    let payload = null;
+    if (replyToMessage) {
+      payload = {
+        reply_to: {
+          id: replyToMessage.id,
+          content: replyToMessage.content,
+          sender_name: replyToMessage.sender_name || (replyToMessage.sender_type === 'admin' ? t('chat.adminName') : applicantName),
+          sender_id: replyToMessage.sender_id || (replyToMessage.sender_type === 'admin' ? 'admin' : applicantId)
+        }
+      };
+      setReplyToMessage(null);
+    }
+
     const tempId = 'temp-' + Date.now();
     const newMsg = {
       id: tempId,
-      content: customContent || text,
+      content: contentVal || text,
       sender_type: 'applicant',
       sender_name: applicantName,
       created_at: new Date().toISOString(),
-      status: 'sending'
+      status: 'sending',
+      payload: payload
     };
     
     setMessages(prev => [...prev, newMsg]);
     
-    if (!customContent) {
+    // Immediately clear typing state on sending
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    if (typingChannelRef.current) {
+      typingChannelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { sender_type: 'applicant', isTyping: false }
+      });
+    }
+
+    if (!contentVal) {
       setInputText('');
       if (textareaRef.current) {
         textareaRef.current.value = '';
@@ -224,11 +407,17 @@ export default function ChatPage({ params }) {
     setTimeout(scrollToBottom, 50);
 
     try {
-      const actualMsg = await DB.sendMessage(applicantId, 'applicant', applicantName, applicantId, customContent || text);
+      const actualMsg = await DB.sendMessage(applicantId, 'applicant', applicantName, applicantId, contentVal || text, payload);
       // Replace temp with actual
       setMessages(prev => prev.map(m => m.id === tempId ? actualMsg : m));
     } catch(err) {
       console.error('Send failed', err);
+      if (err && (err.code === '23503' || (err.message && err.message.includes('foreign key')))) {
+        showToast(t('register.invalidOtp') || 'Phiên làm việc đã hết hạn hoặc không tồn tại.', 'error');
+        localStorage.removeItem('jobchat_session');
+        router.push('/register');
+        return;
+      }
       showToast(t('common.error'), 'error');
       // Mark as failed
       setMessages(prev => prev.map(m => m.id === tempId ? {...m, status: 'failed'} : m));
@@ -246,11 +435,11 @@ export default function ChatPage({ params }) {
       let uploadName = file.name;
       
       if (type === 'image') {
-        // Compress image client-side to WebP
-        const compressedBlob = await compressImage(file);
+        // Compress image client-side to JPG/PNG
+        const { blob, mimeType, ext } = await compressImage(file);
         const baseName = file.name.includes('.') ? file.name.substring(0, file.name.lastIndexOf('.')) : file.name;
-        uploadName = `${baseName}.webp`;
-        fileToUpload = new File([compressedBlob], uploadName, { type: 'image/webp' });
+        uploadName = `${baseName}${ext}`;
+        fileToUpload = new File([blob], uploadName, { type: mimeType });
       }
 
       // Upload file to Supabase Storage
@@ -310,7 +499,15 @@ export default function ChatPage({ params }) {
 
   return (
     <div className="chat-container">
-      <div className="chat-messages" id="chat-messages" ref={listRef}>
+      {connectionStatus !== 'online' && (
+        <div className={`network-banner ${connectionStatus}`}>
+          {connectionStatus === 'offline' && (t('chat.networkOffline') || '⚠️ Không có kết nối mạng. Vui lòng kiểm tra lại thiết bị.')}
+          {connectionStatus === 'reconnecting' && (t('chat.networkReconnecting') || '🔄 Đang kết nối lại...')}
+          {connectionStatus === 'connected' && (t('chat.networkConnected') || '🟢 Đã kết nối lại thành công!')}
+        </div>
+      )}
+
+      <div className="chat-messages" id="chat-messages" ref={listRef} onScroll={handleScroll}>
         {hasMoreMessages && (
           <div style={{textAlign: 'center', margin: '10px 0'}}>
             <button 
@@ -329,7 +526,7 @@ export default function ChatPage({ params }) {
           <p>{t('chat.welcomeMsg')}</p>
         </div>
         
-        {messages.map((msg, index) => {
+        {messages.filter(msg => !msg.deleted_by_applicant).map((msg, index, filteredMsgs) => {
           let showDateSeparator = false;
           let dateLabel = '';
           const d = new Date(msg.created_at);
@@ -338,7 +535,7 @@ export default function ChatPage({ params }) {
           if (index === 0) {
             showDateSeparator = true;
           } else {
-            const prevD = new Date(messages[index - 1].created_at);
+            const prevD = new Date(filteredMsgs[index - 1].created_at);
             if (d.toDateString() !== prevD.toDateString()) {
               showDateSeparator = true;
             }
@@ -359,11 +556,24 @@ export default function ChatPage({ params }) {
           }
 
           let isLastInGroup = true;
-          const nextMsg = messages[index + 1];
+          const nextMsg = filteredMsgs[index + 1];
           if (nextMsg) {
             const nextD = new Date(nextMsg.created_at);
-            if (nextMsg.sender_type === msg.sender_type && nextD.toDateString() === d.toDateString()) {
+            const isSameSender = nextMsg.sender_type === msg.sender_type && 
+                                 (msg.sender_type !== 'admin' || nextMsg.sender_id === msg.sender_id);
+            if (isSameSender && nextD.toDateString() === d.toDateString()) {
               isLastInGroup = false;
+            }
+          }
+
+          let isFirstInGroup = true;
+          const prevMsg = filteredMsgs[index - 1];
+          if (prevMsg) {
+            const prevD = new Date(prevMsg.created_at);
+            const isSameSender = prevMsg.sender_type === msg.sender_type && 
+                                 (msg.sender_type !== 'admin' || prevMsg.sender_id === msg.sender_id);
+            if (isSameSender && prevD.toDateString() === d.toDateString()) {
+              isFirstInGroup = false;
             }
           }
 
@@ -380,59 +590,106 @@ export default function ChatPage({ params }) {
               <ChatBubble 
                 msg={msg} 
                 isSent={msg.sender_type === 'applicant'} 
-                showSender={false} 
+                showSender={msg.sender_type === 'admin' ? isFirstInGroup : false} 
                 showAvatar={isLastInGroup}
                 adminInfo={msgAdminInfo}
                 onDelete={async (msgId) => {
                   try {
-                    await DB.deleteMessage(msgId);
+                    await DB.deleteMessageLocally(msgId, 'applicant');
                     setMessages(prev => prev.filter(m => m.id !== msgId));
                     showToast(t('chat.deleted') || 'Đã xóa', 'success');
                   } catch(e) {
                     showToast(t('common.error'), 'error');
                   }
                 }}
+                onReply={(replyMsg) => setReplyToMessage(replyMsg)}
+                activeMessageId={activeMessageId}
+                setActiveMessageId={setActiveMessageId}
               />
             </React.Fragment>
           );
         })}
+        {isPartnerTyping && (
+          <TypingIndicator name={partnerName || t('chat.adminName') || 'Đội ngũ tuyển dụng'} avatar={partnerAvatar} />
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="chat-input-bar">
-        <input type="file" id="chat-file-upload" style={{display:'none'}} ref={fileInputRef} onChange={e => handleFileSelect(e, 'file')} />
-        <input type="file" id="chat-image-upload" accept="image/*" style={{display:'none'}} ref={imageInputRef} onChange={e => handleFileSelect(e, 'image')} />
-        <div className="chat-actions">
-          <button className="chat-action-btn" title={t('chat.attachFile') || 'Đính kèm file'} onClick={() => fileInputRef.current?.click()}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-          </button>
-          <button className="chat-action-btn" title={t('chat.sendImage') || 'Gửi ảnh'} onClick={() => imageInputRef.current?.click()}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          </button>
-          <button className="chat-action-btn" title={t('chat.sendLocation') || 'Gửi vị trí'} onClick={handleLocationSend}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          </button>
-        </div>
-        <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
-          <textarea 
-            id="chat-input"
-            ref={textareaRef}
-            className="chat-input" 
-            placeholder={t('chat.placeholder')}
-            value={inputText}
-            onChange={(e) => {
-              setInputText(e.target.value);
-              autoResize(e.target);
-            }}
-            onKeyDown={handleKeyDown}
-            rows="1"
-            style={{background:'transparent', margin:0, flex:1}}
-          ></textarea>
-          <button className="emoji-toggle-btn" onClick={(e) => EmojiPicker.toggle('chat-input', e.currentTarget)}>😊</button>
-        </div>
-        <button className="btn-send" onClick={handleSend}>
-          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      {showScrollBtn && (
+        <button 
+          className={`scroll-bottom-btn ${newMessagesCount > 0 ? 'new-msg' : ''}`}
+          onClick={() => {
+            scrollToBottom();
+            setNewMessagesCount(0);
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+          <span>
+            {newMessagesCount > 0 ? `${newMessagesCount} ${t('chat.newMessages') || 'tin nhắn mới'}` : (t('chat.scrollDown') || 'Cuộn xuống')}
+          </span>
         </button>
+      )}
+
+      {replyToMessage && (
+        <div className="reply-bar-container">
+          <div className="reply-bar-inner">
+            <div className="reply-bar-info">
+              <div className="reply-bar-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--messenger-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v2.5"/></svg>
+                <span>
+                  {t('chat.replyingTo') || 'Đang trả lời'}{' '}
+                  {replyToMessage.sender_id === applicantId 
+                    ? (t('chat.replyToSelf') || 'chính mình') 
+                    : (replyToMessage.sender_name || t('chat.adminName'))}
+                </span>
+              </div>
+              <div className="reply-bar-content">
+                {getReplyText(replyToMessage)}
+              </div>
+            </div>
+            <button className="reply-bar-close" onClick={() => setReplyToMessage(null)}>
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="chat-input-bar">
+        <div className="chat-input-container">
+          <input type="file" id="chat-file-upload" style={{display:'none'}} ref={fileInputRef} onChange={e => handleFileSelect(e, 'file')} />
+          <input type="file" id="chat-image-upload" accept="image/*" style={{display:'none'}} ref={imageInputRef} onChange={e => handleFileSelect(e, 'image')} />
+          <div className="chat-actions">
+            <button className="chat-action-btn" title={t('chat.attachFile') || 'Đính kèm file'} onClick={() => fileInputRef.current?.click()}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <button className="chat-action-btn" title={t('chat.sendImage') || 'Gửi ảnh'} onClick={() => imageInputRef.current?.click()}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </button>
+            <button className="chat-action-btn" title={t('chat.sendLocation') || 'Gửi vị trí'} onClick={handleLocationSend}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </button>
+          </div>
+          <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
+            <textarea 
+              id="chat-input"
+              ref={textareaRef}
+              className="chat-input" 
+              placeholder={t('chat.placeholder')}
+              value={inputText}
+              onChange={(e) => {
+                handleTextChange(e.target.value);
+                autoResize(e.target);
+              }}
+              onKeyDown={handleKeyDown}
+              rows="1"
+              style={{background:'transparent', margin:0, flex:1, border:'none', outline:'none', resize:'none', overflow:'hidden'}}
+            ></textarea>
+            <button className="emoji-toggle-btn" onClick={(e) => EmojiPicker.toggle('chat-input', e.currentTarget)}>😊</button>
+          </div>
+          <button className="btn-send" onClick={() => handleSend()}>
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
       </div>
     </div>
   );

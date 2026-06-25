@@ -1,6 +1,6 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '../../../context/LanguageContext';
 import { DB } from '../../../lib/supabase';
 import ConversationList from '../../../components/ConversationList';
@@ -8,9 +8,10 @@ import AdminChat from '../../../components/AdminChat';
 import JobManagement from '../../../components/JobManagement';
 import JobPreviewPanel from '../../../components/JobPreviewPanel';
 
-export default function AdminDashboardPage() {
+function DashboardContent() {
   const { t } = useLanguage();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [adminSession, setAdminSession] = useState(null);
   const [applicants, setApplicants] = useState([]);
@@ -18,6 +19,30 @@ export default function AdminDashboardPage() {
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileChatActive, setIsMobileChatActive] = useState(false);
+  const [activeTab, setActiveTab] = useState('chats');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [typingStates, setTypingStates] = useState({});
+
+  // Sync tab and selected ID from URL search parameters
+  useEffect(() => {
+    const tabParam = searchParams ? searchParams.get('tab') : null;
+    if (tabParam === 'jobs' || tabParam === 'chats') {
+      setActiveTab(tabParam);
+    } else {
+      setActiveTab('chats');
+    }
+    
+    const idParam = searchParams ? searchParams.get('id') : null;
+    if (idParam) {
+      setSelectedId(idParam);
+      if (window.innerWidth <= 768) {
+        setIsMobileChatActive(true);
+      }
+    } else {
+      setSelectedId(null);
+      setIsMobileChatActive(false);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // Check auth
@@ -32,12 +57,28 @@ export default function AdminDashboardPage() {
 
       await loadApplicants();
 
-      // Subscribe to new applicants
-      const sub1 = DB.subscribeToNewApplicants((applicant) => {
-        setApplicants(prev => {
-          if (prev.find(a => a.id === applicant.id)) return prev;
-          return [applicant, ...prev];
-        });
+      // Subscribe to all changes in applicants (insert, update, delete)
+      const sub1 = DB.subscribeToApplicants((payload) => {
+        const { eventType, new: newRecord, old: oldRecord } = payload;
+        
+        if (eventType === 'INSERT') {
+          setApplicants(prev => {
+            if (prev.find(a => a.id === newRecord.id)) return prev;
+            return [newRecord, ...prev];
+          });
+        } else if (eventType === 'UPDATE') {
+          setApplicants(prev => prev.map(a => a.id === newRecord.id ? { ...a, ...newRecord } : a));
+        } else if (eventType === 'DELETE') {
+          setApplicants(prev => prev.filter(a => a.id !== oldRecord.id));
+          
+          // Clear ID from URL if selected applicant is deleted
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('id') === oldRecord.id) {
+            params.delete('id');
+            const newQuery = params.toString();
+            router.replace(`${window.location.pathname}${newQuery ? '?' + newQuery : ''}`);
+          }
+        }
       });
       if (sub1) subs.push(sub1);
 
@@ -54,6 +95,24 @@ export default function AdminDashboardPage() {
       subs.forEach(sub => DB.unsubscribe(sub));
     };
   }, [router]);
+
+  useEffect(() => {
+    const subChannels = [];
+    applicants.forEach(a => {
+      const channel = DB.subscribeToTyping(a.id, (payload) => {
+        if (payload.sender_type === 'applicant') {
+          setTypingStates(prev => ({
+            ...prev,
+            [a.id]: payload.isTyping
+          }));
+        }
+      });
+      if (channel) subChannels.push(channel);
+    });
+    return () => {
+      subChannels.forEach(c => DB.unsubscribe(c));
+    };
+  }, [applicants]);
 
   const loadApplicants = async () => {
     try {
@@ -88,60 +147,92 @@ export default function AdminDashboardPage() {
   };
 
   const handleSelectConversation = (id) => {
-    setSelectedId(id);
-    if (window.innerWidth <= 768) {
-      setIsMobileChatActive(true);
-    }
+    setApplicants(prev => prev.map(a => a.id === id ? { ...a, _hasUnread: false } : a));
+    const params = new URLSearchParams(window.location.search);
+    params.set('id', id);
+    router.replace(`${window.location.pathname}?${params.toString()}`);
   };
 
   const handleBackToSidebar = () => {
-    setIsMobileChatActive(false);
+    const params = new URLSearchParams(window.location.search);
+    params.delete('id');
+    const newQuery = params.toString();
+    router.replace(`${window.location.pathname}${newQuery ? '?' + newQuery : ''}`);
   };
 
-  const [activeTab, setActiveTab] = useState('chats');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const handleApplicantUpdate = (updatedApplicant) => {
+    setApplicants(prev => prev.map(a => a.id === updatedApplicant.id ? { ...a, ...updatedApplicant } : a));
+  };
 
-  // Hide global header on mobile when chat is active
+  const handleApplicantDelete = (id) => {
+    setApplicants(prev => prev.filter(a => a.id !== id));
+    const params = new URLSearchParams(window.location.search);
+    params.delete('id');
+    const newQuery = params.toString();
+    router.replace(`${window.location.pathname}${newQuery ? '?' + newQuery : ''}`);
+  };
+
   useEffect(() => {
     const header = document.getElementById('app-header');
     const pageContainer = document.getElementById('page-container');
     if (isMobileChatActive) {
       if (header) header.style.display = 'none';
-      if (pageContainer) pageContainer.style.marginTop = '0';
+      if (pageContainer) {
+        pageContainer.style.marginTop = '0';
+        pageContainer.classList.add('chat-active-mobile');
+      }
       document.body.style.height = '100dvh';
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('chat-active-mobile');
     } else {
       if (header) header.style.display = 'flex';
-      if (pageContainer) pageContainer.style.marginTop = 'var(--header-height)';
+      if (pageContainer) {
+        pageContainer.style.marginTop = 'var(--header-height)';
+        pageContainer.classList.remove('chat-active-mobile');
+      }
       document.body.style.height = '';
       document.body.style.overflow = '';
+      document.body.classList.remove('chat-active-mobile');
     }
     return () => {
       if (header) header.style.display = 'flex';
-      if (pageContainer) pageContainer.style.marginTop = 'var(--header-height)';
+      if (pageContainer) {
+        pageContainer.style.marginTop = 'var(--header-height)';
+        pageContainer.classList.remove('chat-active-mobile');
+      }
       document.body.style.height = '';
       document.body.style.overflow = '';
+      document.body.classList.remove('chat-active-mobile');
     };
   }, [isMobileChatActive]);
 
-  if (!adminSession) return null; // or loading
+  if (!adminSession) return null;
 
   return (
     <div className={`admin-container ${isMobileChatActive ? 'chat-active-mobile' : ''}`}>
       <div className={`admin-sidebar ${isMobileChatActive ? 'hidden-mobile' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`} id="admin-sidebar">
-
         
         {/* TABS */}
-        <div style={{ display: 'flex', height: '60px', borderBottom: '1px solid var(--border-light)', background: 'var(--bg-primary)' }}>
+        <div className="admin-tab-bar" style={{ height: '48px', background: 'var(--bg-primary)' }}>
           <button 
-            style={{ flex: 1, height: '100%', padding: '0', background: 'none', border: 'none', borderBottom: activeTab === 'chats' ? '2px solid var(--messenger-blue)' : '2px solid transparent', color: activeTab === 'chats' ? 'var(--messenger-blue)' : 'var(--text-muted)', fontWeight: activeTab === 'chats' ? '600' : '400', cursor: 'pointer' }}
-            onClick={() => setActiveTab('chats')}
+            className={`admin-tab ${activeTab === 'chats' ? 'active' : ''}`}
+            onClick={() => {
+              const params = new URLSearchParams(window.location.search);
+              params.set('tab', 'chats');
+              params.delete('id');
+              router.replace(`${window.location.pathname}?${params.toString()}`);
+            }}
           >
             {t('admin.chats') || 'Tin nhắn'}
           </button>
           <button 
-            style={{ flex: 1, height: '100%', padding: '0', background: 'none', border: 'none', borderBottom: activeTab === 'jobs' ? '2px solid var(--messenger-blue)' : '2px solid transparent', color: activeTab === 'jobs' ? 'var(--messenger-blue)' : 'var(--text-muted)', fontWeight: activeTab === 'jobs' ? '600' : '400', cursor: 'pointer' }}
-            onClick={() => setActiveTab('jobs')}
+            className={`admin-tab ${activeTab === 'jobs' ? 'active' : ''}`}
+            onClick={() => {
+              const params = new URLSearchParams(window.location.search);
+              params.set('tab', 'jobs');
+              params.delete('id');
+              router.replace(`${window.location.pathname}?${params.toString()}`);
+            }}
           >
             {t('admin.jobPosts') || 'Việc làm'}
           </button>
@@ -156,10 +247,15 @@ export default function AdminDashboardPage() {
             setFilter={setFilter}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
+            typingStates={typingStates}
           />
         ) : (
           <JobManagement 
-            onSelectJob={(id) => { setSelectedId(id); if (window.innerWidth <= 768) setIsMobileChatActive(true); }}
+            onSelectJob={(id) => {
+              const params = new URLSearchParams(window.location.search);
+              params.set('id', id);
+              router.replace(`${window.location.pathname}?${params.toString()}`);
+            }}
             selectedJobId={selectedId}
           />
         )}
@@ -172,26 +268,40 @@ export default function AdminDashboardPage() {
               applicantId={selectedId} 
               adminSession={adminSession}
               onBack={handleBackToSidebar}
+              onDelete={handleApplicantDelete}
+              onApplicantUpdate={handleApplicantUpdate}
               isSidebarCollapsed={isSidebarCollapsed}
               onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
             />
           ) : (
             <div className="admin-empty-state">
-              <div className="admin-empty-icon">💬</div>
+              <div className="admin-empty-icon">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+              </div>
               <p>{t('admin.selectConversation') || 'Chọn cuộc trò chuyện'}</p>
             </div>
           )
         ) : (
           selectedId ? (
-            <JobPreviewPanel jobId={selectedId} onBack={handleBackToSidebar} onDelete={() => setSelectedId(null)} />
+            <JobPreviewPanel jobId={selectedId} onBack={handleBackToSidebar} onDelete={handleBackToSidebar} />
           ) : (
             <div className="admin-empty-state">
-              <div className="admin-empty-icon">📋</div>
+              <div className="admin-empty-icon">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+              </div>
               <p>{t('admin.selectJobPreview') || 'Chọn bài đăng để xem'}</p>
             </div>
           )
         )}
       </div>
     </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense fallback={<div style={{ display: 'flex', flex: 1, alignItems: 'center', justifyContent: 'center', height: '100vh' }}><div className="spinner"></div></div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

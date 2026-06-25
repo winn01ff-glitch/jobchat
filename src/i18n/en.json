@@ -28,18 +28,28 @@
         "position": "Desired Position",
         "positionPlaceholder": "Select a position",
         "positions": {
-            "factory": "Factory / Manufacturing",
+            "factory": "Factory",
             "restaurant": "Restaurant / Food Service",
             "construction": "Construction",
             "office": "Office Work",
+            "nursing": "Nursing",
             "it": "IT / Technical",
             "other": "Other"
         },
         "submit": "Start Chat",
+        "enterOtp": "Enter Verification Code",
+        "otpSentHint": "We have sent a 6-digit verification code to:",
+        "verify": "Verify & Start Chat",
+        "changeEmail": "Change email address",
+        "otpSent": "Verification code has been sent to your email!",
+        "sendOtpFailed": "Failed to send verification code. Please try again.",
+        "invalidOtp": "Invalid or expired verification code.",
         "fillAll": "Please enter your email",
         "enterName": "Enter your display name",
         "nameHint": "This name will be shown in the chat.",
-        "welcomeBack": "Welcome back!"
+        "welcomeBack": "Welcome back!",
+        "resendOtp": "Resend OTP",
+        "resendCountdown": "Resend in {seconds}s"
     },
     "chat": {
         "adminName": "Recruitment Team",
@@ -67,10 +77,39 @@
         "deleteMsg": "Delete",
         "copied": "Copied!",
         "deleted": "Deleted",
+        "confirmDelete": "Are you sure you want to delete?",
+        "seen": "Seen",
+        "sentStatus": "Sent",
+        "sending": "Sending...",
+        "failed": "Failed",
         "logout": "Logout",
+        "reply": "Reply",
+        "replyingTo": "Replying to",
+        "replyToSelf": "self",
         "confirmLogout": "Are you sure you want to log out?",
         "confirmLogoutTitle": "Confirm exit",
-        "confirmLogoutText": "Are you sure you want to end this chat session? Message history will be cleared on this device."
+        "confirmLogoutText": "Are you sure you want to end this chat session? Message history will be cleared on this device.",
+        "networkOffline": "⚠️ No internet connection. Please check your device.",
+        "networkReconnecting": "🔄 Reconnecting...",
+        "networkConnected": "🟢 Connected successfully!",
+        "newMessages": "new messages",
+        "scrollDown": "Scroll down",
+        "cannedTitle": "Quick Responses",
+        "cannedResponses": {
+            "greet": "Hello, Uphill has received your registration. We will contact you shortly!",
+            "cv": "Please send your CV (PDF) directly here so we can review your profile.",
+            "interview": "We would like to invite you for an interview at our office.",
+            "askPhone": "Please provide your correct phone number so our HR department can contact you easily.",
+            "askTime": "What is the earliest date you can start working?",
+            "interviewOnline": "We would like to invite you to an online interview via Google Meet. We will send the meeting link later.",
+            "askExperience": "Could you share more about your work experience or notable projects you have completed in a similar position?",
+            "thankReject": "Thank you for your interest in career opportunities at Uphill. After reviewing your profile, we find that your experience is not a fit for this position at this time. We hope to have the opportunity to cooperate with you in the future."
+        },
+        "teamName": "Recruitment Team",
+        "uploading": "Uploading...",
+        "uploadSuccess": "Uploaded successfully!",
+        "uploadFailed": "Upload failed, please try again.",
+        "download": "Download"
     },
     "admin": {
         "loginTitle": "Admin Login",
@@ -119,11 +158,42 @@
         "noJobPosts": "No job posts yet",
         "selectJobPreview": "Select a post to view details",
         "confirmDelete": "Are you sure you want to delete?",
-        "ok": "Delete"
+        "ok": "Delete",
+        "sharedMedia": "Shared Media & Files",
+        "noMedia": "No shared photos or files yet.",
+        "mediaGallery": "Media Gallery",
+        "avatarUpdated": "Avatar updated successfully",
+        "changePassword": "Change Password (optional)",
+        "confirmDeleteJobText": "Are you sure you want to delete this job post?",
+        "confirmDeleteJobTitle": "Delete Job Post",
+        "confirmLogoutText": "Are you sure you want to log out of the admin system?",
+        "confirmLogoutTitle": "Confirm Logout",
+        "currentPasswordRequired": "Please enter your current password",
+        "delete": "Delete",
+        "fillAll": "Please fill in all fields",
+        "invalidCredentials": "Incorrect username or password",
+        "invalidData": "Invalid data",
+        "jobContentPlaceholder": "Detailed description of the job...",
+        "jobStatus": "Status",
+        "locationExample": "Example: Tokyo",
+        "loginBtn": "Login",
+        "loginSubtitle": "Log in to manage applicants",
+        "passwordsNotMatch": "Confirmation password does not match",
+        "salaryExample": "Example: ¥250,000/month",
+        "statusDraft": "Draft",
+        "statusPublished": "Published",
+        "username": "Username",
+        "wrongCurrentPassword": "Current password is incorrect",
+        "mediaImages": "Images",
+        "mediaFiles": "Files & Documents",
+        "noImages": "No shared images yet.",
+        "noFiles": "No shared files yet."
     },
     "common": {
         "error": "An error occurred",
-        "delete": "Delete"
+        "delete": "Delete",
+        "other": "Other / Custom...",
+        "select": "Select..."
     },
     "notification": {
         "newMessage": "New message",
@@ -136,6 +206,41 @@
         "salary": "Salary",
         "location": "Location",
         "applyNow": "Apply for this position",
-        "noJobs": "No job openings available"
+        "noJobs": "No job openings available",
+        "jobList": "Job List",
+        "applicantViewPreview": "Applicant View Preview",
+        "welfare": "Welfare & Benefits",
+        "jobFields": {
+            "bonus": "Bonus",
+            "nenkin": "Nenkin Pension",
+            "insurance": "Insurance & Nenkin",
+            "raise": "Salary Increase",
+            "transport": "Transportation Allowance",
+            "bonusOptions": {
+                "twice_a_year": "Twice a year",
+                "once_a_year": "Once a year",
+                "performance": "Based on performance",
+                "none": "No bonus"
+            },
+            "nenkinOptions": {
+                "full": "Fully covered",
+                "none": "Not supported"
+            },
+            "insuranceOptions": {
+                "full": "Fully covered Insurance & Nenkin",
+                "partial": "Partially covered Insurance & Nenkin",
+                "none": "Not supported"
+            },
+            "raiseOptions": {
+                "once_a_year": "Once a year",
+                "performance": "Based on evaluation",
+                "none": "No increase"
+            },
+            "transportOptions": {
+                "full": "Fully covered",
+                "limited": "Limited coverage",
+                "none": "Not supported"
+            }
+        }
     }
 }

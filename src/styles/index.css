@@ -405,7 +405,7 @@ body {
     position: fixed;
     top: calc(var(--header-height) + 8px);
     right: 12px;
-    z-index: 2000;
+    z-index: 100000;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -443,4 +443,44 @@ body {
     .hidden-mobile { display: none !important; }
     .lang-select { font-size: 12px; padding: 4px 24px 4px 8px; }
     .logo { font-size: var(--font-lg); }
+}
+
+/* ============ CONTEXT MENU ============ */
+.context-menu {
+    position: fixed;
+    background: var(--bg-primary);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md, 8px);
+    padding: 6px 0;
+    z-index: 10000;
+    min-width: 130px;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s ease;
+}
+
+.context-menu-item:hover {
+    background: var(--bg-hover);
+}
+
+.context-menu-item.delete {
+    color: var(--error);
+}
+
+.context-menu-item.delete:hover {
+    background: rgba(225, 29, 72, 0.08); /* light red hover */
 }

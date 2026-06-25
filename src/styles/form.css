@@ -37,7 +37,8 @@
 
 .form-group .input-with-icon { position: relative; }
 .form-group .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; pointer-events: none; }
-.form-group .input-with-icon .form-input { padding-left: 38px; }
+.form-group .input-with-icon .form-input,
+.form-group .input-with-icon .form-select { padding-left: 38px; }
 
 .form-submit {
     width: 100%; padding: 12px;

@@ -7,6 +7,18 @@ export default function LandingPage() {
   const { t } = useLanguage();
   const router = useRouter();
 
+  React.useEffect(() => {
+    const sessionStr = localStorage.getItem('jobchat_session');
+    if (sessionStr) {
+      try {
+        const session = JSON.parse(sessionStr);
+        if (session && session.id) {
+          router.push(`/chat/${session.id}`);
+        }
+      } catch(e) {}
+    }
+  }, [router]);
+
   return (
     <div className="landing-container">
       <div className="landing-content">

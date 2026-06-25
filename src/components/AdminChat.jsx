@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useNotification } from '../context/NotificationContext';
 import { DB } from '../lib/supabase';
-import { ChatBubble, SystemMessage } from './ChatBubble';
-import { autoResize, EmojiPicker, showConfirmModal } from '../lib/helpers';
+import { ChatBubble, SystemMessage, TypingIndicator } from './ChatBubble';
+import { autoResize, EmojiPicker, showConfirmModal, downloadFile } from '../lib/helpers';
 
 const compressImage = (file) => {
   return new Promise((resolve) => {
@@ -33,28 +33,60 @@ const compressImage = (file) => {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
+        // Keep PNG if original is PNG, otherwise compress to JPEG (common JPG format)
+        const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        const ext = file.type === 'image/png' ? '.png' : '.jpg';
+
         canvas.toBlob(
           (blob) => {
-            resolve(blob || file);
+            resolve({
+              blob: blob || file,
+              mimeType: mimeType,
+              ext: ext
+            });
           },
-          'image/webp',
-          0.8
+          mimeType,
+          mimeType === 'image/jpeg' ? 0.85 : undefined
         );
       };
-      img.onerror = () => resolve(file);
+      img.onerror = () => resolve({ blob: file, mimeType: file.type, ext: file.name.includes('.') ? file.name.substring(file.name.lastIndexOf('.')) : '.jpg' });
     };
-    reader.onerror = () => resolve(file);
+    reader.onerror = () => resolve({ blob: file, mimeType: file.type, ext: file.name.includes('.') ? file.name.substring(file.name.lastIndexOf('.')) : '.jpg' });
   });
 };
 
-export default function AdminChat({ applicantId, onBack, onDelete, adminSession, isSidebarCollapsed, onToggleSidebar }) {
+export default function AdminChat({ applicantId, onBack, onDelete, adminSession, isSidebarCollapsed, onToggleSidebar, onApplicantUpdate }) {
   const { t } = useLanguage();
   const { showToast } = useNotification();
   
   const [applicant, setApplicant] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
+  const [replyToMessage, setReplyToMessage] = useState(null);
+  const [activeMessageId, setActiveMessageId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState('online');
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const [newMessagesCount, setNewMessagesCount] = useState(0);
+  const [showMediaSidebar, setShowMediaSidebar] = useState(false);
+  const [mediaTab, setMediaTab] = useState('images'); // 'images' or 'files'
+  const [activeLightboxImage, setActiveLightboxImage] = useState(null);
+  const [showCannedPopup, setShowCannedPopup] = useState(false);
+  const typingTimeoutRef = useRef(null);
+  const typingChannelRef = useRef(null);
+  const autoCollapsedRef = useRef(false);
+
+  const getReplyText = (msg) => {
+    if (!msg) return '';
+    try {
+      const parsed = JSON.parse(msg.content);
+      if (parsed.type === 'image') return t('chat.image') || 'Hình ảnh';
+      if (parsed.type === 'file') return parsed.name;
+      if (parsed.type === 'location') return t('chat.locationShared') || 'Đã chia sẻ vị trí';
+    } catch(e) {}
+    return msg.content;
+  };
   const [adminsMap, setAdminsMap] = useState({});
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editName, setEditName] = useState('');
@@ -86,6 +118,20 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   }, []);
 
   useEffect(() => {
+    if (showMediaSidebar) {
+      if (typeof window !== 'undefined' && window.innerWidth <= 1024 && !isSidebarCollapsed) {
+        autoCollapsedRef.current = true;
+        if (onToggleSidebar) onToggleSidebar();
+      }
+    } else {
+      if (autoCollapsedRef.current && isSidebarCollapsed) {
+        if (onToggleSidebar) onToggleSidebar();
+      }
+      autoCollapsedRef.current = false;
+    }
+  }, [showMediaSidebar]);
+
+  useEffect(() => {
     let sub;
     const load = async () => {
       setIsLoading(true);
@@ -110,7 +156,18 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
             return [...prev, msg];
           });
           setMessagesOffset(prev => prev + 1);
-          setTimeout(scrollToBottom, 50);
+          
+          const container = listRef.current;
+          if (container) {
+            const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
+            if (isAtBottom) {
+              setTimeout(scrollToBottom, 50);
+            } else {
+              setNewMessagesCount(prev => prev + 1);
+            }
+          } else {
+            setTimeout(scrollToBottom, 50);
+          }
           
           if (msg.sender_type === 'applicant') {
             DB.markMessagesAsSeen(applicantId, 'applicant');
@@ -128,6 +185,85 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       if (sub) DB.unsubscribe(sub);
     };
   }, [applicantId, adminSession]);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setConnectionStatus('reconnecting');
+      setTimeout(() => {
+        setConnectionStatus('connected');
+        setTimeout(() => {
+          setConnectionStatus('online');
+        }, 1500);
+      }, 1500);
+    };
+    const handleOffline = () => {
+      setConnectionStatus('offline');
+    };
+    
+    setConnectionStatus(navigator.onLine ? 'online' : 'offline');
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const container = listRef.current;
+      if (!container) return;
+      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
+      setShowScrollBtn(!isAtBottom);
+      if (isAtBottom) {
+        setNewMessagesCount(0);
+      }
+    };
+    const container = listRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+    }
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [messages]);
+
+  useEffect(() => {
+    if (!applicantId) return;
+    const channelName = `typing:${applicantId}`;
+    const channel = DB.supabaseClient.channel(channelName);
+    
+    channel
+      .on('broadcast', { event: 'typing' }, ({ payload }) => {
+        if (payload.sender_type === 'applicant') {
+          setIsPartnerTyping(payload.isTyping);
+        }
+      })
+      .subscribe();
+      
+    typingChannelRef.current = channel;
+    
+    return () => {
+      DB.supabaseClient.removeChannel(channel);
+    };
+  }, [applicantId]);
+
+  useEffect(() => {
+    if (isPartnerTyping) {
+      const container = listRef.current;
+      if (container) {
+        const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 250;
+        if (isAtBottom) {
+          setTimeout(scrollToBottom, 50);
+        }
+      } else {
+        setTimeout(scrollToBottom, 50);
+      }
+    }
+  }, [isPartnerTyping]);
 
   const loadMoreMessages = async () => {
     if (isLoadingMessages || !hasMoreMessages) return;
@@ -180,6 +316,9 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
         position: editPosition
       });
       setApplicant(updated);
+      if (onApplicantUpdate) {
+        onApplicantUpdate(updated);
+      }
       setIsEditingProfile(false);
       showToast(t('admin.settingsSaved') || 'Đã lưu cài đặt ✓', 'success');
     } catch(err) {
@@ -195,23 +334,54 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   };
 
   const handleSend = async (customContent = null) => {
+    const contentVal = typeof customContent === 'string' ? customContent : null;
     const text = (textareaRef.current?.value || inputText).trim();
-    if (!text && !customContent) return;
+    if (!text && !contentVal) return;
     
+    let payload = null;
+    if (replyToMessage) {
+      payload = {
+        reply_to: {
+          id: replyToMessage.id,
+          content: replyToMessage.content,
+          sender_name: replyToMessage.sender_name || (replyToMessage.sender_type === 'applicant' ? (applicant?.name || 'Applicant') : t('chat.adminName')),
+          sender_id: replyToMessage.sender_id || (replyToMessage.sender_type === 'applicant' ? applicantId : 'admin')
+        }
+      };
+      setReplyToMessage(null);
+    }
+
     const tempId = 'temp-' + Date.now();
     const newMsg = {
       id: tempId,
-      content: customContent || text,
+      content: contentVal || text,
       sender_type: 'admin',
       sender_name: adminSession.profile.display_name,
       sender_id: adminSession.user.id,
       created_at: new Date().toISOString(),
-      status: 'sending'
+      status: 'sending',
+      payload: payload
     };
     
     setMessages(prev => [...prev, newMsg]);
     
-    if (!customContent) {
+    // Immediately clear typing state on sending
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    if (typingChannelRef.current) {
+      typingChannelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { 
+          sender_type: 'admin', 
+          sender_id: adminSession.user.id,
+          isTyping: false,
+          sender_name: adminSession.profile.display_name,
+          avatar: adminSession.profile.avatar
+        }
+      });
+    }
+
+    if (!contentVal) {
       setInputText('');
       if (textareaRef.current) {
         textareaRef.current.value = '';
@@ -221,7 +391,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     setTimeout(scrollToBottom, 50);
 
     try {
-      const actualMsg = await DB.sendMessage(applicantId, 'admin', adminSession.profile.display_name, adminSession.user.id, customContent || text);
+      const actualMsg = await DB.sendMessage(applicantId, 'admin', adminSession.profile.display_name, adminSession.user.id, contentVal || text, payload);
       setMessages(prev => prev.map(m => m.id === tempId ? actualMsg : m));
     } catch(err) {
       console.error('Send failed', err);
@@ -241,11 +411,11 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       let uploadName = file.name;
       
       if (type === 'image') {
-        // Compress image client-side to WebP
-        const compressedBlob = await compressImage(file);
+        // Compress image client-side to JPG/PNG
+        const { blob, mimeType, ext } = await compressImage(file);
         const baseName = file.name.includes('.') ? file.name.substring(0, file.name.lastIndexOf('.')) : file.name;
-        uploadName = `${baseName}.webp`;
-        fileToUpload = new File([compressedBlob], uploadName, { type: 'image/webp' });
+        uploadName = `${baseName}${ext}`;
+        fileToUpload = new File([blob], uploadName, { type: mimeType });
       }
 
       // Upload file to Supabase Storage
@@ -307,7 +477,11 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       async () => {
         try {
           await DB.deleteApplicant(applicant.id);
-          onBack(); // Go back or deselect
+          if (onDelete) {
+            onDelete(applicant.id);
+          } else {
+            onBack();
+          }
         } catch(err) {
           showToast(t('common.error'), 'error');
         }
@@ -320,167 +494,401 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   if (isLoading) return <div className="admin-empty-state"><div className="spinner"></div></div>;
   if (!applicant) return <div className="admin-empty-state"><p>{t('common.error')}</p></div>;
 
+  const handleTextChange = (val) => {
+    setInputText(val);
+    
+    // Broadcast typing state
+    if (typingChannelRef.current) {
+      typingChannelRef.current.send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { 
+          sender_type: 'admin', 
+          sender_id: adminSession.user.id,
+          isTyping: val.length > 0,
+          sender_name: adminSession.profile.display_name,
+          avatar: adminSession.profile.avatar
+        }
+      });
+    }
+    
+    // Auto-clear typing status after 3s of inactivity
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    if (val.length > 0) {
+      typingTimeoutRef.current = setTimeout(() => {
+        if (typingChannelRef.current) {
+          typingChannelRef.current.send({
+            type: 'broadcast',
+            event: 'typing',
+            payload: { 
+              sender_type: 'admin', 
+              sender_id: adminSession.user.id,
+              isTyping: false,
+              sender_name: adminSession.profile.display_name,
+              avatar: adminSession.profile.avatar
+            }
+          });
+        }
+      }, 3000);
+    }
+  };
+
+  const cannedResponses = [
+    { key: 'greet', text: t('chat.cannedResponses.greet') || 'Chào bạn, Uphill đã nhận được thông tin đăng ký ứng tuyển của bạn. Chúng tôi sẽ sớm liên hệ lại!' },
+    { key: 'cv', text: t('chat.cannedResponses.cv') || 'Bạn vui lòng gửi bản mềm CV (PDF) trực tiếp qua đây để chúng tôi tiến hành xét duyệt hồ sơ nhé.' },
+    { key: 'interview', text: t('chat.cannedResponses.interview') || 'Uphill trân trọng mời bạn tham gia buổi phỏng vấn trực tiếp tại văn phòng công ty.' },
+    { key: 'askPhone', text: t('chat.cannedResponses.askPhone') || 'Bạn vui lòng cung cấp số điện thoại chính xác để bộ phận nhân sự tiện liên hệ trao đổi công việc nhé.' },
+    { key: 'askTime', text: t('chat.cannedResponses.askTime') || 'Thời gian sớm nhất bạn có thể bắt đầu nhận việc là khi nào?' },
+    { key: 'interviewOnline', text: t('chat.cannedResponses.interviewOnline') || 'Uphill trân trọng mời bạn tham gia buổi phỏng vấn trực tuyến qua Google Meet. Chúng tôi sẽ gửi link họp sau.' },
+    { key: 'askExperience', text: t('chat.cannedResponses.askExperience') || 'Bạn có thể chia sẻ thêm về kinh nghiệm làm việc hoặc các dự án nổi bật đã thực hiện ở vị trí tương đương không?' },
+    { key: 'thankReject', text: t('chat.cannedResponses.thankReject') || 'Cảm ơn bạn đã quan tâm đến cơ hội nghề nghiệp tại Uphill. Sau khi xem xét hồ sơ, chúng tôi nhận thấy kinh nghiệm của bạn chưa thực sự phù hợp với vị trí này tại thời điểm hiện tại. Hy vọng có dịp hợp tác cùng bạn trong tương lai.' }
+  ];
+
+  const getSharedMedia = () => {
+    const list = [];
+    messages.forEach(m => {
+      try {
+        const parsed = JSON.parse(m.content);
+        if (parsed.type === 'image' || parsed.type === 'file') {
+          list.push({ id: m.id, ...parsed });
+        }
+      } catch(e) {}
+    });
+    return list.reverse();
+  };
+
+  const mediaList = getSharedMedia();
+
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, width: '100%' }}>
-      <div className="chat-header-bar">
-        <div className="chat-header-info">
-          <button 
-            className="btn-icon" 
-            onClick={() => {
-              if (window.innerWidth <= 768) {
-                if (onBack) onBack();
-              } else {
-                if (onToggleSidebar) onToggleSidebar();
-              }
-            }} 
-            style={{marginRight:'-4px', marginLeft:'-8px', color:'var(--messenger-blue)', padding:0}}
-            title={isSidebarCollapsed ? "Mở rộng" : "Thu gọn"}
-          >
-            {isSidebarCollapsed ? (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-            ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-            )}
-          </button>
-          <div className="chat-avatar">{applicant.name.charAt(0).toUpperCase()}</div>
-          <div>
-            <div className="chat-header-name">{applicant.name}</div>
-            <div className="chat-header-status">
-              {applicant.phone ? `📱 ${applicant.phone} · ` : ''}
-              {applicant.position ? `🏢 ${t('register.positions.' + applicant.position) || applicant.position}` : ''}
+    <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, width: '100%', position: 'relative' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
+        <div className="chat-header-bar">
+          <div className="chat-header-info">
+            <button 
+              className="btn-icon" 
+              onClick={() => {
+                if (window.innerWidth <= 768) {
+                  if (onBack) onBack();
+                } else {
+                  if (onToggleSidebar) onToggleSidebar();
+                }
+              }} 
+              style={{marginRight:'-4px', marginLeft:'-8px', color:'var(--messenger-blue)', padding:0}}
+              title={isSidebarCollapsed ? "Mở rộng" : "Thu gọn"}
+            >
+              {isSidebarCollapsed ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+              )}
+            </button>
+            <div className="chat-avatar">{applicant.name.charAt(0).toUpperCase()}</div>
+            <div>
+              <div className="chat-header-name">{applicant.name}</div>
+              <div className="chat-header-status">
+                {applicant.phone ? `📞 ${applicant.phone}` : ''}
+              </div>
             </div>
           </div>
+          <div style={{display:'flex', gap:'6px'}}>
+            <button className="btn-icon" onClick={() => setShowMediaSidebar(!showMediaSidebar)} title={t('admin.mediaGallery') || 'Kho ảnh/tập tin'} style={{color: showMediaSidebar ? 'var(--messenger-blue)' : 'var(--text-muted)'}}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+            <button className="btn-icon" onClick={() => setIsEditingProfile(true)} title={t('admin.editJob') || 'Sửa'} style={{color:'var(--messenger-blue)'}}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button className="btn-icon" onClick={handleDeleteConversation} title={t('common.delete')} style={{color:'var(--error)'}}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </button>
+          </div>
         </div>
-        <div style={{display:'flex', gap:'6px'}}>
-          <button className="btn-icon" onClick={() => setIsEditingProfile(true)} title={t('admin.editJob') || 'Sửa'} style={{color:'var(--messenger-blue)'}}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+
+        {connectionStatus !== 'online' && (
+          <div className={`network-banner ${connectionStatus}`}>
+            {connectionStatus === 'offline' && (t('chat.networkOffline') || '⚠️ Không có kết nối mạng. Vui lòng kiểm tra lại thiết bị.')}
+            {connectionStatus === 'reconnecting' && (t('chat.networkReconnecting') || '🔄 Đang kết nối lại...')}
+            {connectionStatus === 'connected' && (t('chat.networkConnected') || '🟢 Đã kết nối lại thành công!')}
+          </div>
+        )}
+        
+        <div className="chat-messages" ref={listRef}>
+          {hasMoreMessages && (
+            <div style={{textAlign: 'center', margin: '10px 0'}}>
+              <button 
+                onClick={loadMoreMessages} 
+                className="btn-secondary" 
+                disabled={isLoadingMessages}
+                style={{fontSize: '12px', padding: '4px 12px', borderRadius: '12px'}}
+              >
+                {isLoadingMessages ? '...' : t('chat.loadMore') || 'Tải thêm tin nhắn'}
+              </button>
+            </div>
+          )}
+          <div className="chat-welcome">
+            <div className="chat-welcome-icon">{applicant.name.charAt(0).toUpperCase()}</div>
+            <h3>{applicant.name}</h3>
+          </div>
+          
+          {messages.filter(msg => !msg.deleted_by_admin).map((msg, index, filteredMsgs) => {
+            let showDateSeparator = false;
+            let dateLabel = '';
+            const d = new Date(msg.created_at);
+            const today = new Date();
+            
+            if (index === 0) {
+              showDateSeparator = true;
+            } else {
+              const prevD = new Date(filteredMsgs[index - 1].created_at);
+              if (d.toDateString() !== prevD.toDateString()) {
+                showDateSeparator = true;
+              }
+            }
+            
+            if (showDateSeparator) {
+              if (d.toDateString() === today.toDateString()) {
+                dateLabel = t('chat.today') || 'Hôm nay';
+              } else {
+                const yesterday = new Date(today);
+                yesterday.setDate(today.getDate() - 1);
+                if (d.toDateString() === yesterday.toDateString()) {
+                  dateLabel = t('chat.yesterday') || 'Hôm qua';
+                } else {
+                  dateLabel = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+                }
+              }
+            }
+
+            let isLastInGroup = true;
+            const nextMsg = filteredMsgs[index + 1];
+            if (nextMsg) {
+              const nextD = new Date(nextMsg.created_at);
+              const isSameSender = nextMsg.sender_type === msg.sender_type && 
+                                   (msg.sender_type !== 'admin' || nextMsg.sender_id === msg.sender_id);
+              if (isSameSender && nextD.toDateString() === d.toDateString()) {
+                isLastInGroup = false;
+              }
+            }
+
+            let isFirstInGroup = true;
+            const prevMsg = filteredMsgs[index - 1];
+            if (prevMsg) {
+              const prevD = new Date(prevMsg.created_at);
+              const isSameSender = prevMsg.sender_type === msg.sender_type && 
+                                   (msg.sender_type !== 'admin' || prevMsg.sender_id === msg.sender_id);
+              if (isSameSender && prevD.toDateString() === d.toDateString()) {
+                isFirstInGroup = false;
+              }
+            }
+
+            const isCurrentAdminMsg = msg.sender_type === 'admin' && msg.sender_id === adminSession?.user?.id;
+
+            return (
+              <React.Fragment key={msg.id}>
+                {showDateSeparator && (
+                  <div className="date-separator">
+                    <span>{dateLabel}</span>
+                  </div>
+                )}
+                <ChatBubble 
+                  msg={msg} 
+                  isSent={isCurrentAdminMsg} 
+                  showSender={isFirstInGroup} 
+                  showAvatar={isLastInGroup}
+                  adminInfo={adminsMap[msg.sender_id]}
+                  onDelete={async (msgId) => {
+                    try {
+                      await DB.deleteMessageLocally(msgId, 'admin');
+                      setMessages(prev => prev.filter(m => m.id !== msgId));
+                      showToast(t('chat.deleted') || 'Đã xóa', 'success');
+                    } catch(e) {
+                      showToast(t('common.error'), 'error');
+                    }
+                  }}
+                  onReply={(replyMsg) => setReplyToMessage(replyMsg)}
+                  activeMessageId={activeMessageId}
+                  setActiveMessageId={setActiveMessageId}
+                />
+              </React.Fragment>
+            );
+          })}
+          {isPartnerTyping && (
+            <TypingIndicator name={applicant.name || 'Ứng viên'} avatar={applicant.avatar || null} />
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {showScrollBtn && (
+          <button 
+            className={`scroll-bottom-btn ${newMessagesCount > 0 ? 'new-msg' : ''}`}
+            onClick={() => {
+              scrollToBottom();
+              setNewMessagesCount(0);
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+            <span>
+              {newMessagesCount > 0 ? `${newMessagesCount} ${t('chat.newMessages') || 'tin nhắn mới'}` : (t('chat.scrollDown') || 'Cuộn xuống')}
+            </span>
           </button>
-          <button className="btn-icon" onClick={handleDeleteConversation} title={t('common.delete')} style={{color:'var(--error)'}}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-          </button>
+        )}
+
+        {replyToMessage && (
+          <div className="reply-bar-container">
+            <div className="reply-bar-inner">
+              <div className="reply-bar-info">
+                <div className="reply-bar-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--messenger-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v2.5"/></svg>
+                  <span>
+                    {t('chat.replyingTo') || 'Đang trả lời'}{' '}
+                    {replyToMessage.sender_type === 'admin' 
+                      ? (t('chat.replyToSelf') || 'chính mình') 
+                      : (replyToMessage.sender_name || (applicant?.name || 'Applicant'))}
+                  </span>
+                </div>
+                <div className="reply-bar-content">
+                  {getReplyText(replyToMessage)}
+                </div>
+              </div>
+              <button className="reply-bar-close" onClick={() => setReplyToMessage(null)}>
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="chat-input-bar">
+          <div className="chat-input-container">
+            <input type="file" id="admin-chat-file-upload" style={{display:'none'}} ref={fileInputRef} onChange={e => handleFileSelect(e, 'file')} />
+            <input type="file" id="admin-chat-image-upload" accept="image/*" style={{display:'none'}} ref={imageInputRef} onChange={e => handleFileSelect(e, 'image')} />
+            <div className="chat-actions">
+              <button className="chat-action-btn" title={t('chat.attachFile') || 'Đính kèm file'} onClick={() => fileInputRef.current?.click()}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+              </button>
+              <button className="chat-action-btn" title={t('chat.sendImage') || 'Gửi ảnh'} onClick={() => imageInputRef.current?.click()}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              </button>
+              <button className="chat-action-btn" title={t('chat.sendLocation') || 'Gửi vị trí'} onClick={handleLocationSend}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </button>
+            </div>
+            <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
+              <button className="emoji-toggle-btn" style={{ marginLeft: '8px' }} onClick={() => setShowCannedPopup(!showCannedPopup)} title="Trả lời nhanh">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: '#ffb020' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </button>
+              <textarea 
+                id="admin-chat-input"
+                ref={textareaRef}
+                className="chat-input" 
+                placeholder={t('chat.placeholder')}
+                value={inputText}
+                onChange={(e) => {
+                  handleTextChange(e.target.value);
+                  autoResize(e.target);
+                }}
+                onKeyDown={handleKeyDown}
+                rows="1"
+                style={{background:'transparent', margin:0, flex:1, border:'none', outline:'none', resize:'none', overflow:'hidden'}}
+              ></textarea>
+              <button className="emoji-toggle-btn" onClick={(e) => EmojiPicker.toggle('admin-chat-input', e.currentTarget)}>😊</button>
+
+              {showCannedPopup && (
+                <div className="canned-popup">
+                  <div className="canned-popup-header">
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#ffb020' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                      {t('chat.cannedTitle') || 'Mẫu trả lời nhanh'}
+                    </span>
+                    <button onClick={() => setShowCannedPopup(false)}>✕</button>
+                  </div>
+                  <div className="canned-popup-list">
+                    {cannedResponses.map(res => (
+                      <button 
+                        key={res.key} 
+                        onClick={() => {
+                          handleTextChange(res.text);
+                          if (textareaRef.current) {
+                            textareaRef.current.value = res.text;
+                            textareaRef.current.focus();
+                            autoResize(textareaRef.current);
+                          }
+                          setShowCannedPopup(false);
+                        }}
+                      >
+                        {res.text}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <button className="btn-send" onClick={() => handleSend()}>
+              <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+          </div>
         </div>
       </div>
       
-      <div className="chat-messages" ref={listRef}>
-        {hasMoreMessages && (
-          <div style={{textAlign: 'center', margin: '10px 0'}}>
+      {showMediaSidebar && (
+        <div className="chat-media-sidebar">
+          <div className="media-sidebar-header">
+            <h4>{t('admin.sharedMedia') || 'Ảnh & Tập tin'}</h4>
+            <button onClick={() => setShowMediaSidebar(false)}>✕</button>
+          </div>
+          <div className="media-sidebar-tabs">
             <button 
-              onClick={loadMoreMessages} 
-              className="btn-secondary" 
-              disabled={isLoadingMessages}
-              style={{fontSize: '12px', padding: '4px 12px', borderRadius: '12px'}}
+              className={`media-tab-btn ${mediaTab === 'images' ? 'active' : ''}`}
+              onClick={() => setMediaTab('images')}
             >
-              {isLoadingMessages ? '...' : t('chat.loadMore') || 'Tải thêm tin nhắn'}
+              {t('admin.mediaImages') || 'Hình ảnh'}
+            </button>
+            <button 
+              className={`media-tab-btn ${mediaTab === 'files' ? 'active' : ''}`}
+              onClick={() => setMediaTab('files')}
+            >
+              {t('admin.mediaFiles') || 'Tập tin'}
             </button>
           </div>
-        )}
-        <div className="chat-welcome">
-          <div className="chat-welcome-icon">{applicant.name.charAt(0).toUpperCase()}</div>
-          <h3>{applicant.name}</h3>
-        </div>
-        
-        {messages.map((msg, index) => {
-          let showDateSeparator = false;
-          let dateLabel = '';
-          const d = new Date(msg.created_at);
-          const today = new Date();
-          
-          if (index === 0) {
-            showDateSeparator = true;
-          } else {
-            const prevD = new Date(messages[index - 1].created_at);
-            if (d.toDateString() !== prevD.toDateString()) {
-              showDateSeparator = true;
-            }
-          }
-          
-          if (showDateSeparator) {
-            if (d.toDateString() === today.toDateString()) {
-              dateLabel = t('chat.today') || 'Hôm nay';
-            } else {
-              const yesterday = new Date(today);
-              yesterday.setDate(today.getDate() - 1);
-              if (d.toDateString() === yesterday.toDateString()) {
-                dateLabel = t('chat.yesterday') || 'Hôm qua';
-              } else {
-                dateLabel = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-              }
-            }
-          }
-
-          let isLastInGroup = true;
-          const nextMsg = messages[index + 1];
-          if (nextMsg) {
-            const nextD = new Date(nextMsg.created_at);
-            if (nextMsg.sender_type === msg.sender_type && nextD.toDateString() === d.toDateString()) {
-              isLastInGroup = false;
-            }
-          }
-
-          return (
-            <React.Fragment key={msg.id}>
-              {showDateSeparator && (
-                <div className="date-separator">
-                  <span>{dateLabel}</span>
+          <div className="media-sidebar-content">
+            {mediaTab === 'images' ? (
+              mediaList.filter(item => item.type === 'image').length === 0 ? (
+                <div className="media-empty">{t('admin.noImages') || 'Chưa có hình ảnh chia sẻ.'}</div>
+              ) : (
+                <div className="media-grid">
+                  {mediaList.filter(item => item.type === 'image').map(item => (
+                    <img 
+                      key={item.id} 
+                      src={item.url || item.data} 
+                      alt={item.name} 
+                      className="media-grid-item-image"
+                      onClick={() => setActiveLightboxImage(item)}
+                    />
+                  ))}
                 </div>
-              )}
-              <ChatBubble 
-                msg={msg} 
-                isSent={msg.sender_type === 'admin'} 
-                showSender={false} 
-                showAvatar={isLastInGroup}
-                adminInfo={adminsMap[msg.sender_id]}
-                onDelete={async (msgId) => {
-                  try {
-                    await DB.deleteMessage(msgId);
-                    setMessages(prev => prev.filter(m => m.id !== msgId));
-                    showToast(t('chat.deleted') || 'Đã xóa', 'success');
-                  } catch(e) {
-                    showToast(t('common.error'), 'error');
-                  }
-                }}
-              />
-            </React.Fragment>
-          );
-        })}
-        <div ref={messagesEndRef} />
-      </div>
+              )
+            ) : (
+              mediaList.filter(item => item.type === 'file').length === 0 ? (
+                <div className="media-empty">{t('admin.noFiles') || 'Chưa có tập tin chia sẻ.'}</div>
+              ) : (
+                <div className="media-files-list">
+                  {mediaList.filter(item => item.type === 'file').map(item => (
+                    <a 
+                      key={item.id} 
+                      href={item.url || item.data} 
+                      download={item.name}
+                      className="media-grid-item-file"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      📄 {item.name}
+                    </a>
+                  ))}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      )}
 
-      <div className="chat-input-bar">
-        <input type="file" id="admin-chat-file-upload" style={{display:'none'}} ref={fileInputRef} onChange={e => handleFileSelect(e, 'file')} />
-        <input type="file" id="admin-chat-image-upload" accept="image/*" style={{display:'none'}} ref={imageInputRef} onChange={e => handleFileSelect(e, 'image')} />
-        <div className="chat-actions">
-          <button className="chat-action-btn" title={t('chat.attachFile') || 'Đính kèm file'} onClick={() => fileInputRef.current?.click()}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-          </button>
-          <button className="chat-action-btn" title={t('chat.sendImage') || 'Gửi ảnh'} onClick={() => imageInputRef.current?.click()}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          </button>
-          <button className="chat-action-btn" title={t('chat.sendLocation') || 'Gửi vị trí'} onClick={handleLocationSend}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          </button>
-        </div>
-        <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
-          <textarea 
-            id="admin-chat-input"
-            ref={textareaRef}
-            className="chat-input" 
-            placeholder={t('chat.placeholder')}
-            value={inputText}
-            onChange={(e) => {
-              setInputText(e.target.value);
-              autoResize(e.target);
-            }}
-            onKeyDown={handleKeyDown}
-            rows="1"
-            style={{background:'transparent', margin:0, flex:1}}
-          ></textarea>
-          <button className="emoji-toggle-btn" onClick={(e) => EmojiPicker.toggle('admin-chat-input', e.currentTarget)}>😊</button>
-        </div>
-        <button className="btn-send" onClick={handleSend}>
-          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-      </div>
       {isEditingProfile && (
         <div className="confirm-modal-overlay" onClick={() => setIsEditingProfile(false)} style={{ zIndex: 1000 }}>
           <div className="job-form-card" style={{ maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
@@ -521,6 +929,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   <option value="restaurant">{t('register.positions.restaurant')}</option>
                   <option value="construction">{t('register.positions.construction')}</option>
                   <option value="office">{t('register.positions.office')}</option>
+                  <option value="nursing">{t('register.positions.nursing')}</option>
                   <option value="it">{t('register.positions.it')}</option>
                   <option value="other">{t('register.positions.other')}</option>
                 </select>
@@ -532,6 +941,48 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 {isSavingProfile ? <div className="spinner"></div> : t('admin.save') || 'Lưu'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {activeLightboxImage && (
+        <div 
+          className="lightbox-overlay" 
+          style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', 
+            background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', 
+            flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+          }}
+          onClick={() => setActiveLightboxImage(null)}
+        >
+          <img 
+            src={activeLightboxImage.url || activeLightboxImage.data} 
+            alt={activeLightboxImage.name} 
+            style={{ maxWidth: '90%', maxHeight: '80%', borderRadius: '8px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} 
+            onClick={e => e.stopPropagation()}
+          />
+          <div style={{ marginTop: '16px', display: 'flex', gap: '12px' }} onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => downloadFile(activeLightboxImage.url || activeLightboxImage.data, activeLightboxImage.name)} 
+              className="btn-download"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                padding: '8px 16px', background: 'var(--messenger-blue)', color: 'white',
+                border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>{t('chat.download') || 'Tải xuống'}</span>
+            </button>
+            <button 
+              onClick={() => setActiveLightboxImage(null)}
+              style={{
+                padding: '8px 16px', background: 'rgba(255,255,255,0.15)', color: 'white',
+                border: 'none', borderRadius: '20px', fontSize: '13px', fontWeight: '600', cursor: 'pointer'
+              }}
+            >
+              ✕ {t('admin.cancel') || 'Đóng'}
+            </button>
           </div>
         </div>
       )}

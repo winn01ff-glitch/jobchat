@@ -28,18 +28,28 @@
         "position": "希望職種",
         "positionPlaceholder": "職種を選択",
         "positions": {
-            "factory": "工場・製造",
+            "factory": "工場",
             "restaurant": "飲食店",
             "construction": "建設",
             "office": "事務",
+            "nursing": "介護・看護",
             "it": "IT・技術",
             "other": "その他"
         },
         "submit": "チャットを開始",
+        "enterOtp": "認証コードを入力してください",
+        "otpSentHint": "ご入力いただいたメールアドレスに6桁の認証コードを送信しました：",
+        "verify": "認証してチャットを開始",
+        "changeEmail": "メールアドレスを変更する",
+        "otpSent": "認証コードをメールで送信しました！",
+        "sendOtpFailed": "認証コードの送信に失敗しました。もう一度お試しください。",
+        "invalidOtp": "認証コードが正しくないか、有効期限が切れています。",
         "fillAll": "メールアドレスを入力してください",
         "enterName": "表示名を入力",
         "nameHint": "チャットで表示される名前を入力してください。",
-        "welcomeBack": "おかえりなさい！"
+        "welcomeBack": "おかえりなさい！",
+        "resendOtp": "認証コードを再送信",
+        "resendCountdown": "{seconds}秒後に再送信可能"
     },
     "chat": {
         "adminName": "採用チーム",
@@ -70,7 +80,36 @@
         "logout": "ログアウト",
         "confirmLogout": "ログアウトしてもよろしいですか？",
         "confirmLogoutTitle": "退出の確認",
-        "confirmLogoutText": "このチャットセッションを終了してもよろしいですか？このデバイスのメッセージ履歴は消去されます。"
+        "confirmLogoutText": "このチャットセッションを終了してもよろしいですか？このデバイスのメッセージ履歴は消去されます。",
+        "confirmDelete": "本当に削除しますか？",
+        "seen": "既読",
+        "sentStatus": "送信済み",
+        "sending": "送信中...",
+        "failed": "送信失敗",
+        "reply": "返信",
+        "replyingTo": "返信先:",
+        "replyToSelf": "自分",
+        "newMessages": "件の新しいメッセージ",
+        "scrollDown": "下へスクロール",
+        "networkOffline": "⚠️ インターネットの接続がありません。端末の設定を確認してください。",
+        "networkReconnecting": "🔄 再接続中...",
+        "networkConnected": "🟢 再接続に成功しました！",
+        "cannedTitle": "定型文",
+        "cannedResponses": {
+            "greet": "こんにちは。応募を受け付けました。まもなく担当者からご連絡いたします！",
+            "cv": "プロフィールの確認のため、こちらに履歴書（PDF）をお送りください。",
+            "interview": "弊社オフィスでの面接にご招待いたします。",
+            "askPhone": "採用担当者が連絡しやすいように、正しい電話番号を入力してください。",
+            "askTime": "勤務開始可能日はいつからになりますでしょうか？",
+            "interviewOnline": "Google Meetによるオンライン面接にご招待いたします。面接用リンクは後ほどお送りします。",
+            "askExperience": "同等のポジションでの職務経験や、これまでに担当された主なプロジェクトについて詳しく教えていただけますか？",
+            "thankReject": "この度はUphillの求人にご興味をお持ちいただきありがとうございます。選考の結果、大変恐縮ながら今回はご期待に添えない結果となりました。今後のご健勝をお祈り申し上げます。"
+        },
+        "teamName": "採用チーム",
+        "uploading": "アップロード中...",
+        "uploadSuccess": "アップロードが完了しました！",
+        "uploadFailed": "アップロードに失敗しました。もう一度お試しください。",
+        "download": "ダウンロード"
     },
     "admin": {
         "loginTitle": "管理者ログイン",
@@ -127,10 +166,34 @@
         "publish": "公開する",
         "noJobPosts": "求人がありません",
         "selectJobPreview": "投稿を選択して詳細を表示",
-        "confirmDelete": "削除してもよろしいですか？"
+        "confirmDelete": "削除してもよろしいですか？",
+        "sharedMedia": "写真とファイル",
+        "noMedia": "共有された写真やファイルはまだありません。",
+        "mediaGallery": "メディアギャラリー",
+        "avatarUpdated": "アバターを更新しました",
+        "changePassword": "パスワード変更（任意）",
+        "confirmLogoutText": "管理者システムからログアウトしてもよろしいですか？",
+        "confirmLogoutTitle": "ログアウトの確認",
+        "currentPasswordRequired": "現在のパスワードを入力してください",
+        "fillAll": "すべての項目を入力してください",
+        "invalidCredentials": "ユーザー名またはパスワードが正しくありません",
+        "invalidData": "無効なデータ",
+        "loginBtn": "ログイン",
+        "loginSubtitle": "管理者アカウントでログインしてください",
+        "ok": "確定",
+        "passwordsNotMatch": "新しいパスワードが一致しません",
+        "username": "ユーザー名",
+        "wrongCurrentPassword": "現在のパスワードが正しくありません",
+        "mediaImages": "画像",
+        "mediaFiles": "ファイルと文書",
+        "noImages": "共有された画像はまだありません。",
+        "noFiles": "共有されたファイルはまだありません。"
     },
     "common": {
-        "error": "エラーが発生しました"
+        "error": "エラーが発生しました",
+        "delete": "削除",
+        "other": "その他 / 直接入力...",
+        "select": "選択..."
     },
     "notification": {
         "newMessage": "新しいメッセージ",
@@ -143,6 +206,41 @@
         "salary": "給与",
         "location": "勤務地",
         "applyNow": "この求人に応募する",
-        "noJobs": "現在、求人情報はありません"
+        "noJobs": "求人はまだありません",
+        "jobList": "求人一覧",
+        "applicantViewPreview": "応募者画面プレビュー (Applicant View Preview)",
+        "welfare": "福利厚生・処遇",
+        "jobFields": {
+            "bonus": "賞与",
+            "nenkin": "年金",
+            "insurance": "社会保険・年金",
+            "raise": "昇給",
+            "transport": "通勤手当",
+            "bonusOptions": {
+                "twice_a_year": "年2回",
+                "once_a_year": "年1回",
+                "performance": "業績による",
+                "none": "賞与なし"
+            },
+            "nenkinOptions": {
+                "full": "厚生年金加入",
+                "none": "なし"
+            },
+            "insuranceOptions": {
+                "full": "社会保険・厚生年金完備",
+                "partial": "一部加入",
+                "none": "なし"
+            },
+            "raiseOptions": {
+                "once_a_year": "年1回",
+                "performance": "評価による",
+                "none": "昇給なし"
+            },
+            "transportOptions": {
+                "full": "全額支給",
+                "limited": "一部支給（上限あり）",
+                "none": "支給なし"
+            }
+        }
     }
 }
