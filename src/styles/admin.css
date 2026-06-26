@@ -191,3 +191,16 @@
 .confirm-modal-actions .btn-cancel:hover { background: #e0e0e0; transform: translateY(-1px); }
 .confirm-modal-actions .btn-confirm { background: var(--error); color: white; box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3); }
 .confirm-modal-actions .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255, 59, 48, 0.4); }
+
+/* PC Admin Chat Area Overrides - Span Full Width */
+.admin-chat-area .chat-messages {
+    max-width: none;
+    margin: 0;
+}
+.admin-chat-area .chat-input-container {
+    max-width: none;
+}
+.admin-chat-area .reply-bar-inner {
+    max-width: none;
+    margin: 0;
+}
