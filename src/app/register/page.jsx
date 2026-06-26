@@ -25,6 +25,7 @@ function RegisterContent() {
   const [isOtpLoading, setIsOtpLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [isResending, setIsResending] = useState(false);
+  const [isOtpFocused, setIsOtpFocused] = useState(false);
 
   useEffect(() => {
     const sessionStr = localStorage.getItem('jobchat_session');
@@ -145,10 +146,10 @@ function RegisterContent() {
     }
   };
 
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault();
+  const handleOtpSubmit = async (e, forceOtp) => {
+    if (e) e.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
-    const cleanOtp = otp.trim();
+    const cleanOtp = (forceOtp || otp).trim();
 
     if (!cleanOtp) {
       showToast(t('register.enterOtp') || 'Vui lòng nhập mã xác thực', 'error');
@@ -299,13 +300,27 @@ function RegisterContent() {
                   required 
                   maxLength={6}
                   value={otp}
-                  onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setOtp(val);
+                    if (val.length === 6) {
+                      handleOtpSubmit(null, val);
+                    }
+                  }}
                   onKeyPress={e => {
                     if (!/[0-9]/.test(e.key)) {
                       e.preventDefault();
                     }
                   }}
-                  placeholder="------"
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleOtpSubmit();
+                    }
+                  }}
+                  onFocus={() => setIsOtpFocused(true)}
+                  onBlur={() => setIsOtpFocused(false)}
+                  placeholder={isOtpFocused ? "" : "------"}
                   style={{ textAlign: 'center', letterSpacing: '6px', fontSize: '20px', fontWeight: 'bold' }}
                 />
               </div>
