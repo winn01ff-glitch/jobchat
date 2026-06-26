@@ -810,13 +810,16 @@
 /* ============ Canned Responses (Quick Reply) Popup ============ */
 .canned-popup {
     position: absolute;
-    bottom: 50px;
-    left: 0;
+    bottom: 100%;
+    margin-bottom: 8px;
+    right: 0;
+    left: auto;
     background: var(--bg-primary);
     border: 1px solid var(--border-light);
     box-shadow: var(--shadow-modal);
     border-radius: 12px;
     width: 320px;
+    max-width: calc(100vw - 80px);
     max-height: 250px;
     display: flex;
     flex-direction: column;
@@ -1025,6 +1028,9 @@
 @media (max-width: 768px) {
     .chat-media-sidebar {
         width: 100%;
+    }
+    .chat-input-bar {
+        padding-bottom: calc(8px + env(safe-area-inset-bottom));
     }
 }
 

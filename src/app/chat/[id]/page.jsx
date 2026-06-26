@@ -81,6 +81,7 @@ export default function ChatPage({ params }) {
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [adminsMap, setAdminsMap] = useState({});
+  const [areActionsCollapsed, setAreActionsCollapsed] = useState(false);
 
   const typingTimeoutRef = useRef(null);
   const typingChannelRef = useRef(null);
@@ -399,6 +400,7 @@ export default function ChatPage({ params }) {
 
     if (!contentVal) {
       setInputText('');
+      setAreActionsCollapsed(false);
       if (textareaRef.current) {
         textareaRef.current.value = '';
         textareaRef.current.style.height = 'auto';
@@ -656,17 +658,35 @@ export default function ChatPage({ params }) {
         <div className="chat-input-container">
           <input type="file" id="chat-file-upload" style={{display:'none'}} ref={fileInputRef} onChange={e => handleFileSelect(e, 'file')} />
           <input type="file" id="chat-image-upload" accept="image/*" style={{display:'none'}} ref={imageInputRef} onChange={e => handleFileSelect(e, 'image')} />
-          <div className="chat-actions">
-            <button className="chat-action-btn" title={t('chat.attachFile') || 'Đính kèm file'} onClick={() => fileInputRef.current?.click()}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+          
+          {areActionsCollapsed ? (
+            <button 
+              className="chat-action-btn expand-btn" 
+              title="Mở rộng" 
+              onClick={() => {
+                setAreActionsCollapsed(false);
+                textareaRef.current?.blur();
+              }}
+              style={{ marginRight: '4px' }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
             </button>
-            <button className="chat-action-btn" title={t('chat.sendImage') || 'Gửi ảnh'} onClick={() => imageInputRef.current?.click()}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-            </button>
-            <button className="chat-action-btn" title={t('chat.sendLocation') || 'Gửi vị trí'} onClick={handleLocationSend}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            </button>
-          </div>
+          ) : (
+            <div className="chat-actions">
+              <button className="chat-action-btn" title={t('chat.attachFile') || 'Đính kèm file'} onClick={() => fileInputRef.current?.click()}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+              </button>
+              <button className="chat-action-btn" title={t('chat.sendImage') || 'Gửi ảnh'} onClick={() => imageInputRef.current?.click()}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              </button>
+              <button className="chat-action-btn" title={t('chat.sendLocation') || 'Gửi vị trí'} onClick={handleLocationSend}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </button>
+            </div>
+          )}
+
           <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
             <textarea 
               id="chat-input"
@@ -674,9 +694,18 @@ export default function ChatPage({ params }) {
               className="chat-input" 
               placeholder={t('chat.placeholder')}
               value={inputText}
+              onFocus={() => setAreActionsCollapsed(true)}
+              onBlur={() => {
+                if (!inputText.trim()) {
+                  setAreActionsCollapsed(false);
+                }
+              }}
               onChange={(e) => {
                 handleTextChange(e.target.value);
                 autoResize(e.target);
+                if (e.target.value.trim()) {
+                  setAreActionsCollapsed(true);
+                }
               }}
               onKeyDown={handleKeyDown}
               rows="1"
