@@ -779,12 +779,40 @@
     color: var(--text-secondary);
 }
 
+.job-detail-meta-item.position {
+    background: rgba(0, 132, 255, 0.08);
+    border-color: rgba(0, 132, 255, 0.15);
+    color: var(--messenger-blue);
+}
+.job-detail-meta-item.position svg {
+    color: var(--messenger-blue);
+}
+
+.job-detail-meta-item.salary {
+    background: rgba(39, 174, 96, 0.08);
+    border-color: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+}
+.job-detail-meta-item.salary svg {
+    color: #27ae60;
+}
+
+.job-detail-meta-item.location {
+    background: rgba(230, 126, 34, 0.08);
+    border-color: rgba(230, 126, 34, 0.15);
+    color: #e67e22;
+}
+.job-detail-meta-item.location svg {
+    color: #e67e22;
+}
+
 .job-detail-meta-item svg {
     color: var(--text-muted);
 }
 
-/* Welfare Section */
-.job-detail-welfare {
+/* Welfare & Detail Section */
+.job-detail-welfare,
+.job-detail-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-lg);
@@ -792,7 +820,8 @@
     margin-bottom: var(--space-xl);
 }
 
-.welfare-title {
+.welfare-title,
+.section-title {
     font-size: 15px;
     font-weight: 700;
     color: var(--text-primary);
