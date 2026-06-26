@@ -177,7 +177,7 @@ export default function JobPreviewPanel({ jobId, onBack, onDelete }) {
       <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
         {/* Candidate View Preview Container */}
         <div className="job-detail-page" style={{ padding: '0', minHeight: 'auto' }}>
-          <div className="job-detail-content-wrapper" style={{ padding: '0', border: 'none', background: 'transparent' }}>
+          <div className="job-detail-content-wrapper" style={{ padding: '0', border: 'none', background: 'transparent', overflowY: 'visible' }}>
             <div className="job-detail-inner" style={{ padding: '0' }}>
               <h1 className="job-detail-title">{job.title}</h1>
               
