@@ -437,11 +437,11 @@
     height: 100dvh;
     z-index: 9999;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     padding: 20px;
     box-sizing: border-box;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 .job-form-card {
@@ -450,11 +450,10 @@
     border-radius: var(--radius-md);
     max-width: 700px;
     width: 100%;
+    max-height: calc(100dvh - 40px);
     display: flex;
     flex-direction: column;
     box-shadow: 0 16px 48px rgba(0,0,0,0.2);
-    margin: auto 0;
-    margin-top: 0;
     animation: slideUp 0.3s ease;
     overflow: hidden;
 }
