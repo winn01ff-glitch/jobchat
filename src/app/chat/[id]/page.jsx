@@ -267,23 +267,12 @@ export default function ChatPage({ params }) {
     if (isLoadingMessages || !hasMoreMessages) return;
     setIsLoadingMessages(true);
     
-    // Save current scroll position
-    const container = listRef.current;
-    const oldScrollHeight = container ? container.scrollHeight : 0;
-
     try {
       const msgs = await DB.getMessages(applicantId, messagesOffset, 20);
       if (msgs.length > 0) {
         setMessages(prev => [...msgs, ...prev]);
         setMessagesOffset(prev => prev + msgs.length);
         if (msgs.length < 20) setHasMoreMessages(false);
-        
-        // Restore scroll position
-        setTimeout(() => {
-          if (container) {
-            container.scrollTop = container.scrollHeight - oldScrollHeight;
-          }
-        }, 10);
       } else {
         setHasMoreMessages(false);
       }
