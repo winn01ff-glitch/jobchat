@@ -1123,5 +1123,11 @@
         margin-right: 0 !important;
         pointer-events: none !important;
     }
+    
+    /* Position canned popup near the lightning bolt on desktop */
+    .canned-popup {
+        left: 0;
+        right: auto;
+    }
 }
 
