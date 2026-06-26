@@ -125,6 +125,11 @@
         visibility: visible !important;
     }
     
+    .admin-sidebar-inner {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    
     .admin-container .admin-sidebar.hidden-mobile {
         display: flex !important;
         transform: translateX(-100%) !important;
