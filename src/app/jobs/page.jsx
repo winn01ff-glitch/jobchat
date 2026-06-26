@@ -82,7 +82,6 @@ export default function JobsPage() {
                     </div>
                   )}
                 </div>
-                <div className="job-card-preview">{preview}</div>
                 <div className="job-card-footer">
                   <span className="job-card-date">{formatDate(job.created_at)}</span>
                   <span className="job-card-action">{t('jobs.viewDetail') || 'Xem chi tiết'} →</span>
