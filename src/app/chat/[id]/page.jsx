@@ -90,6 +90,7 @@ export default function ChatPage({ params }) {
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const isInitialScrollDone = useRef(false);
 
   const getReplyText = (msg) => {
     if (!msg) return '';
@@ -238,6 +239,7 @@ export default function ChatPage({ params }) {
   }, [applicantId]);
 
   const loadInitialMessages = async (id) => {
+    isInitialScrollDone.current = false;
     try {
       const msgs = await DB.getMessages(id, 0, 20);
       setMessages(msgs);
@@ -245,7 +247,12 @@ export default function ChatPage({ params }) {
       if (msgs.length < 20) setHasMoreMessages(false);
       
       // Scroll to bottom
-      setTimeout(() => scrollToBottom('auto'), 100);
+      setTimeout(() => {
+        scrollToBottom('auto');
+        setTimeout(() => {
+          isInitialScrollDone.current = true;
+        }, 300);
+      }, 100);
       DB.markMessagesAsSeen(id, 'admin');
     } catch (err) {
       console.error('Failed to load initial chat state:', err);
@@ -326,6 +333,10 @@ export default function ChatPage({ params }) {
     
     if (!isScrolledUp) {
       setNewMessagesCount(0);
+    }
+
+    if (isInitialScrollDone.current && container.scrollTop <= 50 && hasMoreMessages && !isLoadingMessages) {
+      loadMoreMessages();
     }
   };
 
@@ -514,16 +525,12 @@ export default function ChatPage({ params }) {
             <h3>{t('chat.welcomeTitle')}</h3>
             <p>{t('chat.welcomeMsg')}</p>
           </div>
-          {hasMoreMessages && (
-            <div style={{textAlign: 'center', margin: '10px 0'}}>
-              <button 
-                onClick={loadMoreMessages} 
-                className="btn-secondary" 
-                disabled={isLoadingMessages}
-                style={{fontSize: '12px', padding: '4px 12px', borderRadius: '12px'}}
-              >
-                {isLoadingMessages ? '...' : t('chat.loadMore') || 'Tải thêm tin nhắn cũ'}
-              </button>
+          {isLoadingMessages && (
+            <div style={{ textAlign: 'center', margin: '15px 0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <svg style={{ animation: 'spin 1s linear infinite', width: '24px', height: '24px', color: 'var(--messenger-blue)' }} viewBox="0 0 24 24" fill="none">
+                <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
             </div>
           )}
           

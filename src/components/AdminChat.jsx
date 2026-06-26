@@ -102,6 +102,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const isInitialScrollDone = useRef(false);
 
   useEffect(() => {
     const fetchAdmins = async () => {
@@ -139,13 +140,19 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
         const app = await DB.getApplicant(applicantId);
         setApplicant(app);
         
+        isInitialScrollDone.current = false;
         const msgs = await DB.getMessages(applicantId, 0, 20);
         setMessages(msgs);
         setMessagesOffset(20);
         if (msgs.length < 20) setHasMoreMessages(false);
         else setHasMoreMessages(true);
         
-        setTimeout(() => scrollToBottom('auto'), 100);
+        setTimeout(() => {
+          scrollToBottom('auto');
+          setTimeout(() => {
+            isInitialScrollDone.current = true;
+          }, 300);
+        }, 100);
         DB.markMessagesAsSeen(applicantId, 'applicant');
         
         sub = DB.subscribeToMessages(applicantId, (msg) => {
@@ -210,26 +217,19 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     };
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const container = listRef.current;
-      if (!container) return;
-      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
-      setShowScrollBtn(!isAtBottom);
-      if (isAtBottom) {
-        setNewMessagesCount(0);
-      }
-    };
+  const handleScroll = () => {
     const container = listRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
+    if (!container) return;
+    const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
+    setShowScrollBtn(!isAtBottom);
+    if (isAtBottom) {
+      setNewMessagesCount(0);
     }
-    return () => {
-      if (container) {
-        container.removeEventListener('scroll', handleScroll);
-      }
-    };
-  }, [messages]);
+
+    if (isInitialScrollDone.current && container.scrollTop <= 50 && hasMoreMessages && !isLoadingMessages) {
+      loadMoreMessages();
+    }
+  };
 
   useEffect(() => {
     if (!applicantId) return;
@@ -611,22 +611,18 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
           </div>
         )}
         
-        <div className="chat-messages" ref={listRef}>
+        <div className="chat-messages" ref={listRef} onScroll={handleScroll}>
           <div className="chat-messages-inner">
             <div className="chat-welcome">
               <div className="chat-welcome-icon">{applicant.name.charAt(0).toUpperCase()}</div>
               <h3>{applicant.name}</h3>
             </div>
-            {hasMoreMessages && (
-              <div style={{textAlign: 'center', margin: '10px 0'}}>
-                <button 
-                  onClick={loadMoreMessages} 
-                  className="btn-secondary" 
-                  disabled={isLoadingMessages}
-                  style={{fontSize: '12px', padding: '4px 12px', borderRadius: '12px'}}
-                >
-                  {isLoadingMessages ? '...' : t('chat.loadMore') || 'Tải thêm tin nhắn'}
-                </button>
+            {isLoadingMessages && (
+              <div style={{ textAlign: 'center', margin: '15px 0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <svg style={{ animation: 'spin 1s linear infinite', width: '24px', height: '24px', color: 'var(--messenger-blue)' }} viewBox="0 0 24 24" fill="none">
+                  <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
               </div>
             )}
             
