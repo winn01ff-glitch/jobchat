@@ -182,15 +182,70 @@ body {
 .admin-header-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-left: 4px;
-    padding-left: 8px;
+    gap: 8px;
+    margin-left: 8px;
+    padding-left: 12px;
     border-left: 1px solid var(--border-light);
 }
 .admin-header-name {
     font-size: var(--font-sm);
     font-weight: 600;
     color: var(--text-primary);
+    margin-right: 4px;
+}
+
+.admin-header-divider {
+    width: 1px;
+    height: 16px;
+    background-color: var(--border-light);
+    margin: 0 4px;
+}
+
+/* Premium Admin Action Buttons (Settings & Logout) */
+.btn-settings,
+.btn-admin-logout {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: color 0.25s ease, background-color 0.25s ease;
+    outline: none;
+    width: 32px;
+    height: 32px;
+}
+
+.btn-settings svg,
+.btn-admin-logout svg {
+    display: block;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* Hover effects */
+.btn-settings:hover {
+    color: var(--messenger-blue);
+    background-color: rgba(0, 132, 255, 0.08);
+}
+
+.btn-settings:hover svg {
+    transform: rotate(180deg);
+}
+
+.btn-admin-logout:hover {
+    color: var(--error);
+    background-color: rgba(240, 40, 73, 0.08);
+}
+
+.btn-admin-logout:hover svg {
+    transform: translateX(2px);
 }
 
 /* Admin Login Button in Header */

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { DB } from '../lib/supabase';
-import { showConfirmModal } from '../lib/helpers';
+import { showConfirmModal, formatSalary } from '../lib/helpers';
 import JobFormModal from './JobFormModal';
 
 export default function JobManagement({ onSelectJob, selectedJobId }) {
@@ -65,47 +65,54 @@ export default function JobManagement({ onSelectJob, selectedJobId }) {
                 className={`job-post-item ${selectedJobId === job.id ? 'selected' : ''}`}
                 onClick={() => onSelectJob(job.id)}
                 style={{
-                  padding: '16px', borderRadius: '8px', marginBottom: '12px', cursor: 'pointer',
+                  padding: '8px 12px', borderRadius: '8px', marginBottom: '8px', cursor: 'pointer',
                   background: selectedJobId === job.id ? 'rgba(0, 132, 255, 0.06)' : 'var(--bg-secondary)',
                   border: '1px solid var(--border-light)',
                   borderLeft: selectedJobId === job.id ? '4px solid var(--messenger-blue)' : '1px solid var(--border-light)',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
                 }}
               >
-                <div className="job-post-item-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span className="job-post-item-title" style={{ fontWeight: '600' }}>{job.title}</span>
-                  <span className={`job-post-item-status ${statusClass}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: '4px 8px', borderRadius: '12px', background: isPublished ? '#e6f4ea' : '#f1f3f4', color: isPublished ? '#1e8e3e' : '#5f6368' }}>
+                <div className="job-post-item-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', alignItems: 'center' }}>
+                  <span className="job-post-item-title" style={{ fontWeight: '600', fontSize: '14px' }}>{job.title}</span>
+                  <span className={`job-post-item-status ${statusClass}`} style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: '4px', 
+                    fontSize: '11px', 
+                    padding: '3px 8px', 
+                    borderRadius: '12px', 
+                    background: isPublished ? 'rgba(0, 132, 255, 0.12)' : 'rgba(46, 204, 113, 0.12)', 
+                    color: isPublished ? '#0084ff' : '#2e7d32', 
+                    fontWeight: '600' 
+                  }}>
                     {isPublished ? (
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><polyline points="20 6 9 17 4 12"/></svg>
+                      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><polyline points="20 6 9 17 4 12"/></svg>
                     ) : (
-                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     )}
                     <span>{statusText}</span>
                   </span>
                 </div>
-                <div className="job-post-item-meta" style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                <div className="job-post-item-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
                   {posLabel && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(0, 132, 255, 0.09)', border: '1px solid rgba(0, 132, 255, 0.25)', color: 'var(--messenger-blue)', fontWeight: '600', fontSize: '11px' }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
                       <span>{posLabel}</span>
                     </span>
                   )}
-                  {posLabel && (job.salary || job.location) && <span>·</span>}
                   {job.salary && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><path d="M6 3l6 8 6-8M12 11v10M9 13h6M9 17h6"/></svg>
-                      <span>{job.salary}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(39, 174, 96, 0.09)', border: '1px solid rgba(39, 174, 96, 0.25)', color: '#27ae60', fontWeight: '600', fontSize: '11px' }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color: '#27ae60', display:'block'}}><path d="M6 3l6 8 6-8M12 11v10M9 13h6M9 17h6"/></svg>
+                      <span>{formatSalary(job.salary, t)}</span>
                     </span>
                   )}
-                  {job.salary && job.location && <span>·</span>}
                   {job.location && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '12px', background: 'rgba(230, 126, 34, 0.09)', border: '1px solid rgba(230, 126, 34, 0.25)', color: '#e67e22', fontWeight: '600', fontSize: '11px' }}>
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color: '#e67e22'}}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                       <span>{job.location}</span>
                     </span>
                   )}
                 </div>
-
               </div>
             );
           })

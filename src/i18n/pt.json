@@ -179,6 +179,8 @@
         "ok": "OK",
         "passwordsNotMatch": "A confirmação de senha não coincide",
         "salaryExample": "Exemplo: ¥250.000/mês",
+        "salaryExampleMonthly": "Exemplo: 250.000",
+        "salaryExampleHourly": "Exemplo: 1.200",
         "sharedMedia": "Fotos e Arquivos",
         "statusDraft": "Rascunho",
         "statusPublished": "Publicado",
@@ -242,6 +244,13 @@
                 "limited": "Cobertura limitada",
                 "none": "Não suportado"
             }
+        },
+        "salaryType": "Tipo de Salário",
+        "monthly": "Mensal",
+        "hourly": "Por hora",
+        "salarySuffix": {
+            "monthly": " / mês",
+            "hourly": " / hora"
         }
     }
 }

@@ -238,27 +238,41 @@ function DashboardContent() {
           </button>
         </div>
 
-        {activeTab === 'chats' ? (
-          <ConversationList 
-            applicants={applicants}
-            selectedId={selectedId}
-            onSelect={handleSelectConversation}
-            filter={filter}
-            setFilter={setFilter}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            typingStates={typingStates}
-          />
-        ) : (
-          <JobManagement 
-            onSelectJob={(id) => {
-              const params = new URLSearchParams(window.location.search);
-              params.set('id', id);
-              router.replace(`${window.location.pathname}?${params.toString()}`);
-            }}
-            selectedJobId={selectedId}
-          />
-        )}
+        {/* Sliding wrapper container for Tabs */}
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          <div style={{ 
+            display: 'flex', 
+            width: '200%', 
+            height: '100%', 
+            transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+            transform: activeTab === 'chats' ? 'translateX(0)' : 'translateX(-50%)' 
+          }}>
+            {/* Chats pane */}
+            <div style={{ width: '50%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <ConversationList 
+                applicants={applicants}
+                selectedId={selectedId}
+                onSelect={handleSelectConversation}
+                filter={filter}
+                setFilter={setFilter}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                typingStates={typingStates}
+              />
+            </div>
+            {/* Jobs pane */}
+            <div style={{ width: '50%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <JobManagement 
+                onSelectJob={(id) => {
+                  const params = new URLSearchParams(window.location.search);
+                  params.set('id', id);
+                  router.replace(`${window.location.pathname}?${params.toString()}`);
+                }}
+                selectedJobId={selectedId}
+              />
+            </div>
+          </div>
+        </div>
       </div>
       
       <div className={`admin-chat-area ${!isMobileChatActive ? 'hidden-mobile' : ''}`} id="admin-chat-area">

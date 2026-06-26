@@ -36,7 +36,7 @@ export default function ConversationList({
   });
 
   return (
-    <div className="admin-sidebar" id="admin-sidebar">
+    <div className="conversation-list-container" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
       <div className="sidebar-search">
         <div className="search-wrapper">
           <span className="search-icon">🔍</span>

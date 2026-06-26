@@ -158,6 +158,8 @@
         "statusPublished": "公開済み",
         "jobContentPlaceholder": "仕事の詳細な説明...",
         "salaryExample": "例：月給 250,000円",
+        "salaryExampleMonthly": "例：250,000",
+        "salaryExampleHourly": "例：1,200",
         "locationExample": "例：東京都",
         "confirmDeleteJobTitle": "求人を削除",
         "confirmDeleteJobText": "この求人を削除してもよろしいですか？",
@@ -242,6 +244,13 @@
                 "limited": "一部支給（上限あり）",
                 "none": "支給なし"
             }
+        },
+        "salaryType": "給与形態",
+        "monthly": "月給",
+        "hourly": "時給",
+        "salarySuffix": {
+            "monthly": " / 月",
+            "hourly": " / 時"
         }
     }
 }

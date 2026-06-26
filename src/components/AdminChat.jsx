@@ -828,66 +828,64 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
         </div>
       </div>
       
-      {showMediaSidebar && (
-        <div className="chat-media-sidebar">
-          <div className="media-sidebar-header">
-            <h4>{t('admin.sharedMedia') || 'Ảnh & Tập tin'}</h4>
-            <button onClick={() => setShowMediaSidebar(false)}>✕</button>
-          </div>
-          <div className="media-sidebar-tabs">
-            <button 
-              className={`media-tab-btn ${mediaTab === 'images' ? 'active' : ''}`}
-              onClick={() => setMediaTab('images')}
-            >
-              {t('admin.mediaImages') || 'Hình ảnh'}
-            </button>
-            <button 
-              className={`media-tab-btn ${mediaTab === 'files' ? 'active' : ''}`}
-              onClick={() => setMediaTab('files')}
-            >
-              {t('admin.mediaFiles') || 'Tập tin'}
-            </button>
-          </div>
-          <div className="media-sidebar-content">
-            {mediaTab === 'images' ? (
-              mediaList.filter(item => item.type === 'image').length === 0 ? (
-                <div className="media-empty">{t('admin.noImages') || 'Chưa có hình ảnh chia sẻ.'}</div>
-              ) : (
-                <div className="media-grid">
-                  {mediaList.filter(item => item.type === 'image').map(item => (
-                    <img 
-                      key={item.id} 
-                      src={item.url || item.data} 
-                      alt={item.name} 
-                      className="media-grid-item-image"
-                      onClick={() => setActiveLightboxImage(item)}
-                    />
-                  ))}
-                </div>
-              )
-            ) : (
-              mediaList.filter(item => item.type === 'file').length === 0 ? (
-                <div className="media-empty">{t('admin.noFiles') || 'Chưa có tập tin chia sẻ.'}</div>
-              ) : (
-                <div className="media-files-list">
-                  {mediaList.filter(item => item.type === 'file').map(item => (
-                    <a 
-                      key={item.id} 
-                      href={item.url || item.data} 
-                      download={item.name}
-                      className="media-grid-item-file"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      📄 {item.name}
-                    </a>
-                  ))}
-                </div>
-              )
-            )}
-          </div>
+      <div className={`chat-media-sidebar ${showMediaSidebar ? 'active' : ''}`}>
+        <div className="media-sidebar-header">
+          <h4>{t('admin.sharedMedia') || 'Ảnh & Tập tin'}</h4>
+          <button onClick={() => setShowMediaSidebar(false)}>✕</button>
         </div>
-      )}
+        <div className="media-sidebar-tabs">
+          <button 
+            className={`media-tab-btn ${mediaTab === 'images' ? 'active' : ''}`}
+            onClick={() => setMediaTab('images')}
+          >
+            {t('admin.mediaImages') || 'Hình ảnh'}
+          </button>
+          <button 
+            className={`media-tab-btn ${mediaTab === 'files' ? 'active' : ''}`}
+            onClick={() => setMediaTab('files')}
+          >
+            {t('admin.mediaFiles') || 'Tập tin'}
+          </button>
+        </div>
+        <div className="media-sidebar-content">
+          {mediaTab === 'images' ? (
+            mediaList.filter(item => item.type === 'image').length === 0 ? (
+              <div className="media-empty">{t('admin.noImages') || 'Chưa có hình ảnh chia sẻ.'}</div>
+            ) : (
+              <div className="media-grid">
+                {mediaList.filter(item => item.type === 'image').map(item => (
+                  <img 
+                    key={item.id} 
+                    src={item.url || item.data} 
+                    alt={item.name} 
+                    className="media-grid-item-image"
+                    onClick={() => setActiveLightboxImage(item)}
+                  />
+                ))}
+              </div>
+            )
+          ) : (
+            mediaList.filter(item => item.type === 'file').length === 0 ? (
+              <div className="media-empty">{t('admin.noFiles') || 'Chưa có tập tin chia sẻ.'}</div>
+            ) : (
+              <div className="media-files-list">
+                {mediaList.filter(item => item.type === 'file').map(item => (
+                  <a 
+                    key={item.id} 
+                    href={item.url || item.data} 
+                    download={item.name}
+                    className="media-grid-item-file"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    📄 {item.name}
+                  </a>
+                ))}
+              </div>
+            )
+          )}
+        </div>
+      </div>
 
       {isEditingProfile && (
         <div className="confirm-modal-overlay" onClick={() => setIsEditingProfile(false)} style={{ zIndex: 1000 }}>

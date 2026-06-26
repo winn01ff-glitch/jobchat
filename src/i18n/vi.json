@@ -171,6 +171,8 @@
         "statusPublished": "Công khai",
         "jobContentPlaceholder": "Mô tả chi tiết công việc...",
         "salaryExample": "Ví dụ: ¥250,000/tháng",
+        "salaryExampleMonthly": "Ví dụ: 250,000",
+        "salaryExampleHourly": "Ví dụ: 1,200",
         "locationExample": "Ví dụ: Tokyo",
         "confirmDeleteJobTitle": "Xóa bài đăng",
         "confirmDeleteJobText": "Bạn có chắc chắn muốn xóa bài đăng này?",
@@ -242,6 +244,13 @@
                 "limited": "Hỗ trợ có giới hạn",
                 "none": "Không hỗ trợ"
             }
+        },
+        "salaryType": "Loại lương",
+        "monthly": "Tháng",
+        "hourly": "Giờ",
+        "salarySuffix": {
+            "monthly": " / tháng",
+            "hourly": " / giờ"
         }
     }
 }

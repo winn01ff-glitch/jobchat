@@ -123,6 +123,8 @@
     margin-top: var(--space-md);
     padding-top: var(--space-sm);
     border-top: 1px solid var(--border-light);
+    position: relative;
+    top: 2px;
 }
 
 .job-card-date {
@@ -429,24 +431,30 @@
 /* Job Form Modal */
 .job-form-modal {
     position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 2000;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    z-index: 9999;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: var(--space-md);
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
 }
 
 .job-form-card {
+    position: relative;
     background: var(--bg-primary);
-    border-radius: var(--radius-xl);
-    max-width: 550px;
+    border-radius: var(--radius-md);
+    max-width: 700px;
     width: 100%;
-    max-height: 90vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+    margin: auto 0;
+    margin-top: 0;
     animation: slideUp 0.3s ease;
     overflow: hidden;
 }
@@ -598,7 +606,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 .job-ap-toolbar {
@@ -732,23 +740,39 @@
         gap: var(--space-md);
     }
     .job-detail-card { margin: var(--space-sm); }
-    .job-form-card { margin: var(--space-sm); }
+    .job-form-card {
+        max-width: 100%;
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+        margin: 0;
+    }
+    .job-form-modal {
+        padding: 0;
+        align-items: stretch;
+        overflow: hidden;
+    }
 }
 
 /* ============ Candidate Job Detail Page ============ */
 .job-detail-page {
     max-width: 800px;
     margin: 0 auto;
-    padding: var(--space-xl) var(--space-md) 100px;
-    min-height: calc(100dvh - var(--header-height));
+    height: 100%;
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    overflow: hidden;
+    position: relative;
+    width: 100%;
 }
 
 .job-detail-content-wrapper {
+    flex: 1;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
+    gap: var(--space-lg);
+    padding: var(--space-xl) var(--space-md) 90px;
 }
 
 .job-detail-title {
@@ -880,30 +904,19 @@
 }
 
 /* Fixed Bottom Apply Bar */
-.job-apply-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: transparent;
-    border: none;
-    padding: var(--space-md) var(--space-lg);
-    display: flex;
-    justify-content: center;
-    z-index: 1000;
-    box-shadow: none;
-    pointer-events: none;
-}
-
 .btn-apply {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
     pointer-events: auto;
-    width: 100%;
-    max-width: 500px;
+    width: auto;
     padding: 12px 24px;
     background: var(--messenger-gradient);
     color: white;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -917,23 +930,23 @@
 
 .btn-apply:hover {
     opacity: 0.95;
-    transform: translateY(-1px);
+    transform: translateX(-50%) translateY(-1px);
     box-shadow: 0 6px 16px rgba(0, 132, 255, 0.35);
 }
 
 .btn-apply:active {
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
     .job-detail-page {
-        padding: var(--space-md) var(--space-sm) 90px;
-        gap: var(--space-md);
+        padding: 0;
+        gap: 0;
     }
     
     .job-detail-content-wrapper {
-        padding: 0;
+        padding: var(--space-md) 20px 80px;
     }
     
     .job-detail-title {
@@ -950,12 +963,9 @@
         font-size: var(--font-xs);
     }
 
-    .job-apply-bar {
-        padding: 10px var(--space-md);
-    }
-
     .btn-apply {
-        max-width: none;
+        bottom: 16px;
+        width: auto;
     }
 }
 
@@ -1052,4 +1062,47 @@
         grid-column: span 1;
     }
 }
+
+
+/* ============ Guest Jobs Page Slide Transitions ============ */
+.jobs-layout-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex: 1;
+}
+
+.jobs-layout-list {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(0);
+    overflow-y: auto;
+}
+
+.jobs-layout-list.is-detail {
+    transform: translateX(-30%);
+}
+
+.jobs-layout-detail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    background: var(--bg-primary);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+    visibility: hidden;
+    overflow: hidden;
+}
+
+.jobs-layout-detail.is-detail {
+    transform: translateX(0);
+    visibility: visible;
+}
+
 

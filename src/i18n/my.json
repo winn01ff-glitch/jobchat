@@ -180,6 +180,8 @@
         "ok": "သဘောတူသည်",
         "passwordsNotMatch": "အတည်ပြုစကားဝှက် ကိုက်ညီမှုမရှိပါ",
         "salaryExample": "ဥပမာ - တစ်လလျှင် ¥၂၅၀,၀၀၀",
+        "salaryExampleMonthly": "ဥပမာ - 250,000",
+        "salaryExampleHourly": "ဥပမာ - 1,200",
         "statusDraft": "မူကြမ်း",
         "statusPublished": "ထုတ်ဝေပြီး",
         "username": "အသုံးပြုသူအမည်",
@@ -242,6 +244,13 @@
                 "limited": "ကန့်သတ်ချက်ဖြင့် ထောက်ပံ့ခြင်း",
                 "none": "ထောက်ပံ့မှုမရှိပါ"
             }
+        },
+        "salaryType": "လစာပုံစံ",
+        "monthly": "လစဉ်",
+        "hourly": "နာရီခြား",
+        "salarySuffix": {
+            "monthly": " / month",
+            "hourly": " / hour"
         }
     }
 }

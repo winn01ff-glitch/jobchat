@@ -180,6 +180,8 @@
         "loginSubtitle": "Log in to manage applicants",
         "passwordsNotMatch": "Confirmation password does not match",
         "salaryExample": "Example: ¥250,000/month",
+        "salaryExampleMonthly": "Example: 250,000",
+        "salaryExampleHourly": "Example: 1,200",
         "statusDraft": "Draft",
         "statusPublished": "Published",
         "username": "Username",
@@ -242,6 +244,13 @@
                 "limited": "Limited coverage",
                 "none": "Not supported"
             }
+        },
+        "salaryType": "Salary Type",
+        "monthly": "Monthly",
+        "hourly": "Hourly",
+        "salarySuffix": {
+            "monthly": " / month",
+            "hourly": " / hour"
         }
     }
 }

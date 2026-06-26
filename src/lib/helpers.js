@@ -236,9 +236,25 @@ export async function downloadFile(url, filename) {
     }
 }
 
-export function formatSalary(salaryStr) {
+export function formatSalary(salaryStr, t) {
     if (!salaryStr) return '';
-    return salaryStr.replace(/\d+/g, (num) => {
+    
+    let suffix = '';
+    let cleanSalary = salaryStr;
+    
+    if (salaryStr.endsWith('_monthly')) {
+        cleanSalary = salaryStr.replace('_monthly', '');
+        suffix = t ? t('jobs.salarySuffix.monthly') : ' / tháng';
+    } else if (salaryStr.endsWith('_hourly')) {
+        cleanSalary = salaryStr.replace('_hourly', '');
+        suffix = t ? t('jobs.salarySuffix.hourly') : ' / giờ';
+    } else if (/\d/.test(salaryStr)) {
+        suffix = t ? t('jobs.salarySuffix.monthly') : ' / tháng';
+    }
+    
+    const formatted = cleanSalary.replace(/\d+/g, (num) => {
         return Number(num).toLocaleString('en-US');
     });
+    
+    return formatted + suffix;
 }

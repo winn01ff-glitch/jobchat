@@ -125,14 +125,15 @@ export async function POST(request) {
       `,
     };
 
-    // Send email asynchronously in the background to return response instantly to user
-    transporter.sendMail(mailOptions)
-      .then(() => {
-        console.log(`[Auth OTP] Email sent successfully to ${cleanEmail}`);
-      })
-      .catch((err) => {
-        console.error(`[Auth OTP] Failed to send email to ${cleanEmail}:`, err);
-      });
+    // Await email sending to guarantee that the serverless function does not terminate or suspend before sending
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`[Auth OTP] Email sent successfully to ${cleanEmail}`);
+    } catch (err) {
+      console.error(`[Auth OTP] Failed to send email to ${cleanEmail}:`, err);
+      // We can choose to fail the request or proceed. Since the OTP is generated and saved in DB, failing is better so the user knows to resend immediately.
+      return NextResponse.json({ error: 'Failed to send OTP email' }, { status: 500 });
+    }
 
     return NextResponse.json({
       status: 'success',

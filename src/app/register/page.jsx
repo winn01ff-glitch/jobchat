@@ -161,7 +161,7 @@ function RegisterContent() {
       const result = await DB.verifyOtp(cleanEmail, cleanOtp);
       
       if (!result || !result.success) {
-        showToast(result?.message || t('register.invalidOtp') || 'Mã xác thực không chính xác hoặc đã hết hạn.', 'error');
+        showToast(t('register.invalidOtp') || 'Mã xác thực không chính xác hoặc đã hết hạn.', 'error');
         setIsOtpLoading(false);
         return;
       }
@@ -293,11 +293,18 @@ function RegisterContent() {
                 </span>
                 <input 
                   type="text" 
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   className="form-input" 
                   required 
                   maxLength={6}
                   value={otp}
                   onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                  onKeyPress={e => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   placeholder="------"
                   style={{ textAlign: 'center', letterSpacing: '6px', fontSize: '20px', fontWeight: 'bold' }}
                 />

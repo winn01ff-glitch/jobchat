@@ -8,12 +8,26 @@ export default function LandingPage() {
   const router = useRouter();
 
   React.useEffect(() => {
+    // 1. Check candidate session
     const sessionStr = localStorage.getItem('jobchat_session');
     if (sessionStr) {
       try {
         const session = JSON.parse(sessionStr);
         if (session && session.id) {
           router.push(`/chat/${session.id}`);
+          return;
+        }
+      } catch(e) {}
+    }
+
+    // 2. Check admin session
+    const adminStr = localStorage.getItem('jobchat_admin');
+    if (adminStr) {
+      try {
+        const admin = JSON.parse(adminStr);
+        if (admin && (admin.user || admin.profile)) {
+          router.push('/admin/dashboard');
+          return;
         }
       } catch(e) {}
     }

@@ -688,22 +688,48 @@
     color: var(--text-primary);
 }
 
-/* Highlight flash animation when clicking on a reply preview */
 .message-row.highlight-flash .message-bubble {
-    animation: flashHighlight 1.5s ease-out;
+    animation: flashHighlight 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform-origin: center;
+    will-change: transform;
 }
 
 @keyframes flashHighlight {
     0% {
+        transform: scale(1);
+        background-color: #ffd60a !important;
+        color: #000000 !important;
+        box-shadow: 0 0 0 0px rgba(255, 214, 10, 0);
+    }
+    15% {
+        transform: scale(1.08);
+        background-color: #ffd60a !important;
+        color: #000000 !important;
+        box-shadow: 0 8px 24px rgba(255, 214, 10, 0.3);
+    }
+    30% {
+        transform: scale(0.96);
+        background-color: #ffd60a !important;
+        color: #000000 !important;
+        box-shadow: 0 4px 12px rgba(255, 214, 10, 0.15);
+    }
+    45% {
+        transform: scale(1.03);
+        background-color: #ffd60a !important;
+        color: #000000 !important;
+        box-shadow: 0 2px 6px rgba(255, 214, 10, 0.1);
+    }
+    60% {
+        transform: scale(0.99);
         background-color: #ffd60a !important;
         color: #000000 !important;
     }
-    40% {
-        background-color: #ffd60a !important;
-        color: #000000 !important;
+    75% {
+        transform: scale(1.01);
     }
     100% {
-        /* returns to original background/color */
+        transform: scale(1);
+        box-shadow: none;
     }
 }
 
@@ -833,13 +859,20 @@
 
 /* ============ Shared Media Sidebar (Admin) ============ */
 .chat-media-sidebar {
-    width: 280px;
-    border-left: 1px solid var(--border-light);
+    width: 0;
+    overflow: hidden;
+    border-left: none;
     background: var(--bg-primary);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    animation: slideRight 0.2s ease;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s, visibility 0.3s;
+    visibility: hidden;
+}
+.chat-media-sidebar.active {
+    width: 280px;
+    border-left: 1px solid var(--border-light);
+    visibility: visible;
 }
 .media-sidebar-header {
     display: flex;
@@ -964,12 +997,18 @@
         position: absolute;
         top: 0;
         right: 0;
-        width: 300px;
+        width: 300px !important;
         height: 100%;
         z-index: 1100;
         border-left: none;
         box-shadow: -4px 0 16px rgba(0,0,0,0.15);
-        animation: slideRightMobile 0.25s ease-out;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s !important;
+        visibility: hidden;
+    }
+    .chat-media-sidebar.active {
+        transform: translateX(0) !important;
+        visibility: visible !important;
     }
 }
 

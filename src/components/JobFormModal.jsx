@@ -10,7 +10,8 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
   
   const [title, setTitle] = useState('');
   const [position, setPosition] = useState('');
-  const [salary, setSalary] = useState('');
+  const [salaryAmount, setSalaryAmount] = useState('');
+  const [salaryType, setSalaryType] = useState('hourly');
   const [location, setLocation] = useState('');
   const [status, setStatus] = useState('draft');
   const textareaRef = useRef(null);
@@ -56,7 +57,23 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
     if (isOpen) {
       setTitle(job?.title || '');
       setPosition(job?.position || '');
-      setSalary(job?.salary || '');
+      
+      if (job?.salary) {
+        if (job.salary.endsWith('_monthly')) {
+          setSalaryAmount(job.salary.replace('_monthly', ''));
+          setSalaryType('monthly');
+        } else if (job.salary.endsWith('_hourly')) {
+          setSalaryAmount(job.salary.replace('_hourly', ''));
+          setSalaryType('hourly');
+        } else {
+          setSalaryAmount(job.salary);
+          setSalaryType('monthly');
+        }
+      } else {
+        setSalaryAmount('');
+        setSalaryType('hourly');
+      }
+
       setLocation(job?.location || '');
       setStatus(job?.status || 'draft');
 
@@ -153,8 +170,13 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
         transport
       });
 
+      let finalSalary = salaryAmount.trim();
+      if (finalSalary && /\d/.test(finalSalary)) {
+        finalSalary = `${finalSalary}_${salaryType}`;
+      }
+
       const jobData = {
-        title, position, salary, location,
+        title, position, salary: finalSalary, location,
         content: packedContent,
         status,
         author_id: adminSession?.user?.id || '',
@@ -179,9 +201,9 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
   };
 
   const modalContent = (
-    <div className="job-form-modal" style={{position:'fixed', top:0, left:0, width:'100vw', height:'100dvh', zIndex:9999, display:'flex', alignItems:'flex-start', justifyContent:'center', padding: '20px', boxSizing: 'border-box', overflowY:'auto'}}>
+    <div className="job-form-modal">
       <div onClick={onClose} style={{position:'fixed', top:0, left:0, width:'100%', height:'100%', background:'rgba(0,0,0,0.5)'}}></div>
-      <div className="job-form-card" style={{position:'relative', background:'var(--bg-primary)', borderRadius:'var(--radius-md)', width:'100%', maxWidth:'700px', display:'flex', flexDirection:'column', boxShadow:'0 16px 48px rgba(0,0,0,0.2)', margin:'auto 0', marginTop: '0'}}>
+      <div className="job-form-card">
         
         <div className="job-form-header" style={{flexShrink: 0, display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 20px', borderBottom:'1px solid var(--border-light)'}}>
           <h3 style={{margin:0, fontSize: '18px'}}>{job ? (t('admin.editJob') || 'Sửa Bài đăng') : (t('admin.createJob') || 'Tạo Bài đăng mới')}</h3>
@@ -213,7 +235,25 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
 
             <div className="form-group">
               <label className="form-label">{t('admin.jobSalary') || 'Mức lương'}</label>
-              <input type="text" className="form-input" placeholder={t('admin.salaryExample') || 'Ví dụ: ¥250,000/tháng'} value={salary} onChange={e => setSalary(e.target.value)} />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <select 
+                  className="form-select" 
+                  style={{ width: '120px', flexShrink: 0 }}
+                  value={salaryType} 
+                  onChange={e => setSalaryType(e.target.value)}
+                >
+                  <option value="hourly">{t('jobs.hourly') || 'Giờ'}</option>
+                  <option value="monthly">{t('jobs.monthly') || 'Tháng'}</option>
+                </select>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  style={{ flex: 1 }}
+                  placeholder={salaryType === 'hourly' ? t('admin.salaryExampleHourly') : t('admin.salaryExampleMonthly')} 
+                  value={salaryAmount} 
+                  onChange={e => setSalaryAmount(e.target.value)} 
+                />
+              </div>
             </div>
             
             <div className="form-group">
