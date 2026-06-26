@@ -746,10 +746,9 @@
     gap: var(--space-lg);
 }
 
-.job-detail-card {
-    background: var(--bg-primary);
-    border-radius: var(--radius-xl);
-    padding: var(--space-2xl);
+.job-detail-content-wrapper {
+    display: flex;
+    flex-direction: column;
 }
 
 .job-detail-title {
@@ -902,9 +901,8 @@
         gap: var(--space-md);
     }
     
-    .job-detail-card {
-        padding: var(--space-lg) var(--space-md);
-        border-radius: var(--radius-lg);
+    .job-detail-content-wrapper {
+        padding: 0;
     }
     
     .job-detail-title {

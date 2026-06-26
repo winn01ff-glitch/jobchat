@@ -87,7 +87,7 @@ export default function JobDetailPage() {
 
   return (
     <div className="job-detail-page">
-      <div className="job-detail-card">
+      <div className="job-detail-content-wrapper">
         <h1 className="job-detail-title">{job.title}</h1>
         
         <div className="job-detail-meta">
