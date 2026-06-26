@@ -90,6 +90,7 @@ export default function Header() {
   const showAdminLogin = pathname === '/';
   const showAdminControls = isAdminLoggedIn && pathname.startsWith('/admin');
   const showApplicantLogout = isApplicantLoggedIn && pathname.startsWith('/chat');
+  const isLogoClickable = !pathname.startsWith('/chat') && (!pathname.startsWith('/admin') || pathname === '/admin/login');
 
   return (
     <header id="app-header" className="glass-header">
@@ -99,7 +100,7 @@ export default function Header() {
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           </button>
         )}
-        <h1 className="logo" onClick={() => { if (!pathname.startsWith('/chat') && !pathname.startsWith('/admin')) router.push('/'); }} style={{cursor: (pathname.startsWith('/chat') || pathname.startsWith('/admin')) ? 'default' : 'pointer'}}>
+        <h1 className="logo" onClick={() => { if (isLogoClickable) router.push('/'); }} style={{cursor: isLogoClickable ? 'pointer' : 'default'}}>
           Up<span className="logo-accent">hill</span>
         </h1>
       </div>
