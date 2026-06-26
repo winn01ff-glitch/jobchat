@@ -35,6 +35,10 @@
     box-shadow: 0 4px 16px rgba(0,132,255,0.25);
 }
 
+.form-icon-wrapper svg {
+    color: #ffffff;
+}
+
 .form-group .input-with-icon { position: relative; }
 .form-group .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; pointer-events: none; }
 .form-group .input-with-icon .form-input,
