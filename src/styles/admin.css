@@ -202,9 +202,6 @@
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.03);
         background: var(--bg-primary);
     }
-    .admin-container.sidebar-collapsed {
-        max-width: 860px;
-    }
     .admin-chat-area .chat-messages-inner,
     .admin-chat-area .chat-input-container,
     .admin-chat-area .reply-bar-inner {
