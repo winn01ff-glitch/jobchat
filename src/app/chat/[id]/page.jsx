@@ -509,6 +509,11 @@ export default function ChatPage({ params }) {
 
       <div className="chat-messages" id="chat-messages" ref={listRef} onScroll={handleScroll}>
         <div className="chat-messages-inner">
+          <div className="chat-welcome">
+            <div className="chat-welcome-icon">💬</div>
+            <h3>{t('chat.welcomeTitle')}</h3>
+            <p>{t('chat.welcomeMsg')}</p>
+          </div>
           {hasMoreMessages && (
             <div style={{textAlign: 'center', margin: '10px 0'}}>
               <button 
@@ -521,11 +526,6 @@ export default function ChatPage({ params }) {
               </button>
             </div>
           )}
-          <div className="chat-welcome">
-            <div className="chat-welcome-icon">💬</div>
-            <h3>{t('chat.welcomeTitle')}</h3>
-            <p>{t('chat.welcomeMsg')}</p>
-          </div>
           
           {messages.filter(msg => !msg.deleted_by_applicant).map((msg, index, filteredMsgs) => {
             let showDateSeparator = false;

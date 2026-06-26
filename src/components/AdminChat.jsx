@@ -613,6 +613,10 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
         
         <div className="chat-messages" ref={listRef}>
           <div className="chat-messages-inner">
+            <div className="chat-welcome">
+              <div className="chat-welcome-icon">{applicant.name.charAt(0).toUpperCase()}</div>
+              <h3>{applicant.name}</h3>
+            </div>
             {hasMoreMessages && (
               <div style={{textAlign: 'center', margin: '10px 0'}}>
                 <button 
@@ -625,10 +629,6 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 </button>
               </div>
             )}
-            <div className="chat-welcome">
-              <div className="chat-welcome-icon">{applicant.name.charAt(0).toUpperCase()}</div>
-              <h3>{applicant.name}</h3>
-            </div>
             
             {messages.filter(msg => !msg.deleted_by_admin).map((msg, index, filteredMsgs) => {
               let showDateSeparator = false;
