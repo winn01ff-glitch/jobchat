@@ -210,6 +210,7 @@
         "jobList": "Job List",
         "applicantViewPreview": "Applicant View Preview",
         "welfare": "Welfare & Benefits",
+        "description": "Job Description",
         "jobFields": {
             "bonus": "Bonus",
             "nenkin": "Nenkin Pension",

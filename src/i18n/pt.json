@@ -210,6 +210,7 @@
         "jobList": "Lista de vagas",
         "applicantViewPreview": "Visualização do Candidato (Applicant View Preview)",
         "welfare": "Benefícios e Condições",
+        "description": "Descrição do Trabalho",
         "jobFields": {
             "bonus": "Bônus",
             "nenkin": "Previdência (Nenkin)",

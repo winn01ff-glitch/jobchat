@@ -235,3 +235,10 @@ export async function downloadFile(url, filename) {
         window.open(url, '_blank');
     }
 }
+
+export function formatSalary(salaryStr) {
+    if (!salaryStr) return '';
+    return salaryStr.replace(/\d+/g, (num) => {
+        return Number(num).toLocaleString('en-US');
+    });
+}

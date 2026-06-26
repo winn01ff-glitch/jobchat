@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../context/LanguageContext';
 import { DB } from '../../lib/supabase';
-import { formatDate } from '../../lib/helpers';
+import { formatDate, formatSalary } from '../../lib/helpers';
 
 export default function JobsPage() {
   const { t } = useLanguage();
@@ -70,7 +70,7 @@ export default function JobsPage() {
                       <span className="meta-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><path d="M6 3l6 8 6-8M12 11v10M9 13h6M9 17h6"/></svg>
                       </span>
-                      <span>{job.salary}</span>
+                      <span>{formatSalary(job.salary)}</span>
                     </div>
                   )}
                   {job.location && (

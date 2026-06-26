@@ -210,6 +210,7 @@
         "jobList": "求人一覧",
         "applicantViewPreview": "応募者画面プレビュー (Applicant View Preview)",
         "welfare": "福利厚生・処遇",
+        "description": "業務内容",
         "jobFields": {
             "bonus": "賞与",
             "nenkin": "年金",
