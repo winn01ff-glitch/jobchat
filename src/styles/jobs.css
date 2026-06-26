@@ -282,6 +282,7 @@
     height: 50px;
     align-items: stretch;
     box-sizing: border-box;
+    border-bottom: 1px solid var(--border-light);
 }
 
 .admin-tab {
@@ -296,7 +297,7 @@
     font-family: var(--font-family);
     color: var(--text-muted);
     cursor: pointer;
-    border-bottom: 2px solid var(--border-light);
+    border-bottom: 2px solid transparent;
     transition: var(--transition-fast);
     display: flex;
     align-items: center;
@@ -308,7 +309,7 @@
 
 .admin-tab.active {
     color: var(--messenger-blue);
-    border-bottom-color: var(--messenger-blue);
+    border-bottom: 2px solid var(--messenger-blue);
 }
 
 .admin-tab:hover:not(.active) {
