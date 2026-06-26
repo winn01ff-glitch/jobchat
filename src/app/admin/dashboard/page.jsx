@@ -209,7 +209,7 @@ function DashboardContent() {
   if (!adminSession) return null;
 
   return (
-    <div className={`admin-container ${isMobileChatActive ? 'chat-active-mobile' : ''}`}>
+    <div className={`admin-container ${isMobileChatActive ? 'chat-active-mobile' : ''} ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <div className={`admin-sidebar ${isMobileChatActive ? 'hidden-mobile' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`} id="admin-sidebar">
         
         {/* TABS */}
