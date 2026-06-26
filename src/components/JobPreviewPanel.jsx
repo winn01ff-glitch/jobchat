@@ -12,8 +12,6 @@ export default function JobPreviewPanel({ jobId, onBack, onDelete }) {
   const [isMobile, setIsMobile] = useState(false);
 
   const [isBackHovered, setIsBackHovered] = useState(false);
-  const [isEditHovered, setIsEditHovered] = useState(false);
-  const [isDeleteHovered, setIsDeleteHovered] = useState(false);
 
   useEffect(() => {
     setIsMobile(window.innerWidth <= 768);
@@ -119,50 +117,24 @@ export default function JobPreviewPanel({ jobId, onBack, onDelete }) {
         {/* Right side: Status, Edit, Delete */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div>{statusBadge}</div>
-          <button 
-            onClick={() => setIsEditing(true)} 
-            onMouseEnter={() => setIsEditHovered(true)}
-            onMouseLeave={() => setIsEditHovered(false)}
-            style={{ 
-              background: isEditHovered ? 'rgba(127, 140, 141, 0.16)' : 'rgba(127, 140, 141, 0.08)', 
-              border: 'none', 
-              borderRadius: '50%',
-              width: '36px',
-              height: '36px',
-              cursor: 'pointer', 
-              color: 'var(--text-secondary)', 
-              display: 'flex', 
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease',
-              transform: isEditHovered ? 'scale(1.05)' : 'scale(1)'
-            }}
-            title={t('admin.editJob') || 'Sửa'}
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-          <button 
-            onClick={handleDelete} 
-            onMouseEnter={() => setIsDeleteHovered(true)}
-            onMouseLeave={() => setIsDeleteHovered(false)}
-            style={{ 
-              background: isDeleteHovered ? 'rgba(255, 59, 48, 0.16)' : 'rgba(255, 59, 48, 0.08)', 
-              border: 'none', 
-              borderRadius: '50%',
-              width: '36px',
-              height: '36px',
-              cursor: 'pointer', 
-              color: 'var(--error)', 
-              display: 'flex', 
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease',
-              transform: isDeleteHovered ? 'scale(1.05)' : 'scale(1)'
-            }}
-            title={t('admin.deleteJob') || 'Xóa'}
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-          </button>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button 
+              onClick={() => setIsEditing(true)} 
+              className="btn-icon"
+              style={{ color: 'var(--messenger-blue)' }}
+              title={t('admin.editJob') || 'Sửa'}
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button 
+              onClick={handleDelete} 
+              className="btn-icon"
+              style={{ color: 'var(--error)' }}
+              title={t('admin.deleteJob') || 'Xóa'}
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
         </div>
       </div>
 
