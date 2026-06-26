@@ -96,6 +96,8 @@ function DashboardContent() {
     };
   }, [router]);
 
+  const applicantIdsStr = applicants.map(a => a.id).join(',');
+
   useEffect(() => {
     const subChannels = [];
     applicants.forEach(a => {
@@ -112,7 +114,8 @@ function DashboardContent() {
     return () => {
       subChannels.forEach(c => DB.unsubscribe(c));
     };
-  }, [applicants]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicantIdsStr]);
 
   const loadApplicants = async () => {
     try {
@@ -287,6 +290,7 @@ function DashboardContent() {
               onApplicantUpdate={handleApplicantUpdate}
               isSidebarCollapsed={isSidebarCollapsed}
               onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              isPartnerTyping={!!typingStates[selectedId]}
             />
           ) : (
             <div className="admin-empty-state">

@@ -55,7 +55,7 @@ const compressImage = (file) => {
   });
 };
 
-export default function AdminChat({ applicantId, onBack, onDelete, adminSession, isSidebarCollapsed, onToggleSidebar, onApplicantUpdate }) {
+export default function AdminChat({ applicantId, onBack, onDelete, adminSession, isSidebarCollapsed, onToggleSidebar, onApplicantUpdate, isPartnerTyping }) {
   const { t } = useLanguage();
   const { showToast } = useNotification();
   
@@ -66,7 +66,6 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const [activeMessageId, setActiveMessageId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState('online');
-  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [newMessagesCount, setNewMessagesCount] = useState(0);
   const [showMediaSidebar, setShowMediaSidebar] = useState(false);
@@ -246,20 +245,8 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     if (!applicantId) return;
     const channelName = `typing:${applicantId}`;
     const channel = DB.supabaseClient.channel(channelName);
-    
-    channel
-      .on('broadcast', { event: 'typing' }, ({ payload }) => {
-        if (payload.sender_type === 'applicant') {
-          setIsPartnerTyping(payload.isTyping);
-        }
-      })
-      .subscribe();
-      
+    channel.subscribe();
     typingChannelRef.current = channel;
-    
-    return () => {
-      DB.supabaseClient.removeChannel(channel);
-    };
   }, [applicantId]);
 
   useEffect(() => {
