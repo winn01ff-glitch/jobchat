@@ -145,7 +145,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
         if (msgs.length < 20) setHasMoreMessages(false);
         else setHasMoreMessages(true);
         
-        setTimeout(() => scrollToBottom(), 100);
+        setTimeout(() => scrollToBottom('auto'), 100);
         DB.markMessagesAsSeen(applicantId, 'applicant');
         
         sub = DB.subscribeToMessages(applicantId, (msg) => {
@@ -329,8 +329,8 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
   const handleSend = async (customContent = null) => {

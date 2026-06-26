@@ -245,7 +245,7 @@ export default function ChatPage({ params }) {
       if (msgs.length < 20) setHasMoreMessages(false);
       
       // Scroll to bottom
-      setTimeout(() => scrollToBottom(), 100);
+      setTimeout(() => scrollToBottom('auto'), 100);
       DB.markMessagesAsSeen(id, 'admin');
     } catch (err) {
       console.error('Failed to load initial chat state:', err);
@@ -313,8 +313,8 @@ export default function ChatPage({ params }) {
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
   const handleScroll = () => {
