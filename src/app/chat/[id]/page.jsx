@@ -508,111 +508,113 @@ export default function ChatPage({ params }) {
       )}
 
       <div className="chat-messages" id="chat-messages" ref={listRef} onScroll={handleScroll}>
-        {hasMoreMessages && (
-          <div style={{textAlign: 'center', margin: '10px 0'}}>
-            <button 
-              onClick={loadMoreMessages} 
-              className="btn-secondary" 
-              disabled={isLoadingMessages}
-              style={{fontSize: '12px', padding: '4px 12px', borderRadius: '12px'}}
-            >
-              {isLoadingMessages ? '...' : t('chat.loadMore') || 'Tải thêm tin nhắn cũ'}
-            </button>
+        <div className="chat-messages-inner">
+          {hasMoreMessages && (
+            <div style={{textAlign: 'center', margin: '10px 0'}}>
+              <button 
+                onClick={loadMoreMessages} 
+                className="btn-secondary" 
+                disabled={isLoadingMessages}
+                style={{fontSize: '12px', padding: '4px 12px', borderRadius: '12px'}}
+              >
+                {isLoadingMessages ? '...' : t('chat.loadMore') || 'Tải thêm tin nhắn cũ'}
+              </button>
+            </div>
+          )}
+          <div className="chat-welcome">
+            <div className="chat-welcome-icon">💬</div>
+            <h3>{t('chat.welcomeTitle')}</h3>
+            <p>{t('chat.welcomeMsg')}</p>
           </div>
-        )}
-        <div className="chat-welcome">
-          <div className="chat-welcome-icon">💬</div>
-          <h3>{t('chat.welcomeTitle')}</h3>
-          <p>{t('chat.welcomeMsg')}</p>
-        </div>
-        
-        {messages.filter(msg => !msg.deleted_by_applicant).map((msg, index, filteredMsgs) => {
-          let showDateSeparator = false;
-          let dateLabel = '';
-          const d = new Date(msg.created_at);
-          const today = new Date();
           
-          if (index === 0) {
-            showDateSeparator = true;
-          } else {
-            const prevD = new Date(filteredMsgs[index - 1].created_at);
-            if (d.toDateString() !== prevD.toDateString()) {
+          {messages.filter(msg => !msg.deleted_by_applicant).map((msg, index, filteredMsgs) => {
+            let showDateSeparator = false;
+            let dateLabel = '';
+            const d = new Date(msg.created_at);
+            const today = new Date();
+            
+            if (index === 0) {
               showDateSeparator = true;
-            }
-          }
-          
-          if (showDateSeparator) {
-            if (d.toDateString() === today.toDateString()) {
-              dateLabel = t('chat.today') || 'Hôm nay';
             } else {
-              const yesterday = new Date(today);
-              yesterday.setDate(today.getDate() - 1);
-              if (d.toDateString() === yesterday.toDateString()) {
-                dateLabel = t('chat.yesterday') || 'Hôm qua';
-              } else {
-                dateLabel = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+              const prevD = new Date(filteredMsgs[index - 1].created_at);
+              if (d.toDateString() !== prevD.toDateString()) {
+                showDateSeparator = true;
               }
             }
-          }
-
-          let isLastInGroup = true;
-          const nextMsg = filteredMsgs[index + 1];
-          if (nextMsg) {
-            const nextD = new Date(nextMsg.created_at);
-            const isSameSender = nextMsg.sender_type === msg.sender_type && 
-                                 (msg.sender_type !== 'admin' || nextMsg.sender_id === msg.sender_id);
-            if (isSameSender && nextD.toDateString() === d.toDateString()) {
-              isLastInGroup = false;
+            
+            if (showDateSeparator) {
+              if (d.toDateString() === today.toDateString()) {
+                dateLabel = t('chat.today') || 'Hôm nay';
+              } else {
+                const yesterday = new Date(today);
+                yesterday.setDate(today.getDate() - 1);
+                if (d.toDateString() === yesterday.toDateString()) {
+                  dateLabel = t('chat.yesterday') || 'Hôm qua';
+                } else {
+                  dateLabel = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+                }
+              }
             }
-          }
 
-          let isFirstInGroup = true;
-          const prevMsg = filteredMsgs[index - 1];
-          if (prevMsg) {
-            const prevD = new Date(prevMsg.created_at);
-            const isSameSender = prevMsg.sender_type === msg.sender_type && 
-                                 (msg.sender_type !== 'admin' || prevMsg.sender_id === msg.sender_id);
-            if (isSameSender && prevD.toDateString() === d.toDateString()) {
-              isFirstInGroup = false;
+            let isLastInGroup = true;
+            const nextMsg = filteredMsgs[index + 1];
+            if (nextMsg) {
+              const nextD = new Date(nextMsg.created_at);
+              const isSameSender = nextMsg.sender_type === msg.sender_type && 
+                                   (msg.sender_type !== 'admin' || nextMsg.sender_id === msg.sender_id);
+              if (isSameSender && nextD.toDateString() === d.toDateString()) {
+                isLastInGroup = false;
+              }
             }
-          }
 
-          // AdminInfo is matched by sender_id from adminsMap
-          const msgAdminInfo = msg.sender_type === 'admin' ? (adminsMap[msg.sender_id] || { display_name: msg.sender_name || t('chat.adminName') }) : null;
+            let isFirstInGroup = true;
+            const prevMsg = filteredMsgs[index - 1];
+            if (prevMsg) {
+              const prevD = new Date(prevMsg.created_at);
+              const isSameSender = prevMsg.sender_type === msg.sender_type && 
+                                   (msg.sender_type !== 'admin' || prevMsg.sender_id === msg.sender_id);
+              if (isSameSender && prevD.toDateString() === d.toDateString()) {
+                isFirstInGroup = false;
+              }
+            }
 
-          return (
-            <React.Fragment key={msg.id}>
-              {showDateSeparator && (
-                <div className="date-separator">
-                  <span>{dateLabel}</span>
-                </div>
-              )}
-              <ChatBubble 
-                msg={msg} 
-                isSent={msg.sender_type === 'applicant'} 
-                showSender={msg.sender_type === 'admin' ? isFirstInGroup : false} 
-                showAvatar={isLastInGroup}
-                adminInfo={msgAdminInfo}
-                onDelete={async (msgId) => {
-                  try {
-                    await DB.deleteMessageLocally(msgId, 'applicant');
-                    setMessages(prev => prev.filter(m => m.id !== msgId));
-                    showToast(t('chat.deleted') || 'Đã xóa', 'success');
-                  } catch(e) {
-                    showToast(t('common.error'), 'error');
-                  }
-                }}
-                onReply={(replyMsg) => setReplyToMessage(replyMsg)}
-                activeMessageId={activeMessageId}
-                setActiveMessageId={setActiveMessageId}
-              />
-            </React.Fragment>
-          );
-        })}
-        {isPartnerTyping && (
-          <TypingIndicator name={partnerName || t('chat.adminName') || 'Đội ngũ tuyển dụng'} avatar={partnerAvatar} />
-        )}
-        <div ref={messagesEndRef} />
+            // AdminInfo is matched by sender_id from adminsMap
+            const msgAdminInfo = msg.sender_type === 'admin' ? (adminsMap[msg.sender_id] || { display_name: msg.sender_name || t('chat.adminName') }) : null;
+
+            return (
+              <React.Fragment key={msg.id}>
+                {showDateSeparator && (
+                  <div className="date-separator">
+                    <span>{dateLabel}</span>
+                  </div>
+                )}
+                <ChatBubble 
+                  msg={msg} 
+                  isSent={msg.sender_type === 'applicant'} 
+                  showSender={msg.sender_type === 'admin' ? isFirstInGroup : false} 
+                  showAvatar={isLastInGroup}
+                  adminInfo={msgAdminInfo}
+                  onDelete={async (msgId) => {
+                    try {
+                      await DB.deleteMessageLocally(msgId, 'applicant');
+                      setMessages(prev => prev.filter(m => m.id !== msgId));
+                      showToast(t('chat.deleted') || 'Đã xóa', 'success');
+                    } catch(e) {
+                      showToast(t('common.error'), 'error');
+                    }
+                  }}
+                  onReply={(replyMsg) => setReplyToMessage(replyMsg)}
+                  activeMessageId={activeMessageId}
+                  setActiveMessageId={setActiveMessageId}
+                />
+              </React.Fragment>
+            );
+          })}
+          {isPartnerTyping && (
+            <TypingIndicator name={partnerName || t('chat.adminName') || 'Đội ngũ tuyển dụng'} avatar={partnerAvatar} />
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {showScrollBtn && (

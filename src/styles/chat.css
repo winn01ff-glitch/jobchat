@@ -65,14 +65,22 @@
     flex: 1;
     overflow-y: auto;
     padding: var(--space-md) var(--space-lg) 12px var(--space-lg);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: block;
     scroll-behavior: smooth;
     background: var(--bg-primary);
     width: 100%;
-    max-width: 800px;
+    max-width: none;
+    margin: 0;
+}
+
+.chat-messages-inner {
+    max-width: 850px;
     margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 100%;
 }
 
 .message-row {
@@ -252,7 +260,7 @@
     gap: 6px;
     padding: 8px var(--space-md);
     width: 100%;
-    max-width: 800px;
+    max-width: 850px;
 }
 
 .chat-actions {
@@ -639,7 +647,7 @@
 }
 
 .reply-bar-inner {
-    max-width: 800px;
+    max-width: 850px;
     margin: 0 auto;
     width: 100%;
     display: flex;
