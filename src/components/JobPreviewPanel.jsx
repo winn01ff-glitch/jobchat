@@ -87,14 +87,7 @@ export default function JobPreviewPanel({ jobId, onBack, onDelete }) {
     <div className="job-applicant-preview" style={{ height:'100%', background:'var(--bg-primary)', display: 'flex', flexDirection: 'column', overflow: 'hidden', overflowY: 'hidden' }}>
       
       {/* Admin Actions Toolbar (Fixed at top) */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        background: 'var(--bg-primary)',
-        padding: '16px 20px',
-        borderBottom: '1px solid var(--border-light)',
-        flexShrink: 0,
+      <div className="job-ap-toolbar" style={{ 
         position: 'sticky',
         top: 0,
         zIndex: 10
