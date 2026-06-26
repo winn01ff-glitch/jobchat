@@ -278,7 +278,7 @@
 .chat-actions.collapsed {
     width: 0;
     opacity: 0;
-    margin-right: 0;
+    margin-right: -6px;
     pointer-events: none;
 }
 
@@ -294,7 +294,7 @@
 .chat-action-btn.expand-btn.active {
     width: 36px;
     opacity: 1;
-    margin-right: 4px;
+    margin-right: 0;
     pointer-events: auto;
 }
 
