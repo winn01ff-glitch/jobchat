@@ -279,14 +279,14 @@
 .admin-tab-bar {
     display: flex;
     margin-bottom: 0;
-    height: 48px;
+    height: 60px;
     align-items: stretch;
     box-sizing: border-box;
 }
 
 .admin-tab {
     flex: 1;
-    height: 48px;
+    height: 60px;
     padding: 0;
     margin: 0;
     background: none;

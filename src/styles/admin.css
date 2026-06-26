@@ -18,7 +18,8 @@
 /* Admin Dashboard */
 .admin-container { display: flex; height: calc(100dvh - var(--header-height)); overflow: hidden; }
 
-.admin-sidebar { width: 340px; flex-shrink: 0; background: var(--bg-primary); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; z-index: 10; transition: width 0.3s ease, padding 0.3s ease, border 0.3s ease; }
+.admin-sidebar { width: 340px; flex-shrink: 0; background: var(--bg-primary); border-right: 1px solid var(--border-light); display: flex; flex-direction: column; z-index: 10; transition: width 0.3s ease, padding 0.3s ease, border 0.3s ease; overflow: hidden; }
+.admin-sidebar-inner { width: 340px; min-width: 340px; height: 100%; display: flex; flex-direction: column; flex-shrink: 0; }
 @media (min-width: 769px) {
     .admin-sidebar.collapsed { width: 0 !important; padding: 0; border-right: none; overflow: hidden; }
 }

@@ -211,65 +211,66 @@ function DashboardContent() {
   return (
     <div className={`admin-container ${isMobileChatActive ? 'chat-active-mobile' : ''} ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <div className={`admin-sidebar ${isMobileChatActive ? 'hidden-mobile' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`} id="admin-sidebar">
-        
-        {/* TABS */}
-        <div className="admin-tab-bar" style={{ height: '48px', background: 'var(--bg-primary)' }}>
-          <button 
-            className={`admin-tab ${activeTab === 'chats' ? 'active' : ''}`}
-            onClick={() => {
-              const params = new URLSearchParams(window.location.search);
-              params.set('tab', 'chats');
-              params.delete('id');
-              router.replace(`${window.location.pathname}?${params.toString()}`);
-            }}
-          >
-            {t('admin.chats') || 'Tin nhắn'}
-          </button>
-          <button 
-            className={`admin-tab ${activeTab === 'jobs' ? 'active' : ''}`}
-            onClick={() => {
-              const params = new URLSearchParams(window.location.search);
-              params.set('tab', 'jobs');
-              params.delete('id');
-              router.replace(`${window.location.pathname}?${params.toString()}`);
-            }}
-          >
-            {t('admin.jobPosts') || 'Việc làm'}
-          </button>
-        </div>
+        <div className="admin-sidebar-inner">
+          {/* TABS */}
+          <div className="admin-tab-bar" style={{ height: '60px', background: 'var(--bg-primary)' }}>
+            <button 
+              className={`admin-tab ${activeTab === 'chats' ? 'active' : ''}`}
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search);
+                params.set('tab', 'chats');
+                params.delete('id');
+                router.replace(`${window.location.pathname}?${params.toString()}`);
+              }}
+            >
+              {t('admin.chats') || 'Tin nhắn'}
+            </button>
+            <button 
+              className={`admin-tab ${activeTab === 'jobs' ? 'active' : ''}`}
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search);
+                params.set('tab', 'jobs');
+                params.delete('id');
+                router.replace(`${window.location.pathname}?${params.toString()}`);
+              }}
+            >
+              {t('admin.jobPosts') || 'Việc làm'}
+            </button>
+          </div>
 
-        {/* Sliding wrapper container for Tabs */}
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-          <div style={{ 
-            display: 'flex', 
-            width: '200%', 
-            height: '100%', 
-            transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
-            transform: activeTab === 'chats' ? 'translateX(0)' : 'translateX(-50%)' 
-          }}>
-            {/* Chats pane */}
-            <div style={{ width: '50%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <ConversationList 
-                applicants={applicants}
-                selectedId={selectedId}
-                onSelect={handleSelectConversation}
-                filter={filter}
-                setFilter={setFilter}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                typingStates={typingStates}
-              />
-            </div>
-            {/* Jobs pane */}
-            <div style={{ width: '50%', height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <JobManagement 
-                onSelectJob={(id) => {
-                  const params = new URLSearchParams(window.location.search);
-                  params.set('id', id);
-                  router.replace(`${window.location.pathname}?${params.toString()}`);
-                }}
-                selectedJobId={selectedId}
-              />
+          {/* Sliding wrapper container for Tabs */}
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+            <div style={{ 
+              display: 'flex', 
+              width: '200%', 
+              height: '100%', 
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+              transform: activeTab === 'chats' ? 'translateX(0)' : 'translateX(-50%)' 
+            }}>
+              {/* Chats pane */}
+              <div style={{ width: '50%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <ConversationList 
+                  applicants={applicants}
+                  selectedId={selectedId}
+                  onSelect={handleSelectConversation}
+                  filter={filter}
+                  setFilter={setFilter}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  typingStates={typingStates}
+                />
+              </div>
+              {/* Jobs pane */}
+              <div style={{ width: '50%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <JobManagement 
+                  onSelectJob={(id) => {
+                    const params = new URLSearchParams(window.location.search);
+                    params.set('id', id);
+                    router.replace(`${window.location.pathname}?${params.toString()}`);
+                  }}
+                  selectedJobId={selectedId}
+                />
+              </div>
             </div>
           </div>
         </div>
