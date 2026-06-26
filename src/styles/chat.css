@@ -861,7 +861,7 @@
 .canned-popup {
     position: absolute;
     bottom: 100%;
-    margin-bottom: 8px;
+    margin-bottom: 13px;
     right: 0;
     left: auto;
     background: var(--bg-primary);
