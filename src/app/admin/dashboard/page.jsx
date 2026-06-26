@@ -213,7 +213,7 @@ function DashboardContent() {
       <div className={`admin-sidebar ${isMobileChatActive ? 'hidden-mobile' : ''} ${isSidebarCollapsed ? 'collapsed' : ''}`} id="admin-sidebar">
         <div className="admin-sidebar-inner">
           {/* TABS */}
-          <div className="admin-tab-bar" style={{ height: '60px', background: 'var(--bg-primary)' }}>
+          <div className="admin-tab-bar" style={{ height: '50px', background: 'var(--bg-primary)' }}>
             <button 
               className={`admin-tab ${activeTab === 'chats' ? 'active' : ''}`}
               onClick={() => {

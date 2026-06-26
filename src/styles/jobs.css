@@ -279,14 +279,14 @@
 .admin-tab-bar {
     display: flex;
     margin-bottom: 0;
-    height: 60px;
+    height: 50px;
     align-items: stretch;
     box-sizing: border-box;
 }
 
 .admin-tab {
     flex: 1;
-    height: 60px;
+    height: 50px;
     padding: 0;
     margin: 0;
     background: none;
@@ -612,10 +612,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-md) var(--space-xl);
+    padding: 0 var(--space-xl);
     border-bottom: 1px solid var(--border-light);
     flex-shrink: 0;
     background: var(--bg-primary);
+    height: 50px;
+    box-sizing: border-box;
 }
 
 .job-ap-back {
