@@ -17,7 +17,7 @@ const inter = Inter({ subsets: ['latin', 'vietnamese'], weight: ['300', '400', '
 export const metadata = {
   title: "Job Chat",
   description: "Job Recruitment Platform",
-  manifest: "/manifest.json?v=3",
+  manifest: "/manifest.json?v=4",
   icons: {
     apple: "/icon.png",
   }
