@@ -152,12 +152,12 @@ body {
 }
 
 .lang-select {
-    padding: 5px 28px 5px 10px;
+    padding: 5px 22px 5px 10px;
     border: 1px solid var(--border-light);
     border-radius: var(--radius-full);
     background: var(--bg-primary);
     color: var(--text-primary);
-    font-size: var(--font-sm);
+    font-size: var(--font-xs);
     font-weight: 600;
     font-family: var(--font-family);
     cursor: pointer;
@@ -165,7 +165,7 @@ body {
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2365676b' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 10px center;
+    background-position: right 8px center;
     transition: var(--transition-fast);
 }
 
