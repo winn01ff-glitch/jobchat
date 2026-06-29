@@ -376,6 +376,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       if (textareaRef.current) {
         textareaRef.current.value = '';
         textareaRef.current.style.height = 'auto';
+        textareaRef.current.focus();
       }
     }
     setTimeout(scrollToBottom, 50);
@@ -453,9 +454,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+    if (e.key === 'Enter') {
+      const isMobileOrTablet = window.matchMedia('(max-width: 1024px)').matches;
+      if (!isMobileOrTablet && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
     }
   };
 
@@ -603,7 +607,13 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
           </div>
         )}
         
-        <div className="chat-messages" ref={listRef} onScroll={handleScroll}>
+        <div 
+          className="chat-messages" 
+          ref={listRef} 
+          onScroll={handleScroll}
+          onClick={() => textareaRef.current?.blur()}
+          onTouchStart={() => textareaRef.current?.blur()}
+        >
           <div className="chat-messages-inner">
             <div className="chat-welcome">
               <div className="chat-welcome-icon">{applicant.name.charAt(0).toUpperCase()}</div>

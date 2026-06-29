@@ -143,12 +143,22 @@ export const EmojiPicker = {
     init: function() {
         if (typeof document === 'undefined') return;
         if (document.getElementById('global-emoji-picker')) return;
+        
         var picker = document.createElement('div');
         picker.id = 'global-emoji-picker';
         picker.className = 'emoji-picker hidden';
-        picker.innerHTML = this.emojis.map(function(e) {
-            return '<span class="emoji-item" onclick="window.EmojiPickerSelect(\'' + e + '\')">' + e + '</span>';
-        }).join('');
+        
+        this.emojis.forEach((e) => {
+            var span = document.createElement('span');
+            span.className = 'emoji-item';
+            span.textContent = e;
+            span.style.cursor = 'pointer';
+            span.addEventListener('click', () => {
+                this.select(e);
+            });
+            picker.appendChild(span);
+        });
+        
         document.body.appendChild(picker);
         
         document.addEventListener('click', function(e) {
@@ -156,11 +166,6 @@ export const EmojiPicker = {
                 picker.classList.add('hidden');
             }
         });
-        
-        // Expose to window for the onclick handler
-        if (typeof window !== 'undefined') {
-            window.EmojiPickerSelect = (emoji) => this.select(emoji);
-        }
     },
     toggle: function(inputId, btnElement) {
         if (typeof document === 'undefined') return;
@@ -184,11 +189,26 @@ export const EmojiPicker = {
         if (!this.currentInputId) return;
         var input = document.getElementById(this.currentInputId);
         if (input) {
-            input.value += emoji;
-            input.focus();
+            const newValue = input.value + emoji;
+            const prototype = input.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+            const descriptor = Object.getOwnPropertyDescriptor(prototype, "value");
+            if (descriptor && descriptor.set) {
+                descriptor.set.call(input, newValue);
+            } else {
+                input.value = newValue;
+            }
             // Trigger input event for React to pick up changes
             var event = new Event('input', { bubbles: true });
             input.dispatchEvent(event);
+            
+            // Focus the input to keep keyboard open
+            input.focus();
+            
+            // Auto resize if textarea
+            if (input.tagName === 'TEXTAREA') {
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+            }
         }
         var picker = document.getElementById('global-emoji-picker');
         if (picker) picker.classList.add('hidden');

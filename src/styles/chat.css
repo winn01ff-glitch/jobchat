@@ -639,30 +639,27 @@
 }
 
 /* ============ Reply Messages and Preview ============ */
-.reply-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
 .reply-preview-bubble {
-    background: rgba(0, 0, 0, 0.05);
-    border-left: 3px solid var(--messenger-blue);
-    border-radius: 8px;
-    padding: 6px 10px;
-    margin-bottom: 4px;
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    border-radius: 18px;
+    padding: 8px 14px 16px; /* Bottom padding accommodates the 10px overlap of the main bubble */
+    margin-bottom: 0px;
     cursor: pointer;
     font-size: 12px;
     text-align: left;
     transition: background 0.2s;
     user-select: none;
     max-width: 100%;
+    position: relative;
+    z-index: 1;
+    border: 1px solid var(--border-light);
 }
 
 .message-row.sent .reply-preview-bubble {
-    background: rgba(255, 255, 255, 0.15);
-    border-left-color: rgba(255, 255, 255, 0.7);
-    color: white;
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-light);
 }
 
 .reply-preview-bubble:hover {
@@ -681,7 +678,7 @@
 }
 
 .reply-content-text {
-    opacity: 0.9;
+    opacity: 0.85;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -748,7 +745,7 @@
 }
 
 .message-row.highlight-flash .message-bubble {
-    animation: flashHighlight 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    animation: flashHighlight 2.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     transform-origin: center;
     will-change: transform;
 }

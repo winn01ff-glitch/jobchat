@@ -92,6 +92,60 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
     return () => window.removeEventListener('close-all-context-menus', handleCloseAll);
   }, [msg.id]);
 
+  const renderReplyHeader = () => {
+    const replyTo = msg.payload?.reply_to;
+    if (!replyTo) return null;
+
+    const isOwnReply = replyTo.sender_id === msg.sender_id;
+    let headerText = '';
+
+    if (isSent) {
+      // Find the name of the author we replied to
+      let recipientName = replyTo.sender_name;
+      // Fallback display names
+      if (replyTo.sender_type === 'admin') {
+        recipientName = t('chat.adminName') || 'Đội ngũ tuyển dụng';
+      }
+      headerText = `${t('chat.youRepliedTo') || 'Bạn đã trả lời'} ${recipientName || 'Ứng viên'}`;
+    } else {
+      const senderName = displaySenderName;
+      if (isOwnReply) {
+        headerText = `${senderName} ${t('chat.repliedToSelf') || 'đã trả lời chính mình'}`;
+      } else {
+        headerText = `${senderName} ${t('chat.repliedToYou') || 'đã trả lời bạn'}`;
+      }
+    }
+
+    return (
+      <div 
+        className="reply-header-text" 
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '4px', 
+          fontSize: '11px', 
+          color: 'var(--text-muted)', 
+          marginBottom: '3px', 
+          fontWeight: '500',
+          cursor: 'pointer',
+          userSelect: 'none'
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          const element = document.querySelector(`[data-message-id="${replyTo.id}"]`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('highlight-flash');
+            setTimeout(() => element.classList.remove('highlight-flash'), 3000);
+          }
+        }}
+      >
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v2.5"/></svg>
+        <span>{headerText}</span>
+      </div>
+    );
+  };
+
   const renderReplyPreview = () => {
     const replyTo = msg.payload?.reply_to;
     if (!replyTo) return null;
@@ -109,11 +163,6 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
       contentPreview = contentPreview.substring(0, 50) + '...';
     }
 
-    const isOwnReply = replyTo.sender_id === msg.sender_id;
-    const displayName = isOwnReply 
-      ? (t('chat.replyToSelf') || 'chính mình') 
-      : replyTo.sender_name;
-
     return (
       <div 
         className="reply-preview-bubble" 
@@ -123,14 +172,10 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             element.classList.add('highlight-flash');
-            setTimeout(() => element.classList.remove('highlight-flash'), 1500);
+            setTimeout(() => element.classList.remove('highlight-flash'), 3000);
           }
         }}
       >
-        <div className="reply-sender-name" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v2.5"/></svg>
-          <span>{(t('chat.replyingTo') || 'Đang trả lời') + ' ' + displayName}</span>
-        </div>
         <div className="reply-content-text">{contentPreview}</div>
       </div>
     );
@@ -244,9 +289,17 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
 
     if (msg.payload?.reply_to) {
       return (
-        <div className="message-bubble reply-wrapper" style={{ padding: isMedia ? '6px 8px 6px' : '8px 12px' }}>
+        <div className="reply-container" style={{ display: 'flex', flexDirection: 'column', alignItems: isSent ? 'flex-end' : 'flex-start', width: '100%', maxWidth: '100%' }}>
           {renderReplyPreview()}
-          {mainContent}
+          {isMedia ? (
+            <div style={{ marginTop: '-10px', position: 'relative', zIndex: 2 }}>
+              {mainContent}
+            </div>
+          ) : (
+            <div className="message-bubble" style={{ marginTop: '-10px', position: 'relative', zIndex: 2 }}>
+              {mainContent}
+            </div>
+          )}
         </div>
       );
     }
@@ -290,6 +343,8 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
           {!isSent && msg.sender_name && showSender && (
             <div className="message-sender">{displaySenderName}</div>
           )}
+          
+          {msg.payload?.reply_to && renderReplyHeader()}
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexDirection: isSent ? 'row-reverse' : 'row', maxWidth: '100%' }}>
             {renderContent()}
@@ -343,18 +398,30 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
         <div 
           className="context-menu" 
           style={{
-            top: Math.min(contextMenu.y, window.innerHeight - 100), 
+            top: Math.min(contextMenu.y, window.innerHeight - 150), 
             left: Math.min(contextMenu.x, window.innerWidth - 160)
           }}
         >
+          {onReply && (
+            <button 
+              onClick={() => {
+                onReply(msg);
+                setContextMenu(null);
+              }}
+              className="context-menu-item"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color:'var(--text-primary)'}}><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
+              <span>{t('chat.reply') || 'Trả lời'}</span>
+            </button>
+          )}
           <button 
             onClick={handleCopy}
             className="context-menu-item"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color:'var(--text-primary)'}}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span>{t('chat.copy') || 'Copy'}</span>
+            <span>{t('chat.copy') || 'Sao chép'}</span>
           </button>
-          {isSent && (
+          {onDelete && (
             <button 
               onClick={handleDelete}
               className="context-menu-item delete"

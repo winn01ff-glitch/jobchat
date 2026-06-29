@@ -8,6 +8,7 @@ import { LanguageProvider } from '../context/LanguageContext';
 import { NotificationProvider } from '../context/NotificationContext';
 import SupabaseProvider from '../context/SupabaseProvider';
 import Header from '../components/Header';
+import PWARegister from '../components/PWARegister';
 import { Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 
@@ -17,6 +18,9 @@ export const metadata = {
   title: "Job Chat",
   description: "Job Recruitment Platform",
   manifest: "/manifest.json",
+  icons: {
+    apple: "/icon.png",
+  }
 };
 
 export const viewport = {
@@ -33,6 +37,7 @@ export default function RootLayout({ children }) {
         <LanguageProvider>
           <NotificationProvider>
             <SupabaseProvider>
+              <PWARegister />
               <div id="app">
                 <Header />
                 <main id="page-container">
