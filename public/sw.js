@@ -1,8 +1,8 @@
-const CACHE_NAME = 'jobchat-v1';
+const CACHE_NAME = 'jobchat-v3';
 const ASSETS_TO_CACHE = [
   '/',
-  '/manifest.json',
-  '/logo.jpg',
+  '/manifest.json?v=3',
+  '/icon.png',
   '/favicon.ico'
 ];
 

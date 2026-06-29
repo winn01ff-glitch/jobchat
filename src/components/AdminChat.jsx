@@ -64,6 +64,20 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const [inputText, setInputText] = useState('');
   const [replyToMessage, setReplyToMessage] = useState(null);
   const [activeMessageId, setActiveMessageId] = useState(null);
+
+  useEffect(() => {
+    const handleGlobalClick = (e) => {
+      if (!e.target.closest('.message-row') && !e.target.closest('.msg-action-btn')) {
+        setActiveMessageId(null);
+      }
+    };
+    document.addEventListener('click', handleGlobalClick);
+    document.addEventListener('touchstart', handleGlobalClick, { passive: true });
+    return () => {
+      document.removeEventListener('click', handleGlobalClick);
+      document.removeEventListener('touchstart', handleGlobalClick);
+    };
+  }, []);
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState('online');
   const [showScrollBtn, setShowScrollBtn] = useState(false);
