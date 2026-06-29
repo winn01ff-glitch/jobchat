@@ -64,6 +64,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const [inputText, setInputText] = useState('');
   const [replyToMessage, setReplyToMessage] = useState(null);
   const [activeMessageId, setActiveMessageId] = useState(null);
+  const [isScrollDone, setIsScrollDone] = useState(false);
 
   useEffect(() => {
     const handleGlobalClick = (e) => {
@@ -165,6 +166,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
         setApplicant(app);
         
         isInitialScrollDone.current = false;
+        setIsScrollDone(false);
         const msgs = await DB.getMessages(applicantId, 0, 20);
         setMessages(msgs);
         setMessagesOffset(20);
@@ -173,10 +175,11 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
         
         setTimeout(() => {
           scrollToBottom('auto');
+          setIsScrollDone(true);
           setTimeout(() => {
             isInitialScrollDone.current = true;
-          }, 300);
-        }, 100);
+          }, 100);
+        }, 50);
         DB.markMessagesAsSeen(applicantId, 'applicant');
         
         sub = DB.subscribeToMessages(applicantId, (msg) => {
@@ -627,6 +630,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
           onScroll={handleScroll}
           onClick={() => textareaRef.current?.blur()}
           onTouchStart={() => textareaRef.current?.blur()}
+          style={{ opacity: isScrollDone ? 1 : 0, transition: 'none' }}
         >
           <div className="chat-messages-inner">
             <div className="chat-welcome">

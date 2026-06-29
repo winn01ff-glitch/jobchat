@@ -215,7 +215,7 @@
 @media (min-width: 769px) {
     .admin-container {
         width: 100%;
-        max-width: 1200px;
+        max-width: 1366px;
         margin: 0 auto;
         border-left: 1px solid var(--border-light);
         border-right: 1px solid var(--border-light);

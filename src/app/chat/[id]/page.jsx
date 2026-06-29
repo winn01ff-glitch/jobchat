@@ -69,6 +69,7 @@ export default function ChatPage({ params }) {
   const [inputText, setInputText] = useState('');
   const [replyToMessage, setReplyToMessage] = useState(null);
   const [activeMessageId, setActiveMessageId] = useState(null);
+  const [isScrollDone, setIsScrollDone] = useState(false);
 
   useEffect(() => {
     const handleGlobalClick = (e) => {
@@ -255,25 +256,28 @@ export default function ChatPage({ params }) {
 
   const loadInitialMessages = async (id) => {
     isInitialScrollDone.current = false;
+    setIsScrollDone(false);
     try {
       const msgs = await DB.getMessages(id, 0, 20);
       setMessages(msgs);
       setMessagesOffset(20);
       if (msgs.length < 20) setHasMoreMessages(false);
       
-      // Scroll to bottom
+      setIsLoading(false);
+      
+      // Scroll to bottom instantly
       setTimeout(() => {
         scrollToBottom('auto');
+        setIsScrollDone(true);
         setTimeout(() => {
           isInitialScrollDone.current = true;
-        }, 300);
-      }, 100);
+        }, 100);
+      }, 50);
       DB.markMessagesAsSeen(id, 'admin');
     } catch (err) {
       console.error('Failed to load initial chat state:', err);
       localStorage.removeItem('jobchat_session');
       router.push('/register');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -534,6 +538,7 @@ export default function ChatPage({ params }) {
         onScroll={handleScroll}
         onClick={() => textareaRef.current?.blur()}
         onTouchStart={() => textareaRef.current?.blur()}
+        style={{ opacity: isScrollDone ? 1 : 0, transition: 'none' }}
       >
         <div className="chat-messages-inner">
           <div className="chat-welcome">

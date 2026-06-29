@@ -254,6 +254,9 @@
         "salarySuffix": {
             "monthly": " / tháng",
             "hourly": " / giờ"
-        }
+        },
+        "copyLink": "Copy link bài viết",
+        "linkCopied": "Đã sao chép liên kết bài viết!",
+        "copied": "Đã sao chép!"
     }
 }

@@ -254,6 +254,9 @@
         "salarySuffix": {
             "monthly": " / month",
             "hourly": " / hour"
-        }
+        },
+        "copyLink": "ပို့စ်လင့်ခ်ကို ကူးယူပါ",
+        "linkCopied": "လင့်ခ်ကို ကူးယူပြီးပါပြီ။",
+        "copied": "ကူးယူပြီးပါပြီ။"
     }
 }

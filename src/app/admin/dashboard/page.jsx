@@ -302,7 +302,13 @@ function DashboardContent() {
           )
         ) : (
           selectedId ? (
-            <JobPreviewPanel jobId={selectedId} onBack={handleBackToSidebar} onDelete={handleBackToSidebar} />
+            <JobPreviewPanel 
+              jobId={selectedId} 
+              onBack={handleBackToSidebar} 
+              onDelete={handleBackToSidebar} 
+              isSidebarCollapsed={isSidebarCollapsed}
+              onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            />
           ) : (
             <div className="admin-empty-state">
               <div className="admin-empty-icon">

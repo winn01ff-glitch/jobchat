@@ -254,6 +254,9 @@
         "salarySuffix": {
             "monthly": " / month",
             "hourly": " / hour"
-        }
+        },
+        "copyLink": "Copy post link",
+        "linkCopied": "Post link copied!",
+        "copied": "Copied!"
     }
 }

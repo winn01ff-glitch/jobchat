@@ -254,6 +254,9 @@
         "salarySuffix": {
             "monthly": " / 月",
             "hourly": " / 時"
-        }
+        },
+        "copyLink": "求人リンクをコピー",
+        "linkCopied": "求人リンクをコピーしました！",
+        "copied": "コピー完了！"
     }
 }

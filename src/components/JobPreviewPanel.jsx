@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { DB } from '../lib/supabase';
-import { showConfirmModal, formatSalary } from '../lib/helpers';
+import { showConfirmModal, formatSalary, showToast } from '../lib/helpers';
 import JobFormModal from './JobFormModal';
 
-export default function JobPreviewPanel({ jobId, onBack, onDelete }) {
+export default function JobPreviewPanel({ jobId, onBack, onDelete, isSidebarCollapsed, onToggleSidebar }) {
   const { t } = useLanguage();
   const [job, setJob] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const [isMobile, setIsMobile] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
-  const [isBackHovered, setIsBackHovered] = useState(false);
 
   useEffect(() => {
     setIsMobile(window.innerWidth <= 768);
@@ -43,6 +43,22 @@ export default function JobPreviewPanel({ jobId, onBack, onDelete }) {
       t('admin.delete') || 'Xóa',
       { t }
     );
+  };
+
+  const handleCopyLink = async () => {
+    if (!job) return;
+    const publicUrl = `${window.location.origin}/jobs/${job.id}`;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      showToast(t('jobs.linkCopied') || 'Đã sao chép liên kết bài viết!', 'success');
+      setIsCopied(true);
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (err) {
+      console.error(err);
+      showToast(t('common.error') || 'Có lỗi xảy ra khi sao chép liên kết.', 'error');
+    }
   };
 
   if (!job) return <div className="admin-empty-state"><p>Loading...</p></div>;
@@ -82,7 +98,7 @@ export default function JobPreviewPanel({ jobId, onBack, onDelete }) {
   );
 
   return (
-    <div className="job-applicant-preview" style={{ height:'100%', background:'var(--bg-primary)', display: 'flex', flexDirection: 'column', overflow: 'hidden', overflowY: 'hidden' }}>
+    <div className="job-applicant-preview" style={{ height:'100%', background:'var(--bg-primary)', display: 'flex', flexDirection: 'column', overflow: 'hidden', overflowY: 'hidden', position: 'relative' }}>
       
       {/* Admin Actions Toolbar (Fixed at top) */}
       <div className="job-ap-toolbar" style={{ 
@@ -90,28 +106,26 @@ export default function JobPreviewPanel({ jobId, onBack, onDelete }) {
         top: 0,
         zIndex: 10
       }}>
-        {/* Left side: Back Button */}
+        {/* Left side: Back / Sidebar Toggle Button */}
         <button 
-          onClick={onBack} 
-          onMouseEnter={() => setIsBackHovered(true)}
-          onMouseLeave={() => setIsBackHovered(false)}
-          style={{ 
-            background: isBackHovered ? 'rgba(127, 140, 141, 0.16)' : 'rgba(127, 140, 141, 0.08)', 
-            border: 'none', 
-            borderRadius: '50%',
-            width: '36px',
-            height: '36px',
-            cursor: 'pointer', 
-            color: 'var(--text-primary)', 
-            display: 'flex', 
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.2s ease',
-            transform: isBackHovered ? 'scale(1.05)' : 'scale(1)'
-          }}
-          title={t('admin.jobPosts') || 'Trở lại'}
+          className="btn-icon" 
+          onClick={() => {
+            if (window.innerWidth <= 768) {
+              if (onBack) onBack();
+            } else {
+              if (onToggleSidebar) onToggleSidebar();
+            }
+          }} 
+          style={{marginRight:'-4px', marginLeft:'-8px', color:'var(--messenger-blue)', padding:0}}
+          title={isSidebarCollapsed ? (t('admin.expand') || "Mở rộng") : (t('admin.collapse') || "Thu gọn")}
         >
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          {isMobile ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          ) : isSidebarCollapsed ? (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          )}
         </button>
 
         {/* Right side: Status, Edit, Delete */}
@@ -139,7 +153,7 @@ export default function JobPreviewPanel({ jobId, onBack, onDelete }) {
       </div>
 
       {/* Scrollable Content Wrapper */}
-      <div style={{ padding: '20px', flex: 1, overflowY: 'auto' }}>
+      <div style={{ padding: '20px 20px 80px 20px', flex: 1, overflowY: 'auto' }}>
         {/* Candidate View Preview Container */}
         <div className="job-detail-page" style={{ padding: '0', minHeight: 'auto', height: 'auto', overflow: 'visible' }}>
           <div className="job-detail-content-wrapper" style={{ padding: '0', border: 'none', background: 'transparent', overflowY: 'visible' }}>
@@ -266,6 +280,72 @@ export default function JobPreviewPanel({ jobId, onBack, onDelete }) {
           </div>
         </div>
       </div>
+
+      <button 
+        onClick={handleCopyLink} 
+        className="btn-apply"
+        style={{
+          background: isCopied ? '#2ecc71' : 'var(--messenger-gradient)',
+          boxShadow: isCopied ? '0 4px 12px rgba(46, 204, 113, 0.25)' : '0 4px 12px rgba(0, 132, 255, 0.25)',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          position: 'absolute',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '220px',
+          height: '45px',
+          padding: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden'
+        }}
+      >
+        <div style={{ position: 'relative', width: '100%', height: '24px', overflow: 'hidden' }}>
+          {/* Normal state */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            opacity: isCopied ? 0 : 1,
+            transform: isCopied ? 'translateY(-24px)' : 'translateY(0)',
+            transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}>
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            <span>{t('jobs.copyLink') || 'Copy link bài viết'}</span>
+          </div>
+
+          {/* Copied state */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            opacity: isCopied ? 1 : 0,
+            transform: isCopied ? 'translateY(0)' : 'translateY(24px)',
+            transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)'
+          }}>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}>
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>{t('jobs.copied') || 'Đã sao chép!'}</span>
+          </div>
+        </div>
+      </button>
 
       <JobFormModal 
         isOpen={isEditing} 

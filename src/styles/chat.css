@@ -67,7 +67,6 @@
     overflow-y: auto;
     padding: var(--space-md) var(--space-lg) 12px var(--space-lg);
     display: block;
-    scroll-behavior: smooth;
     background: var(--bg-primary);
     width: 100%;
     max-width: none;
