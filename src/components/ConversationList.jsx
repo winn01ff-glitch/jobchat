@@ -83,7 +83,13 @@ export default function ConversationList({
                 className={`conversation-item ${selectedId === applicant.id ? 'active' : ''} ${applicant._hasUnread ? 'unread' : ''}`}
                 onClick={() => onSelect(applicant.id)}
               >
-                <div className="conv-avatar">{getInitials(applicant.name)}</div>
+                <div className="conv-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {applicant.avatar ? (
+                    <img src={applicant.avatar} alt={applicant.name} style={{width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%'}} />
+                  ) : (
+                    getInitials(applicant.name)
+                  )}
+                </div>
                 <div className="conv-info">
                   <div className="conv-name" style={{ fontWeight: applicant._hasUnread ? '800' : '600', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
                     <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{applicant.name}</span>

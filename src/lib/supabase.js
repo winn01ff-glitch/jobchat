@@ -171,6 +171,79 @@ export const DB = {
         return result;
     },
 
+    checkLoginIdExists: async function (loginId) {
+        const clean = (loginId || '').trim().toLowerCase();
+        const { data, error } = await supabaseClient
+            .rpc('check_login_id_exists', { id_param: clean });
+        if (error) return false;
+        return !!data;
+    },
+
+    registerApplicantWithPassword: async function (data) {
+        const cleanLoginId = (data.loginId || '').trim().toLowerCase();
+        const cleanEmail = (data.email || '').trim().toLowerCase();
+
+        const { data: result, error } = await supabaseClient
+            .rpc('register_applicant_with_password', {
+                name_param: data.name,
+                id_param: cleanLoginId,
+                pw_hash: data.passwordHash,
+                email_param: cleanEmail || null,
+                phone_param: data.phone || '',
+                position_param: data.position || 'other',
+                lang_param: data.language || 'vi'
+            });
+
+        if (error) throw error;
+        return result;
+    },
+
+    loginApplicantWithPassword: async function (loginId, passwordHash) {
+        const cleanId = (loginId || '').trim().toLowerCase();
+        const { data, error } = await supabaseClient
+            .rpc('login_applicant_with_password', {
+                id_param: cleanId,
+                pw_hash: passwordHash
+            });
+
+        if (error) {
+            throw new Error(error.message || 'Sai tên đăng nhập hoặc mật khẩu');
+        }
+        return data;
+    },
+
+    requestPasswordReset: async function (loginId) {
+        const cleanId = (loginId || '').trim().toLowerCase();
+        const { data: email, error } = await supabaseClient
+            .rpc('get_email_by_login_id', { id_param: cleanId });
+
+        if (error) throw error;
+        if (email === undefined || email === null) {
+            // Check if user exists but has no email to give correct error key
+            const exists = await this.checkLoginIdExists(cleanId);
+            if (!exists) {
+                return { success: false, error: 'not_found' };
+            }
+            return { success: false, error: 'no_email' };
+        }
+        return { success: true, email: email };
+    },
+
+    resetPasswordWithOtp: async function (loginId, otp, newPasswordHash) {
+        const cleanId = (loginId || '').trim().toLowerCase();
+        const { data: success, error } = await supabaseClient
+            .rpc('reset_password_with_otp', {
+                id_param: cleanId,
+                otp_param: otp,
+                pw_hash_param: newPasswordHash
+            });
+
+        if (error) {
+            throw new Error(error.message || 'Đặt lại mật khẩu thất bại');
+        }
+        return success;
+    },
+
     getAllApplicants: async function () {
         const { data, error } = await supabaseClient
             .from('applicants')
@@ -189,6 +262,16 @@ export const DB = {
             .single();
         if (error) throw error;
         return row;
+    },
+
+    verifyApplicantPassword: async function (id, passwordHash) {
+        const { data, error } = await supabaseClient
+            .from('applicants')
+            .select('password_hash')
+            .eq('id', id)
+            .maybeSingle();
+        if (error || !data) return false;
+        return data.password_hash === passwordHash;
     },
 
     updateApplicantStatus: async function (id, status) {

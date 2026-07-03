@@ -72,6 +72,15 @@ export default function ChatPage({ params }) {
   const [isScrollDone, setIsScrollDone] = useState(false);
 
   useEffect(() => {
+    // Add active class for chat page layout to body and document
+    document.documentElement.classList.add('chat-page-active');
+    document.body.classList.add('chat-page-active');
+    
+    // Trigger visualViewport resize check if helper exists
+    if (window.visualViewport) {
+      window.dispatchEvent(new Event('resize'));
+    }
+
     const handleGlobalClick = (e) => {
       if (!e.target.closest('.message-row') && !e.target.closest('.msg-action-btn')) {
         setActiveMessageId(null);
@@ -80,6 +89,8 @@ export default function ChatPage({ params }) {
     document.addEventListener('click', handleGlobalClick);
     document.addEventListener('touchstart', handleGlobalClick, { passive: true });
     return () => {
+      document.documentElement.classList.remove('chat-page-active');
+      document.body.classList.remove('chat-page-active');
       document.removeEventListener('click', handleGlobalClick);
       document.removeEventListener('touchstart', handleGlobalClick);
     };
@@ -120,53 +131,72 @@ export default function ChatPage({ params }) {
   };
 
   useEffect(() => {
-    // Check auth
-    const sessionStr = localStorage.getItem('jobchat_session');
-    if (!sessionStr) {
-      router.push('/register');
-      return;
-    }
-    try {
-      const session = JSON.parse(sessionStr);
-      if (session.id !== applicantId) {
+    let subChannel = null;
+
+    const checkAuthAndInit = async () => {
+      const sessionStr = localStorage.getItem('jobchat_session');
+      if (!sessionStr) {
         router.push('/register');
         return;
       }
-      setApplicantName(session.name);
-      loadInitialMessages(applicantId);
-      
-      const fetchAdmins = async () => {
-        try {
-          const list = await DB.getAllAdmins();
-          const map = {};
-          list.forEach(adm => {
-            map[adm.id] = adm;
-          });
-          setAdminsMap(map);
-        } catch(e) {}
-      };
-      fetchAdmins();
-      
-      const sub = DB.subscribeToMessages(applicantId, (msg) => {
-        const sessionStr = localStorage.getItem('jobchat_session');
-        if (sessionStr) {
-          try {
-            const session = JSON.parse(sessionStr);
-            if (msg.sender_type === 'applicant' && msg.sender_id === session.id) {
-              return; // Prevent duplicate message from subscription
-            }
-          } catch(e) {}
+      try {
+        const session = JSON.parse(sessionStr);
+        if (session.id !== applicantId) {
+          router.push('/register');
+          return;
         }
-        handleNewMessage(msg);
-      });
-      setSubscription(sub);
-      
-      return () => {
-        DB.unsubscribe(sub);
-      };
-    } catch(e) {
-      router.push('/register');
-    }
+
+        // Verify applicant still exists in database
+        const applicant = await DB.getApplicantByToken(session.token);
+        if (!applicant) {
+          console.warn('Session is invalid or applicant was deleted in database.');
+          localStorage.removeItem('jobchat_session');
+          window.dispatchEvent(new Event('authChange'));
+          router.push('/');
+          return;
+        }
+
+        setApplicantName(applicant.name);
+        loadInitialMessages(applicantId);
+
+        const fetchAdmins = async () => {
+          try {
+            const list = await DB.getAllAdmins();
+            const map = {};
+            list.forEach(adm => {
+              map[adm.id] = adm;
+            });
+            setAdminsMap(map);
+          } catch(e) {}
+        };
+        fetchAdmins();
+
+        subChannel = DB.subscribeToMessages(applicantId, (msg) => {
+          const sStr = localStorage.getItem('jobchat_session');
+          if (sStr) {
+            try {
+              const s = JSON.parse(sStr);
+              if (msg.sender_type === 'applicant' && msg.sender_id === s.id) {
+                return; // Prevent duplicate message from subscription
+              }
+            } catch(e) {}
+          }
+          handleNewMessage(msg);
+        });
+        setSubscription(subChannel);
+      } catch(e) {
+        localStorage.removeItem('jobchat_session');
+        router.push('/register');
+      }
+    };
+
+    checkAuthAndInit();
+
+    return () => {
+      if (subChannel) {
+        DB.unsubscribe(subChannel);
+      }
+    };
   }, [applicantId]);
 
   useEffect(() => {
@@ -500,6 +530,12 @@ export default function ChatPage({ params }) {
   const handleFileSelect = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      showToast(t('chat.fileTooLarge') || 'Kích thước tập tin vượt quá giới hạn (Tối đa 10MB)', 'error');
+      e.target.value = '';
+      return;
+    }
     
     showToast(t('chat.uploading') || 'Đang tải lên...', 'info');
     

@@ -5,19 +5,68 @@ import { useRouter, usePathname } from 'next/navigation';
 import { DB } from '../lib/supabase';
 import { showConfirmModal } from '../lib/helpers';
 import AdminSettingsModal from './AdminSettingsModal';
+import ApplicantSettingsModal from './ApplicantSettingsModal';
+import { useNotification } from '../context/NotificationContext';
+
+const getLangName = (l) => {
+  switch (l) {
+    case 'vi': return 'Tiếng Việt';
+    case 'ja': return '日本語';
+    case 'en': return 'English';
+    case 'my': return 'မြန်မာဘာသာ';
+    case 'pt': return 'Português';
+    default: return 'Tiếng Việt';
+  }
+};
 
 export default function Header() {
   const { lang, changeLanguage, t } = useLanguage();
+  const { showToast } = useNotification();
   const router = useRouter();
   const pathname = usePathname();
   const isChatPage = pathname && pathname.startsWith('/chat/');
+  const applicantId = isChatPage ? pathname.split('/chat/')[1] : null;
   const menuRef = useRef(null);
   
   const [adminName, setAdminName] = useState('');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [isApplicantLoggedIn, setIsApplicantLoggedIn] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showApplicantSettings, setShowApplicantSettings] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showLangOptions, setShowLangOptions] = useState(false);
+
+  useEffect(() => {
+    const updateVisualViewport = () => {
+      if (window.visualViewport) {
+        document.documentElement.style.setProperty(
+          '--visual-viewport-height',
+          `${window.visualViewport.height}px`
+        );
+        // Force scroll reset to keep fixed elements in place when typing
+        const isChatActive = document.body.classList.contains('chat-page-active') || 
+                             document.body.classList.contains('chat-active-mobile');
+        if (isChatActive) {
+          window.scrollTo(0, 0);
+        }
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateVisualViewport);
+      window.visualViewport.addEventListener('scroll', updateVisualViewport);
+      // Run immediately and also delayed to account for loading/rendering delays
+      updateVisualViewport();
+      setTimeout(updateVisualViewport, 300);
+    }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', updateVisualViewport);
+        window.visualViewport.removeEventListener('scroll', updateVisualViewport);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Check login states
@@ -50,6 +99,7 @@ export default function Header() {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setShowMoreMenu(false);
+        setShowLangOptions(false);
       }
     };
     if (showMoreMenu) {
@@ -125,6 +175,8 @@ export default function Header() {
     );
   };
 
+
+
   // Determine visibility
   const showBackButton = pathname !== '/' && pathname !== '/admin/dashboard' && !pathname.startsWith('/chat');
   const showAdminLogin = pathname === '/';
@@ -155,27 +207,49 @@ export default function Header() {
             </button>
             {showMoreMenu && (
               <div ref={menuRef} className="header-more-menu" onClick={(e) => e.stopPropagation()} style={{marginTop: '11.5px'}}>
-                <div className="header-dropdown-item lang-item" style={{display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px'}}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-                  <select 
-                    value={lang} 
-                    onChange={(e) => { changeLanguage(e.target.value); setShowMoreMenu(false); }}
-                    style={{
-                      border: 'none', background: 'transparent', color: 'var(--text-primary)',
-                      fontSize: '13px', fontWeight: '500', outline: 'none', cursor: 'pointer',
-                      width: '100%', fontFamily: 'inherit'
-                    }}
-                  >
-                    <option value="ja">🇯🇵 JP</option>
-                    <option value="vi">🇻🇳 VN</option>
-                    <option value="en">🇬🇧 EN</option>
-                    <option value="my">🇲🇲 MM</option>
-                    <option value="pt">🇧🇷 BR</option>
-                  </select>
-                </div>
+                <button 
+                  className="header-dropdown-item" 
+                  onClick={() => setShowLangOptions(!showLangOptions)}
+                  style={{display: 'flex', alignItems: 'center', gap: '8px', width: '100%'}}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--text-secondary)'}}><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                  <span>
+                    {(t('common.language') || 'Ngôn ngữ') + ': ' + getLangName(lang)}
+                  </span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--text-secondary)', marginLeft: 'auto', transform: showLangOptions ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease'}}><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                
+                {showLangOptions && (
+                  <div style={{background: 'var(--bg-secondary)', borderRadius: '6px', margin: '2px 8px 4px', padding: '4px 0'}}>
+                    {['vi', 'ja', 'en', 'my', 'pt'].map((l) => (
+                      <button
+                        key={l}
+                        className="header-dropdown-item"
+                        onClick={() => { changeLanguage(l); setShowLangOptions(false); setShowMoreMenu(false); }}
+                        style={{
+                          padding: '8px 12px 8px 24px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: lang === l ? 'var(--bg-hover)' : 'transparent',
+                          color: lang === l ? 'var(--messenger-blue)' : 'var(--text-primary)',
+                          fontWeight: lang === l ? '600' : '500',
+                          fontSize: '12.5px'
+                        }}
+                      >
+                        <span>{getLangName(l)}</span>
+                        {lang === l && <span style={{fontSize: '12px', color: 'var(--messenger-blue)'}}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <button className="header-dropdown-item" onClick={handleClearHistoryClick}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                   <span>{t('chat.clearHistory') || 'Xóa lịch sử trò chuyện'}</span>
+                </button>
+                <button className="header-dropdown-item" onClick={() => { setShowMoreMenu(false); setShowApplicantSettings(true); }}>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{color:'var(--text-primary)'}}><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                  <span>{t('admin.settings') || 'Cài đặt tài khoản'}</span>
                 </button>
                 <div style={{height: '1px', background: 'var(--border-light)', margin: '4px 8px'}}></div>
                 <button className="header-dropdown-item danger" onClick={() => { setShowMoreMenu(false); handleApplicantLogout(); }}>
@@ -234,6 +308,12 @@ export default function Header() {
       </div>
 
       <AdminSettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+
+      <ApplicantSettingsModal 
+        isOpen={showApplicantSettings} 
+        onClose={() => setShowApplicantSettings(false)} 
+        applicantId={applicantId} 
+      />
     </header>
   );
 }

@@ -71,6 +71,11 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       if (!e.target.closest('.message-row') && !e.target.closest('.msg-action-btn')) {
         setActiveMessageId(null);
       }
+      
+      // Close canned responses popup when clicking outside
+      if (!e.target.closest('.canned-popup') && !e.target.closest('.canned-toggle-btn')) {
+        setShowCannedPopup(false);
+      }
     };
     document.addEventListener('click', handleGlobalClick);
     document.addEventListener('touchstart', handleGlobalClick, { passive: true });
@@ -442,6 +447,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const handleFileSelect = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      showToast(t('chat.fileTooLarge') || 'Kích thước tập tin vượt quá giới hạn (Tối đa 10MB)', 'error');
+      e.target.value = '';
+      return;
+    }
     
     showToast(t('chat.uploading') || 'Đang tải lên...', 'info');
     
@@ -652,7 +663,13 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
               )}
             </button>
-            <div className="chat-avatar">{applicant.name.charAt(0).toUpperCase()}</div>
+            <div className="chat-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {applicant.avatar ? (
+                <img src={applicant.avatar} alt={applicant.name} style={{width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%'}} />
+              ) : (
+                applicant.name.charAt(0).toUpperCase()
+              )}
+            </div>
             <div>
               <div className="chat-header-name">{applicant.name}</div>
               <div className="chat-header-status">
@@ -782,6 +799,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     showSender={isFirstInGroup} 
                     showAvatar={isLastInGroup}
                     adminInfo={adminsMap[msg.sender_id]}
+                    applicantAvatar={applicant?.avatar || null}
                     onDelete={async (msgId) => {
                       try {
                         await DB.deleteMessageLocally(msgId, 'admin');

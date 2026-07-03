@@ -2,7 +2,7 @@ import React from 'react';
 import { formatTime, getInitials, showConfirmModal, downloadFile } from '../lib/helpers';
 import { useLanguage } from '../context/LanguageContext';
 
-export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, adminInfo = null, showAvatar = true, activeMessageId = null, setActiveMessageId = null }) {
+export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, adminInfo = null, applicantAvatar = null, showAvatar = true, activeMessageId = null, setActiveMessageId = null }) {
   const { lang, t } = useLanguage();
   const [localShowTime, setLocalShowTime] = React.useState(false);
   const showTime = setActiveMessageId ? (activeMessageId === msg.id) : localShowTime;
@@ -48,9 +48,9 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
   };
 
   // Dynamic override for admin messages
-  const isAdminMessage = isSent ? msg.sender_type === 'admin' : msg.sender_type === 'admin';
+  const isAdminMessage = msg.sender_type === 'admin';
   const displaySenderName = (isAdminMessage && adminInfo?.display_name) ? adminInfo.display_name : (msg.sender_name || 'A');
-  const displayAvatar = (isAdminMessage && adminInfo?.avatar) ? adminInfo.avatar : null;
+  const displayAvatar = isAdminMessage ? (adminInfo?.avatar || null) : (applicantAvatar || null);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(msg.content).then(() => {
