@@ -5,7 +5,7 @@ import { useLanguage } from '../../../context/LanguageContext';
 import { useNotification } from '../../../context/NotificationContext';
 import { DB } from '../../../lib/supabase';
 import { ChatBubble, SystemMessage, TypingIndicator } from '../../../components/ChatBubble';
-import { autoResize, EmojiPicker } from '../../../lib/helpers';
+import { autoResize, EmojiPicker, showConfirmModal } from '../../../lib/helpers';
 
 const compressImage = (file) => {
   return new Promise((resolve) => {
@@ -170,6 +170,42 @@ export default function ChatPage({ params }) {
   }, [applicantId]);
 
   useEffect(() => {
+    if (!applicantId || !applicantName) return;
+
+    const processPendingApplication = async () => {
+      try {
+        const jobStr = localStorage.getItem('uphill_apply_job');
+        if (!jobStr) return;
+
+        const jobInfo = JSON.parse(jobStr);
+        if (!jobInfo || !jobInfo.id || !jobInfo.title) return;
+
+        // 1. Update the DB record
+        await DB.updateApplicant(applicantId, { applied_job_title: jobInfo.title });
+
+        // 2. Send the auto-apply message
+        const messageText = `【応募】この求人に応募します： "${jobInfo.title}" (https://${window.location.host}/jobs/${jobInfo.id})`;
+        const actualMsg = await DB.sendMessage(applicantId, 'applicant', applicantName, applicantId, messageText);
+        setMessages(prev => {
+          // Prevent duplicates if already added
+          if (prev.some(m => m.id === actualMsg.id || m.content === messageText)) return prev;
+          return [...prev, actualMsg];
+        });
+
+        // 3. Clear from local storage
+        localStorage.removeItem('uphill_apply_job');
+        
+        // Scroll to bottom
+        setTimeout(scrollToBottom, 100);
+      } catch (e) {
+        console.error('[Apply Tracking] Failed to process pending application:', e);
+      }
+    };
+
+    processPendingApplication();
+  }, [applicantId, applicantName]);
+
+  useEffect(() => {
     if (!applicantId) return;
     const channelName = `typing:${applicantId}`;
     const channel = DB.supabaseClient.channel(channelName);
@@ -207,6 +243,21 @@ export default function ChatPage({ params }) {
       }
     }
   }, [isPartnerTyping]);
+
+  useEffect(() => {
+    const handleClearHistory = async () => {
+      try {
+        await DB.clearChatHistoryLocally(applicantId, 'applicant');
+        setMessages([]);
+        showToast(t('chat.historyCleared') || 'Đã xóa lịch sử trò chuyện', 'success');
+      } catch (err) {
+        showToast(t('common.error'), 'error');
+      }
+    };
+
+    window.addEventListener('chat-clear-history', handleClearHistory);
+    return () => window.removeEventListener('chat-clear-history', handleClearHistory);
+  }, [applicantId, t, showToast]);
 
   useEffect(() => {
     if (!applicantId) return;
@@ -376,6 +427,7 @@ export default function ChatPage({ params }) {
   };
 
   const handleSend = async (customContent = null) => {
+    EmojiPicker.hide();
     const contentVal = typeof customContent === 'string' ? customContent : null;
     const text = (textareaRef.current?.value || inputText).trim();
     if (!text && !contentVal) return;
@@ -509,7 +561,10 @@ export default function ChatPage({ params }) {
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      const isMobileOrTablet = window.matchMedia('(max-width: 1024px)').matches;
+      const isMobileOrTablet = typeof window !== 'undefined' && (
+        /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0 && /Macintosh|MacIntel/.test(navigator.userAgent))
+      );
       if (!isMobileOrTablet && !e.shiftKey) {
         e.preventDefault();
         handleSend();
@@ -739,8 +794,12 @@ export default function ChatPage({ params }) {
             ></textarea>
             <button className="emoji-toggle-btn" onClick={(e) => EmojiPicker.toggle('chat-input', e.currentTarget)}>😊</button>
           </div>
-          <button className="btn-send" onClick={() => handleSend()}>
-            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          <button className="btn-send" onClick={() => handleSend(inputText.trim() ? null : '👍')}>
+            {inputText.trim() ? (
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M21.72 11.27l-18-9c-.53-.26-1.16-.16-1.58.26-.42.42-.52 1.05-.26 1.58l3.62 7.24a1 1 0 0 0 .89.55h8.11c.55 0 1 .45 1 1s-.45 1-1 1H6.39a1 1 0 0 0-.89.55l-3.62 7.24c-.26.53-.16 1.16.26 1.58.29.29.69.45 1.09.45.17 0 .34-.03.5-.1l18-9c.67-.34.94-1.15.6-1.82-.14-.28-.38-.52-.66-.66z"/></svg>
+            ) : (
+              <span style={{ fontSize: '22px', lineHeight: '1', display: 'block', userSelect: 'none' }}>👍</span>
+            )}
           </button>
         </div>
       </div>

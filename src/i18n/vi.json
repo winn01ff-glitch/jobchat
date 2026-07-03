@@ -112,7 +112,23 @@
         "uploading": "Đang tải lên...",
         "uploadSuccess": "Tải lên thành công!",
         "uploadFailed": "Tải lên thất bại, vui lòng thử lại.",
-        "download": "Tải xuống"
+        "download": "Tải xuống",
+        "clearHistory": "Xóa lịch sử trò chuyện",
+        "confirmCallTitle": "Xác nhận cuộc gọi",
+        "confirmCallManagerMessage": "Bạn có chắc chắn muốn thực hiện cuộc gọi tới số 07015528761?",
+        "confirmCallMessage": "Bạn có chắc chắn muốn thực hiện cuộc gọi tới số",
+        "call": "Gọi",
+        "callManager": "Gọi cho quản lý",
+        "clearHistoryTitle": "Xóa lịch sử trò chuyện",
+        "confirmClearHistory": "Bạn có chắc chắn muốn xóa toàn bộ lịch sử trò chuyện cục bộ không? Hành động này không thể hoàn tác.",
+        "historyCleared": "Đã xóa lịch sử trò chuyện",
+        "noPhoneTitle": "Không tìm thấy số điện thoại",
+        "noPhoneMessage": "Ứng viên này chưa cung cấp hoặc cập nhật số điện thoại trên hệ thống!",
+        "activeStatus": "Đang hoạt động",
+        "translate": "Dịch tin nhắn",
+        "translating": "Đang dịch...",
+        "showOriginal": "Xem bản gốc",
+        "showTranslation": "Xem bản dịch"
     },
     "admin": {
         "confirmLogoutTitle": "Xác nhận đăng xuất",
@@ -135,6 +151,7 @@
         "filterUnread": "Chưa đọc",
         "selectConversation": "Chọn một cuộc trò chuyện",
         "newApplicant": "Ứng viên mới",
+        "appliedFrom": "Ứng tuyển từ",
         "noConversations": "Chưa có cuộc trò chuyện",
         "conversationStarted": "Bắt đầu:",
         "settings": "Cài đặt",
@@ -246,6 +263,31 @@
                 "full": "Chi trả đầy đủ",
                 "limited": "Hỗ trợ có giới hạn",
                 "none": "Không hỗ trợ"
+            },
+            "dormitory": "Ký túc xá công ty",
+            "dormitoryOptions": {
+                "full": "Miễn phí nhà ở & chi phí đầu vào",
+                "partial": "Cung cấp KTX (Hỗ trợ tiền nhà & đồ đạc)",
+                "rent_support": "Hỗ trợ một phần tiền nhà",
+                "none": "Không hỗ trợ KTX"
+            },
+            "visa": "Xin visa",
+            "visaOptions": {
+                "full": "Hỗ trợ đầy đủ thủ tục & chi phí",
+                "support": "Hỗ trợ làm thủ tục chuyển đổi/gia hạn",
+                "none": "Không hỗ trợ"
+            },
+            "meal": "Hỗ trợ tiền ăn",
+            "mealOptions": {
+                "free": "Cung cấp bữa ăn miễn phí",
+                "allowance": "Phụ cấp ăn uống hàng tháng",
+                "none": "Không hỗ trợ"
+            },
+            "other": "Hỗ trợ khác",
+            "otherOptions": {
+                "cert": "Hỗ trợ phí thi chứng chỉ chuyên môn",
+                "health": "Khám sức khỏe định kỳ miễn phí",
+                "none": "Không hỗ trợ"
             }
         },
         "salaryType": "Loại lương",
@@ -255,8 +297,13 @@
             "monthly": " / tháng",
             "hourly": " / giờ"
         },
-        "copyLink": "Copy link bài viết",
+        "copyLink": "Copy link",
         "linkCopied": "Đã sao chép liên kết bài viết!",
-        "copied": "Đã sao chép!"
+        "copied": "Đã sao chép!",
+        "translateTo": "Dịch sang Tiếng Việt",
+        "viewOriginal": "Xem bản gốc",
+        "translating": "Đang dịch...",
+        "copyContent": "Copy nội dung",
+        "contentCopiedToast": "Đã sao chép chi tiết công việc!"
     }
 }

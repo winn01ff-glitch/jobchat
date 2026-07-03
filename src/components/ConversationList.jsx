@@ -85,10 +85,29 @@ export default function ConversationList({
               >
                 <div className="conv-avatar">{getInitials(applicant.name)}</div>
                 <div className="conv-info">
-                  <div className="conv-name" style={{ fontWeight: applicant._hasUnread ? '800' : '600' }}>
-                    {applicant.name}
-                    <span className="conv-time" style={{ fontWeight: '400' }}>{timeStr}</span>
+                  <div className="conv-name" style={{ fontWeight: applicant._hasUnread ? '800' : '600', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
+                    <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{applicant.name}</span>
+                    <span className="conv-time" style={{ fontWeight: '400', flexShrink: 0 }}>{timeStr}</span>
                   </div>
+                  {applicant.applied_job_title && (
+                    <div style={{
+                      fontSize: '11px',
+                      color: 'var(--messenger-blue)',
+                      background: 'rgba(0, 132, 255, 0.08)',
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                      width: 'fit-content',
+                      marginTop: '2px',
+                      marginBottom: '2px',
+                      fontWeight: '600',
+                      maxWidth: '100%',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {t('admin.appliedFrom') || 'Ứng tuyển từ'}: {applicant.applied_job_title}
+                    </div>
+                  )}
                   <div className="conv-last-msg" style={{ 
                     fontWeight: applicant._hasUnread ? '700' : '400', 
                     color: isTyping ? 'var(--messenger-blue)' : (applicant._hasUnread ? 'var(--text-primary)' : 'var(--text-muted)') 

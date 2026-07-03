@@ -27,6 +27,14 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
   const [raiseCustom, setRaiseCustom] = useState('');
   const [transportSelect, setTransportSelect] = useState('');
   const [transportCustom, setTransportCustom] = useState('');
+  const [dormitorySelect, setDormitorySelect] = useState('');
+  const [dormitoryCustom, setDormitoryCustom] = useState('');
+  const [visaSelect, setVisaSelect] = useState('');
+  const [visaCustom, setVisaCustom] = useState('');
+  const [mealSelect, setMealSelect] = useState('');
+  const [mealCustom, setMealCustom] = useState('');
+  const [otherSelect, setOtherSelect] = useState('');
+  const [otherCustom, setOtherCustom] = useState('');
 
   // Hàm helper parse content
   const parseJobContent = (rawContent) => {
@@ -39,7 +47,11 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
           nenkin: data.nenkin || '',
           insurance: data.insurance || '',
           raise: data.raise || '',
-          transport: data.transport || ''
+          transport: data.transport || '',
+          dormitory: data.dormitory || '',
+          visa: data.visa || '',
+          meal: data.meal || '',
+          other: data.other || ''
         };
       }
     } catch (e) {}
@@ -49,7 +61,11 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
       nenkin: '',
       insurance: '',
       raise: '',
-      transport: ''
+      transport: '',
+      dormitory: '',
+      visa: '',
+      meal: '',
+      other: ''
     };
   };
 
@@ -132,6 +148,58 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
         setTransportSelect('custom');
         setTransportCustom(parsed.transport);
       }
+
+      // Load Dormitory
+      const dormOpts = ['full', 'partial', 'rent_support', 'none'];
+      if (!parsed.dormitory) {
+        setDormitorySelect('');
+        setDormitoryCustom('');
+      } else if (dormOpts.includes(parsed.dormitory)) {
+        setDormitorySelect(parsed.dormitory);
+        setDormitoryCustom('');
+      } else {
+        setDormitorySelect('custom');
+        setDormitoryCustom(parsed.dormitory);
+      }
+
+      // Load Visa
+      const visaOptsVal = ['full', 'support', 'none'];
+      if (!parsed.visa) {
+        setVisaSelect('');
+        setVisaCustom('');
+      } else if (visaOptsVal.includes(parsed.visa)) {
+        setVisaSelect(parsed.visa);
+        setVisaCustom('');
+      } else {
+        setVisaSelect('custom');
+        setVisaCustom(parsed.visa);
+      }
+
+      // Load Meal
+      const mealOptsVal = ['free', 'allowance', 'none'];
+      if (!parsed.meal) {
+        setMealSelect('');
+        setMealCustom('');
+      } else if (mealOptsVal.includes(parsed.meal)) {
+        setMealSelect(parsed.meal);
+        setMealCustom('');
+      } else {
+        setMealSelect('custom');
+        setMealCustom(parsed.meal);
+      }
+
+      // Load Other
+      const otherOptsVal = ['cert', 'health', 'none'];
+      if (!parsed.other) {
+        setOtherSelect('');
+        setOtherCustom('');
+      } else if (otherOptsVal.includes(parsed.other)) {
+        setOtherSelect(parsed.other);
+        setOtherCustom('');
+      } else {
+        setOtherSelect('custom');
+        setOtherCustom(parsed.other);
+      }
     }
   }, [isOpen, job]);
 
@@ -160,6 +228,10 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
       const insurance = insuranceSelect === 'custom' ? insuranceCustom : insuranceSelect;
       const raise = raiseSelect === 'custom' ? raiseCustom : raiseSelect;
       const transport = transportSelect === 'custom' ? transportCustom : transportSelect;
+      const dormitory = dormitorySelect === 'custom' ? dormitoryCustom : dormitorySelect;
+      const visa = visaSelect === 'custom' ? visaCustom : visaSelect;
+      const meal = mealSelect === 'custom' ? mealCustom : mealSelect;
+      const other = otherSelect === 'custom' ? otherCustom : otherSelect;
 
       const packedContent = JSON.stringify({
         description,
@@ -167,7 +239,11 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
         nenkin: '',
         insurance,
         raise,
-        transport
+        transport,
+        dormitory,
+        visa,
+        meal,
+        other
       });
 
       let finalSalary = salaryAmount.trim();
@@ -354,6 +430,95 @@ export default function JobFormModal({ isOpen, onClose, job, onSave }) {
                   placeholder={t('jobs.jobFields.transport') || 'Nhập thông tin trợ cấp...'} 
                   value={transportCustom} 
                   onChange={e => setTransportCustom(e.target.value)} 
+                />
+              )}
+            </div>
+
+            {/* Ký túc xá công ty */}
+            <div className="form-group">
+              <label className="form-label">{t('jobs.jobFields.dormitory') || 'Ký túc xá công ty'}</label>
+              <select className="form-select" value={dormitorySelect} onChange={e => setDormitorySelect(e.target.value)}>
+                <option value="">{t('common.select') || 'Chọn...'}</option>
+                <option value="full">{t('jobs.jobFields.dormitoryOptions.full') || 'Miễn phí nhà ở & chi phí đầu vào'}</option>
+                <option value="partial">{t('jobs.jobFields.dormitoryOptions.partial') || 'Cung cấp KTX (Hỗ trợ tiền nhà & đồ đạc)'}</option>
+                <option value="rent_support">{t('jobs.jobFields.dormitoryOptions.rent_support') || 'Hỗ trợ một phần tiền nhà'}</option>
+                <option value="none">{t('jobs.jobFields.dormitoryOptions.none') || 'Không hỗ trợ KTX'}</option>
+                <option value="custom">{t('common.other') || 'Khác / Nhập tay...'}</option>
+              </select>
+              {dormitorySelect === 'custom' && (
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  style={{ marginTop: '8px' }} 
+                  placeholder={t('jobs.jobFields.dormitory') || 'Nhập thông tin ký túc xá...'} 
+                  value={dormitoryCustom} 
+                  onChange={e => setDormitoryCustom(e.target.value)} 
+                />
+              )}
+            </div>
+
+            {/* Xin visa */}
+            <div className="form-group">
+              <label className="form-label">{t('jobs.jobFields.visa') || 'Xin visa'}</label>
+              <select className="form-select" value={visaSelect} onChange={e => setVisaSelect(e.target.value)}>
+                <option value="">{t('common.select') || 'Chọn...'}</option>
+                <option value="full">{t('jobs.jobFields.visaOptions.full') || 'Hỗ trợ đầy đủ thủ tục & chi phí'}</option>
+                <option value="support">{t('jobs.jobFields.visaOptions.support') || 'Hỗ trợ làm thủ tục chuyển đổi/gia hạn'}</option>
+                <option value="none">{t('jobs.jobFields.visaOptions.none') || 'Không hỗ trợ'}</option>
+                <option value="custom">{t('common.other') || 'Khác / Nhập tay...'}</option>
+              </select>
+              {visaSelect === 'custom' && (
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  style={{ marginTop: '8px' }} 
+                  placeholder={t('jobs.jobFields.visa') || 'Nhập thông tin visa...'} 
+                  value={visaCustom} 
+                  onChange={e => setVisaCustom(e.target.value)} 
+                />
+              )}
+            </div>
+
+            {/* Hỗ trợ tiền ăn */}
+            <div className="form-group">
+              <label className="form-label">{t('jobs.jobFields.meal') || 'Hỗ trợ tiền ăn'}</label>
+              <select className="form-select" value={mealSelect} onChange={e => setMealSelect(e.target.value)}>
+                <option value="">{t('common.select') || 'Chọn...'}</option>
+                <option value="free">{t('jobs.jobFields.mealOptions.free') || 'Cung cấp bữa ăn miễn phí'}</option>
+                <option value="allowance">{t('jobs.jobFields.mealOptions.allowance') || 'Phụ cấp ăn uống hàng tháng'}</option>
+                <option value="none">{t('jobs.jobFields.mealOptions.none') || 'Không hỗ trợ'}</option>
+                <option value="custom">{t('common.other') || 'Khác / Nhập tay...'}</option>
+              </select>
+              {mealSelect === 'custom' && (
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  style={{ marginTop: '8px' }} 
+                  placeholder={t('jobs.jobFields.meal') || 'Nhập thông tin tiền ăn...'} 
+                  value={mealCustom} 
+                  onChange={e => setMealCustom(e.target.value)} 
+                />
+              )}
+            </div>
+
+            {/* Hỗ trợ khác */}
+            <div className="form-group">
+              <label className="form-label">{t('jobs.jobFields.other') || 'Hỗ trợ khác'}</label>
+              <select className="form-select" value={otherSelect} onChange={e => setOtherSelect(e.target.value)}>
+                <option value="">{t('common.select') || 'Chọn...'}</option>
+                <option value="cert">{t('jobs.jobFields.otherOptions.cert') || 'Hỗ trợ phí thi chứng chỉ chuyên môn'}</option>
+                <option value="health">{t('jobs.jobFields.otherOptions.health') || 'Khám sức khỏe định kỳ miễn phí'}</option>
+                <option value="none">{t('jobs.jobFields.otherOptions.none') || 'Không hỗ trợ'}</option>
+                <option value="custom">{t('common.other') || 'Khác / Nhập tay...'}</option>
+              </select>
+              {otherSelect === 'custom' && (
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  style={{ marginTop: '8px' }} 
+                  placeholder={t('jobs.jobFields.other') || 'Nhập thông tin hỗ trợ khác...'} 
+                  value={otherCustom} 
+                  onChange={e => setOtherCustom(e.target.value)} 
                 />
               )}
             </div>

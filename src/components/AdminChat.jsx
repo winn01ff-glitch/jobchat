@@ -111,6 +111,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [areActionsCollapsed, setAreActionsCollapsed] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const messagesEndRef = useRef(null);
   const listRef = useRef(null);
@@ -144,6 +145,14 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   }, []);
 
   useEffect(() => {
+    const handleClickOutside = () => setShowMoreMenu(false);
+    if (showMoreMenu) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showMoreMenu]);
+
+  useEffect(() => {
     if (showMediaSidebar) {
       if (typeof window !== 'undefined' && window.innerWidth <= 1024 && !isSidebarCollapsed) {
         autoCollapsedRef.current = true;
@@ -155,6 +164,27 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       }
       autoCollapsedRef.current = false;
     }
+  }, [showMediaSidebar]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      const sidebar = document.querySelector('.chat-media-sidebar');
+      if (
+        sidebar && 
+        !sidebar.contains(e.target) && 
+        !e.target.closest('.header-dropdown-item') && 
+        !e.target.closest('.confirm-modal-overlay') && 
+        !e.target.closest('.lightbox-overlay')
+      ) {
+        setShowMediaSidebar(false);
+      }
+    };
+    if (showMediaSidebar) {
+      setTimeout(() => {
+        document.addEventListener('click', handleClickOutside);
+      }, 0);
+    }
+    return () => document.removeEventListener('click', handleClickOutside);
   }, [showMediaSidebar]);
 
   useEffect(() => {
@@ -340,6 +370,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   };
 
   const handleSend = async (customContent = null) => {
+    EmojiPicker.hide();
     const contentVal = typeof customContent === 'string' ? customContent : null;
     const text = (textareaRef.current?.value || inputText).trim();
     if (!text && !contentVal) return;
@@ -472,12 +503,38 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      const isMobileOrTablet = window.matchMedia('(max-width: 1024px)').matches;
+      const isMobileOrTablet = typeof window !== 'undefined' && (
+        /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0 && /Macintosh|MacIntel/.test(navigator.userAgent))
+      );
       if (!isMobileOrTablet && !e.shiftKey) {
         e.preventDefault();
         handleSend();
       }
     }
+  };
+
+  const handleCallClick = () => {
+    if (!applicant || !applicant.phone) {
+      showConfirmModal(
+        t('chat.noPhoneTitle') || 'Không tìm thấy số điện thoại',
+        t('chat.noPhoneMessage') || 'Ứng viên này chưa cung cấp hoặc cập nhật số điện thoại trên hệ thống!',
+        null,
+        t('common.close') || 'Đóng',
+        { t }
+      );
+      return;
+    }
+
+    showConfirmModal(
+      t('chat.confirmCallTitle') || 'Xác nhận cuộc gọi',
+      `${t('chat.confirmCallMessage') || 'Bạn có chắc chắn muốn thực hiện cuộc gọi tới số'} ${applicant.phone}?`,
+      () => {
+        window.open(`tel:${applicant.phone}`, '_self');
+      },
+      t('chat.call') || 'Gọi',
+      { t }
+    );
   };
 
   const handleDeleteConversation = () => {
@@ -603,16 +660,29 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               </div>
             </div>
           </div>
-          <div style={{display:'flex', gap:'6px'}}>
-            <button className="btn-icon" onClick={() => setShowMediaSidebar(!showMediaSidebar)} title={t('admin.mediaGallery') || 'Kho ảnh/tập tin'} style={{color: showMediaSidebar ? 'var(--messenger-blue)' : 'var(--text-muted)'}}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>
+          <div style={{display:'flex', gap:'6px', position: 'relative'}}>
+            <button className="btn-icon" onClick={handleCallClick} title={t('chat.call') || 'Gọi cho ứng viên'} style={{color:'var(--messenger-blue)'}}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
             </button>
-            <button className="btn-icon" onClick={() => setIsEditingProfile(true)} title={t('admin.editJob') || 'Sửa'} style={{color:'var(--messenger-blue)'}}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <button className="btn-icon" onClick={(e) => { e.stopPropagation(); setShowMoreMenu(!showMoreMenu); }} title="Thêm tùy chọn" style={{color: showMoreMenu ? 'var(--messenger-blue)' : 'var(--text-muted)'}}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
             </button>
-            <button className="btn-icon" onClick={handleDeleteConversation} title={t('common.delete')} style={{color:'var(--error)'}}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-            </button>
+            {showMoreMenu && (
+              <div className="header-more-menu" onClick={(e) => e.stopPropagation()}>
+                <button className="header-dropdown-item" onClick={() => { setShowMediaSidebar(!showMediaSidebar); setShowMoreMenu(false); }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>
+                  <span>{t('admin.mediaGallery') || 'Tệp đã chia sẻ'}</span>
+                </button>
+                <button className="header-dropdown-item" onClick={() => { setIsEditingProfile(true); setShowMoreMenu(false); }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <span>{t('admin.editJob') || 'Sửa hồ sơ'}</span>
+                </button>
+                <button className="header-dropdown-item danger" onClick={() => { handleDeleteConversation(); setShowMoreMenu(false); }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                  <span>{t('common.delete') || 'Xóa cuộc trò chuyện'}</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -866,8 +936,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 </div>
               )}
             </div>
-            <button className="btn-send" onClick={() => handleSend()}>
-              <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            <button className="btn-send" onClick={() => handleSend(inputText.trim() ? null : '👍')}>
+              {inputText.trim() ? (
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M21.72 11.27l-18-9c-.53-.26-1.16-.16-1.58.26-.42.42-.52 1.05-.26 1.58l3.62 7.24a1 1 0 0 0 .89.55h8.11c.55 0 1 .45 1 1s-.45 1-1 1H6.39a1 1 0 0 0-.89.55l-3.62 7.24c-.26.53-.16 1.16.26 1.58.29.29.69.45 1.09.45.17 0 .34-.03.5-.1l18-9c.67-.34.94-1.15.6-1.82-.14-.28-.38-.52-.66-.66z"/></svg>
+              ) : (
+                <span style={{ fontSize: '22px', lineHeight: '1', display: 'block', userSelect: 'none' }}>👍</span>
+              )}
             </button>
           </div>
         </div>
@@ -936,8 +1010,11 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
         <div className="confirm-modal-overlay" onClick={() => setIsEditingProfile(false)} style={{ zIndex: 1000 }}>
           <div className="job-form-card" style={{ maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
             <div className="job-form-header">
-              <h3>📝 {t('admin.editJob') || 'Sửa thông tin ứng viên'}</h3>
-              <button className="job-form-close" onClick={() => setIsEditingProfile(false)} style={{ background:'none', border:'none', fontSize:'20px', cursor:'pointer', color:'var(--text-muted)', padding:'4px 8px', lineHeight:1 }}>✕</button>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--messenger-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
+                {t('admin.editJob') || 'Sửa'}
+              </h3>
+              <button className="job-form-close-flat" onClick={() => setIsEditingProfile(false)}>✕</button>
             </div>
             <div className="job-form-body">
               <div className="form-group">
@@ -962,19 +1039,14 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               <div className="form-group" style={{ marginTop: '12px' }}>
                 <label className="form-label">{t('register.position')}</label>
                 <select 
-                  className="form-input" 
+                  className="form-select" 
                   value={editPosition}
                   onChange={e => setEditPosition(e.target.value)}
-                  style={{ appearance: 'none', background: 'var(--bg-input)' }}
                 >
                   <option value="">-- {t('register.positionPlaceholder') || 'Chọn vị trí'} --</option>
                   <option value="factory">{t('register.positions.factory')}</option>
-                  <option value="restaurant">{t('register.positions.restaurant')}</option>
-                  <option value="construction">{t('register.positions.construction')}</option>
                   <option value="office">{t('register.positions.office')}</option>
                   <option value="nursing">{t('register.positions.nursing')}</option>
-                  <option value="it">{t('register.positions.it')}</option>
-                  <option value="other">{t('register.positions.other')}</option>
                 </select>
               </div>
             </div>

@@ -494,6 +494,25 @@
     color: #ff3b30;
 }
 
+.job-form-close-flat {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px 8px;
+    line-height: 1;
+    transition: color 0.2s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.job-form-close-flat:hover {
+    color: #ff3b30;
+    transform: scale(1.15);
+}
+
 .job-form-body {
     flex: 1;
     overflow-y: auto;
@@ -936,6 +955,7 @@
     gap: 8px;
     box-shadow: 0 4px 12px rgba(0, 132, 255, 0.25);
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .btn-apply:hover {

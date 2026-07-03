@@ -11,12 +11,20 @@ const translations = { vi, en, ja, my, pt };
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [lang, setLang] = useState('vi');
+  const [lang, setLang] = useState('ja');
 
   useEffect(() => {
     const savedLang = localStorage.getItem('jobchat_lang');
     if (savedLang && translations[savedLang]) {
       setLang(savedLang);
+    } else {
+      const browserLang = typeof navigator !== 'undefined' ? (navigator.language || navigator.userLanguage) : null;
+      if (browserLang) {
+        const shortLang = browserLang.split('-')[0].toLowerCase();
+        if (translations[shortLang]) {
+          setLang(shortLang);
+        }
+      }
     }
   }, []);
 

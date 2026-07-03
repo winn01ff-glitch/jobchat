@@ -347,6 +347,20 @@ export const DB = {
         if (error) throw error;
     },
 
+    clearChatHistoryLocally: async function (conversationId, userType) {
+        const updateData = {};
+        if (userType === 'admin') {
+            updateData.deleted_by_admin = true;
+        } else {
+            updateData.deleted_by_applicant = true;
+        }
+        const { error } = await supabaseClient
+            .from('messages')
+            .update(updateData)
+            .eq('conversation_id', conversationId);
+        if (error) throw error;
+    },
+
     getMessages: async function (conversationId, offset = 0, limit = 20) {
         const { data, error } = await supabaseClient
             .from('messages')
@@ -450,7 +464,17 @@ export const DB = {
     },
 
     getAdminSession: async function () {
-        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        let session = null;
+        try {
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (error) {
+                console.warn('[Admin Auth] getSession error:', error.message);
+            } else if (data) {
+                session = data.session;
+            }
+        } catch (e) {
+            console.error('[Admin Auth] getSession exception:', e);
+        }
         if (!session) {
             localStorage.removeItem('jobchat_admin');
             return null;

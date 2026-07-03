@@ -68,7 +68,7 @@
     --font-family: "Twemoji Country Flags", -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
     --font-xs: 11px;
     --font-sm: 13px;
-    --font-md: 15px;
+    --font-md: 16px;
     --font-lg: 17px;
     --font-xl: 20px;
     --font-2xl: 24px;
@@ -135,15 +135,15 @@ body {
 .logo {
     font-size: var(--font-xl);
     font-weight: 700;
-    color: var(--text-primary);
     letter-spacing: -0.3px;
-}
-
-.logo-accent {
     background: var(--messenger-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+.logo-accent {
+    color: inherit;
 }
 
 /* Language Dropdown */
@@ -152,12 +152,16 @@ body {
 }
 
 .lang-select {
-    padding: 5px 22px 5px 10px;
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-full);
-    background: var(--bg-primary);
+    height: 28px;
+    width: 85px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 16px 0 8px;
+    border: none;
+    background: transparent;
     color: var(--text-primary);
-    font-size: var(--font-xs);
+    font-size: var(--font-sm);
     font-weight: 600;
     font-family: var(--font-family);
     cursor: pointer;
@@ -165,17 +169,16 @@ body {
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2365676b' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 8px center;
+    background-position: right 4px center;
     transition: var(--transition-fast);
 }
 
 .lang-select:hover {
-    border-color: var(--messenger-blue);
+    color: var(--messenger-blue);
 }
 
 .lang-select:focus {
-    border-color: var(--messenger-blue);
-    box-shadow: 0 0 0 2px rgba(0,132,255,0.15);
+    color: var(--messenger-blue);
 }
 
 /* Admin Header Controls */
@@ -183,9 +186,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-left: 8px;
-    padding-left: 12px;
-    border-left: 1px solid var(--border-light);
+    margin-left: 0;
 }
 .admin-header-name {
     font-size: var(--font-sm);
@@ -246,7 +247,12 @@ body {
 
 /* Admin Login Button in Header */
 .btn-admin-login {
-    padding: 5px 14px;
+    height: 28px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
     background: transparent;
     border: 1px solid var(--border-light);
     border-radius: var(--radius-full);
@@ -405,9 +411,10 @@ body {
     font-size: var(--font-md);
     outline: none; cursor: pointer;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2365676b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2365676b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
+    background-size: 14px;
     padding-right: 32px;
 }
 
@@ -493,7 +500,7 @@ body {
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
     .hidden-mobile { display: none !important; }
-    .lang-select { font-size: 12px; padding: 4px 24px 4px 8px; }
+    .lang-select { height: 28px; padding: 0 20px 0 8px; font-size: 12px; }
     .logo { font-size: var(--font-lg); }
 }
 
@@ -543,4 +550,104 @@ body {
         font-size: 16px !important;
     }
 }
+
+/* Auto-Translate Button */
+.btn-translate {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Untranslated state (Brand Blue) */
+    background: rgba(0, 132, 255, 0.08);
+    border: 1px solid rgba(0, 132, 255, 0.25);
+    color: var(--messenger-blue);
+}
+
+.btn-translate:hover {
+    background: rgba(0, 132, 255, 0.14);
+    border-color: rgba(0, 132, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-translate:active {
+    transform: translateY(0);
+}
+
+/* Translated state (Success Green) */
+.btn-translate.active {
+    background: rgba(46, 204, 113, 0.12);
+    border-color: rgba(46, 204, 113, 0.35);
+    color: #27ae60;
+}
+
+.btn-translate.active:hover {
+    background: rgba(46, 204, 113, 0.2);
+    border-color: rgba(46, 204, 113, 0.5);
+}
+
+/* Floating Copy Pill Buttons */
+.btn-copy-pill {
+    width: 150px;
+    height: 38px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 20px;
+    border: none;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+/* Copy Link brand gradient */
+.btn-copy-pill.link {
+    background: var(--messenger-gradient);
+    box-shadow: 0 4px 10px rgba(0, 132, 255, 0.2);
+}
+
+.btn-copy-pill.link:hover {
+    box-shadow: 0 6px 14px rgba(0, 132, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Copy Content purple gradient */
+.btn-copy-pill.content {
+    background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+    box-shadow: 0 4px 10px rgba(108, 92, 231, 0.2);
+}
+
+.btn-copy-pill.content:hover {
+    box-shadow: 0 6px 14px rgba(108, 92, 231, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Copied green success state */
+.btn-copy-pill.copied {
+    background: #2ecc71 !important;
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.25) !important;
+}
+
+.btn-copy-pill.copied:hover {
+    box-shadow: 0 6px 14px rgba(46, 204, 113, 0.35) !important;
+    transform: translateY(-1px);
+}
+
+.btn-copy-pill:active {
+    transform: translateY(0);
+}
+
+
 

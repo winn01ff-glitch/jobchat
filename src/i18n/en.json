@@ -112,7 +112,23 @@
         "uploading": "Uploading...",
         "uploadSuccess": "Uploaded successfully!",
         "uploadFailed": "Upload failed, please try again.",
-        "download": "Download"
+        "download": "Download",
+        "clearHistory": "Clear chat history",
+        "confirmCallTitle": "Confirm Call",
+        "confirmCallManagerMessage": "Are you sure you want to make a call to number 07015528761?",
+        "confirmCallMessage": "Are you sure you want to make a call to",
+        "call": "Call",
+        "callManager": "Call Manager",
+        "clearHistoryTitle": "Clear Chat History",
+        "confirmClearHistory": "Are you sure you want to clear all local chat history? This action cannot be undone.",
+        "historyCleared": "Chat history cleared",
+        "noPhoneTitle": "Phone number not found",
+        "noPhoneMessage": "This applicant has not provided or updated their phone number in the system!",
+        "activeStatus": "Active",
+        "translate": "Translate message",
+        "translating": "Translating...",
+        "showOriginal": "Show original",
+        "showTranslation": "Show translation"
     },
     "admin": {
         "loginTitle": "Admin Login",
@@ -128,6 +144,7 @@
         "filterUnread": "Unread",
         "selectConversation": "Select a conversation",
         "newApplicant": "New Applicant",
+        "appliedFrom": "Applied from",
         "noConversations": "No conversations yet",
         "conversationStarted": "Started:",
         "settings": "Settings",
@@ -246,6 +263,31 @@
                 "full": "Fully covered",
                 "limited": "Limited coverage",
                 "none": "Not supported"
+            },
+            "dormitory": "Company Dormitory",
+            "dormitoryOptions": {
+                "full": "Free housing & initial fees",
+                "partial": "Dormitory provided (Rent & furniture supported)",
+                "rent_support": "Partial rent support",
+                "none": "No dormitory support"
+            },
+            "visa": "Visa Support",
+            "visaOptions": {
+                "full": "Full support for procedures & fees",
+                "support": "Support for conversion/renewal procedures",
+                "none": "No support"
+            },
+            "meal": "Meal Allowance",
+            "mealOptions": {
+                "free": "Free meals provided",
+                "allowance": "Monthly meal allowance",
+                "none": "No support"
+            },
+            "other": "Other Benefits",
+            "otherOptions": {
+                "cert": "Professional certification fee support",
+                "health": "Free regular health checkups",
+                "none": "No support"
             }
         },
         "salaryType": "Salary Type",
@@ -255,8 +297,13 @@
             "monthly": " / month",
             "hourly": " / hour"
         },
-        "copyLink": "Copy post link",
+        "copyLink": "Copy link",
         "linkCopied": "Post link copied!",
-        "copied": "Copied!"
+        "copied": "Copied!",
+        "translateTo": "Translate to English",
+        "viewOriginal": "View original",
+        "translating": "Translating...",
+        "copyContent": "Copy content",
+        "contentCopiedToast": "Copied job description!"
     }
 }

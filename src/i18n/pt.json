@@ -112,7 +112,23 @@
         "uploading": "Enviando...",
         "uploadSuccess": "Enviado com sucesso!",
         "uploadFailed": "Falha no envio, tente novamente.",
-        "download": "Baixar"
+        "download": "Baixar",
+        "clearHistory": "Limpar histórico do chat",
+        "confirmCallTitle": "Confirmar Chamada",
+        "confirmCallManagerMessage": "Tem certeza de que deseja fazer uma chamada para o número 07015528761?",
+        "confirmCallMessage": "Tem certeza de que deseja ligar para",
+        "call": "Ligar",
+        "callManager": "Ligar para o Gerente",
+        "clearHistoryTitle": "Limpar Histórico",
+        "confirmClearHistory": "Tem certeza de que deseja limpar todo o histórico local do chat? Esta ação não pode ser desfeita.",
+        "historyCleared": "Histórico do chat limpo",
+        "noPhoneTitle": "Número de telefone não encontrado",
+        "noPhoneMessage": "Este candidato não forneceu ou atualizou seu número de telefone no sistema!",
+        "activeStatus": "Ativo",
+        "translate": "Traduzir mensagem",
+        "translating": "Traduzindo...",
+        "showOriginal": "Mostrar original",
+        "showTranslation": "Mostrar tradução"
     },
     "admin": {
         "loginTitle": "Login do Administrador",
@@ -128,6 +144,7 @@
         "filterUnread": "Não lidas",
         "selectConversation": "Selecione uma conversa",
         "newApplicant": "Novo candidato",
+        "appliedFrom": "Candidatou-se de",
         "noConversations": "Sem conversas ainda",
         "conversationStarted": "Início:",
         "settings": "Configurações",
@@ -246,6 +263,31 @@
                 "full": "Cobertura total",
                 "limited": "Cobertura limitada",
                 "none": "Não suportado"
+            },
+            "dormitory": "Alojamento da Empresa",
+            "dormitoryOptions": {
+                "full": "Moradia e taxas iniciais grátis",
+                "partial": "Alojamento fornecido (Auxílio aluguel e mobília)",
+                "rent_support": "Auxílio aluguel parcial",
+                "none": "Sem suporte de alojamento"
+            },
+            "visa": "Suporte de Visto",
+            "visaOptions": {
+                "full": "Suporte completo para procedimentos e taxas",
+                "support": "Suporte nos procedimentos de renovação/conversão",
+                "none": "Sem suporte"
+            },
+            "meal": "Auxílio Alimentação",
+            "mealOptions": {
+                "free": "Refeições gratuitas fornecidas",
+                "allowance": "Subsídio de refeição mensal",
+                "none": "Sem suporte"
+            },
+            "other": "Outros Benefícios",
+            "otherOptions": {
+                "cert": "Auxílio para exames de certificação profissional",
+                "health": "Exames médicos periódicos gratuitos",
+                "none": "Sem suporte"
             }
         },
         "salaryType": "Tipo de Salário",
@@ -255,8 +297,13 @@
             "monthly": " / mês",
             "hourly": " / hora"
         },
-        "copyLink": "Copiar link do post",
+        "copyLink": "Copiar link",
         "linkCopied": "Link do post copiado!",
-        "copied": "Copiado!"
+        "copied": "Copiado!",
+        "translateTo": "Traduzir para Português",
+        "viewOriginal": "Ver original",
+        "translating": "Traduzindo...",
+        "copyContent": "Copiar texto",
+        "contentCopiedToast": "Descrição do trabalho copiada!"
     }
 }

@@ -86,7 +86,7 @@
 .message-row {
     display: flex;
     flex-direction: column;
-    max-width: 65%;
+    max-width: 80%;
     animation: messengerFadeIn 0.15s ease;
 }
 
@@ -128,11 +128,12 @@
     word-break: break-word;
     overflow-wrap: anywhere;
     max-width: 100%;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+    cursor: default;
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    white-space: pre-wrap;
 }
 
 .message-row.received .message-bubble {
@@ -349,7 +350,7 @@
 
 .btn-send:hover { background: rgba(0,132,255,0.08); }
 .btn-send:disabled { opacity: 0.3; cursor: default; }
-.btn-send svg { width: 20px; height: 20px; fill: var(--messenger-blue); }
+.btn-send svg { width: 22px; height: 22px; }
 
 .file-preview-bar {
     display: flex;
@@ -537,24 +538,33 @@
     border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-modal);
-    padding: 8px;
+    padding: 10px;
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 4px;
+    grid-template-columns: repeat(6, 40px);
+    gap: 6px;
     z-index: 1000;
-    max-width: 250px;
+    width: max-content;
+    box-sizing: border-box;
     animation: slideUp 0.15s ease;
 }
 .emoji-picker.hidden { display: none; }
 .emoji-item {
     font-size: 24px;
     cursor: pointer;
-    text-align: center;
-    padding: 4px;
-    border-radius: 4px;
-    transition: background 0.2s;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none;
 }
 .emoji-item:hover { background: var(--bg-secondary); }
+.emoji-item:active { transform: scale(0.9); }
 .emoji-toggle-btn {
     border: none;
     background: none;
@@ -928,7 +938,7 @@
     visibility: hidden;
 }
 .chat-media-sidebar.active {
-    width: 280px;
+    width: 340px;
     border-left: 1px solid var(--border-light);
     visibility: visible;
 }
@@ -1047,7 +1057,7 @@
     50% { transform: translateY(-6px); }
 }
 @keyframes slideRight {
-    from { transform: translateX(280px); opacity: 0; }
+    from { transform: translateX(340px); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
 
@@ -1056,7 +1066,7 @@
         position: absolute;
         top: 0;
         right: 0;
-        width: 300px !important;
+        width: 340px !important;
         height: 100%;
         z-index: 1100;
         border-left: none;
@@ -1073,7 +1083,7 @@
 
 @media (max-width: 768px) {
     .chat-media-sidebar {
-        width: 100%;
+        width: 100% !important;
     }
     .chat-input-bar {
         padding-bottom: calc(8px + env(safe-area-inset-bottom));
@@ -1124,6 +1134,66 @@
     .canned-popup {
         left: 0;
         right: auto;
+    }
+}
+
+/* ============ Header Dropdown Options Menu ============ */
+.header-more-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    padding: 6px;
+    min-width: 190px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    animation: ctxFadeIn 0.12s ease;
+}
+
+.header-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.15s ease;
+    text-align: left;
+    outline: none;
+    white-space: nowrap;
+}
+
+.header-dropdown-item:hover {
+    background: var(--bg-hover);
+}
+
+.header-dropdown-item.danger {
+    color: var(--error);
+}
+
+.header-dropdown-item.danger:hover {
+    background: rgba(255, 59, 48, 0.08);
+}
+
+@media (pointer: coarse) {
+    .message-bubble {
+        user-select: none !important;
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        -webkit-touch-callout: none !important; /* Prevents default iOS long-press callout */
     }
 }
 

@@ -3,12 +3,49 @@ import { formatTime, getInitials, showConfirmModal, downloadFile } from '../lib/
 import { useLanguage } from '../context/LanguageContext';
 
 export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, adminInfo = null, showAvatar = true, activeMessageId = null, setActiveMessageId = null }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [localShowTime, setLocalShowTime] = React.useState(false);
   const showTime = setActiveMessageId ? (activeMessageId === msg.id) : localShowTime;
   const [contextMenu, setContextMenu] = React.useState(null);
   const [lightboxOpen, setLightboxOpen] = React.useState(false);
   const touchTimer = React.useRef(null);
+
+  const [translatedText, setTranslatedText] = React.useState(null);
+  const [isTranslating, setIsTranslating] = React.useState(false);
+  const [showTranslation, setShowTranslation] = React.useState(false);
+
+  const isMedia = React.useMemo(() => {
+    try {
+      const parsed = JSON.parse(msg.content);
+      return parsed && (parsed.type === 'image' || parsed.type === 'file' || parsed.type === 'location');
+    } catch (e) {
+      return false;
+    }
+  }, [msg.content]);
+
+  const handleTranslate = async () => {
+    setContextMenu(null);
+    if (translatedText) {
+      setShowTranslation(!showTranslation);
+      return;
+    }
+    setIsTranslating(true);
+    try {
+      const targetLang = lang || 'vi';
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(msg.content)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data && data[0]) {
+        const translated = data[0].map(item => item[0]).join('');
+        setTranslatedText(translated);
+        setShowTranslation(true);
+      }
+    } catch (err) {
+      console.error('Translation failed', err);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   // Dynamic override for admin messages
   const isAdminMessage = isSent ? msg.sender_type === 'admin' : msg.sender_type === 'admin';
@@ -65,9 +102,12 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
     const touch = e.touches[0];
     touchTimer.current = setTimeout(() => {
       const coords = { x: touch.clientX, y: touch.clientY };
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try { navigator.vibrate(50); } catch (err) {}
+      }
       setContextMenu(coords);
       window.dispatchEvent(new CustomEvent('close-all-context-menus', { detail: { msgId: msg.id } }));
-    }, 600);
+    }, 500);
   };
 
   const handleTouchEnd = () => {
@@ -183,11 +223,9 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
 
   const renderContent = () => {
     let mainContent = null;
-    let isMedia = false;
     try {
       const parsed = JSON.parse(msg.content);
       if (parsed.type === 'image') {
-        isMedia = true;
         const imageUrl = parsed.url || parsed.data;
         mainContent = (
           <>
@@ -245,7 +283,6 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
           </>
         );
       } else if (parsed.type === 'file') {
-        isMedia = true;
         const fileUrl = parsed.url || parsed.data;
         const sizeStr = parsed.size < 1024 * 1024 
           ? (parsed.size / 1024).toFixed(1) + ' KB' 
@@ -267,7 +304,6 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
           </a>
         );
       } else if (parsed.type === 'location') {
-        isMedia = true;
         const mapUrl = `https://www.google.com/maps?q=${parsed.lat},${parsed.lng}`;
         mainContent = (
           <a href={mapUrl} target="_blank" rel="noreferrer" className="message-location" style={{textDecoration:'none', color:'inherit'}}>
@@ -297,7 +333,29 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
             </div>
           ) : (
             <div className="message-bubble" style={{ marginTop: '-10px', position: 'relative', zIndex: 2 }}>
-              {mainContent}
+              {showTranslation && translatedText ? translatedText : mainContent}
+            </div>
+          )}
+          {translatedText && (
+            <div 
+              className="message-translation-info" 
+              style={{
+                fontSize: '12px',
+                marginTop: '5px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: 'var(--messenger-blue)',
+                cursor: 'pointer',
+                userSelect: 'none',
+                alignSelf: isSent ? 'flex-end' : 'flex-start',
+                padding: '3px 6px',
+                fontWeight: '500'
+              }} 
+              onClick={(e) => { e.stopPropagation(); setShowTranslation(!showTranslation); }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+              <span>{showTranslation ? (t('chat.showOriginal') || 'Xem bản gốc') : (t('chat.showTranslation') || 'Xem bản dịch')}</span>
             </div>
           )}
         </div>
@@ -305,7 +363,35 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
     }
 
     if (isMedia) return mainContent;
-    return <div className="message-bubble">{mainContent}</div>;
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: isSent ? 'flex-end' : 'flex-start', maxWidth: '100%' }}>
+        <div className="message-bubble">
+          {showTranslation && translatedText ? translatedText : mainContent}
+        </div>
+        {translatedText && (
+          <div 
+            className="message-translation-info" 
+            style={{
+              fontSize: '12px',
+              marginTop: '5px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: 'var(--messenger-blue)',
+              cursor: 'pointer',
+              userSelect: 'none',
+              alignSelf: isSent ? 'flex-end' : 'flex-start',
+              padding: '3px 6px',
+              fontWeight: '500'
+            }} 
+            onClick={(e) => { e.stopPropagation(); setShowTranslation(!showTranslation); }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink: 0}}><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+            <span>{showTranslation ? (t('chat.showOriginal') || 'Xem bản gốc') : (t('chat.showTranslation') || 'Xem bản dịch')}</span>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const handleClick = (e) => {
@@ -326,6 +412,7 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchMove={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
       style={{ marginTop: (!isSent && showSender) ? '12px' : undefined }}
     >
       <div className="message-row-core" style={{ display: 'flex', gap: '6px', flexDirection: isSent ? 'row-reverse' : 'row', alignItems: 'flex-end', width: '100%' }}>
@@ -355,7 +442,7 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
                   onClick={(e) => { e.stopPropagation(); handleDelete(); }}
                   title={t('chat.deleteMsg') || 'Xóa'}
                 >
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
               )}
               {onReply && (
@@ -364,7 +451,7 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
                   onClick={(e) => { e.stopPropagation(); onReply(msg); }}
                   title={t('chat.reply') || 'Trả lời'}
                 >
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v2.5"/></svg>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v2.5"/></svg>
                 </button>
               )}
             </div>
@@ -398,7 +485,7 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
         <div 
           className="context-menu" 
           style={{
-            top: Math.min(contextMenu.y, window.innerHeight - 150), 
+            top: Math.min(contextMenu.y, window.innerHeight - 180), 
             left: Math.min(contextMenu.x, window.innerWidth - 160)
           }}
         >
@@ -412,6 +499,16 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color:'var(--text-primary)'}}><polyline points="9 17 4 12 9 7"></polyline><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path></svg>
               <span>{t('chat.reply') || 'Trả lời'}</span>
+            </button>
+          )}
+          {!isMedia && (
+            <button 
+              onClick={handleTranslate}
+              className="context-menu-item"
+              disabled={isTranslating}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color:'var(--text-primary)'}}><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+              <span>{isTranslating ? (t('chat.translating') || 'Đang dịch...') : showTranslation ? (t('chat.showOriginal') || 'Xem bản gốc') : (t('chat.translate') || 'Dịch tin nhắn')}</span>
             </button>
           )}
           <button 

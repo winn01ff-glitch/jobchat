@@ -234,6 +234,19 @@ function RegisterContent() {
         localStorage.setItem('uphill_cached_sessions', JSON.stringify(cachedSessions));
       } catch (e) {}
 
+      // Update applied_job_title in database if pending application exists
+      try {
+        const jobStr = localStorage.getItem('uphill_apply_job');
+        if (jobStr) {
+          const jobObj = JSON.parse(jobStr);
+          if (jobObj && jobObj.title) {
+            await DB.updateApplicant(result.id, { applied_job_title: jobObj.title });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to update applied job title on register:', e);
+      }
+
       setShowModal(false);
       window.dispatchEvent(new Event('authChange'));
       
@@ -365,14 +378,14 @@ function RegisterContent() {
       </div>
 
       {showModal && (
-        <div className="confirm-modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="confirm-modal-overlay">
           <div className="job-form-card" style={{maxWidth: '420px'}} onClick={e => e.stopPropagation()}>
             <div className="job-form-header">
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--messenger-blue)'}}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 {t('register.enterName')}
               </h3>
-              <button className="job-form-close" onClick={() => setShowModal(false)} style={{background:'none',border:'none',fontSize:'20px',cursor:'pointer',color:'var(--text-muted)',padding:'4px 8px',lineHeight:1}}>✕</button>
+              <button className="job-form-close-flat" onClick={() => setShowModal(false)}>✕</button>
             </div>
             <div className="job-form-body">
               <p style={{color:'var(--text-secondary)',margin:'0 0 16px',fontSize:'var(--font-sm)'}}>

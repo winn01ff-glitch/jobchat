@@ -167,6 +167,13 @@ export const EmojiPicker = {
             }
         });
     },
+    hide: function() {
+        if (typeof document === 'undefined') return;
+        var picker = document.getElementById('global-emoji-picker');
+        if (picker) {
+            picker.classList.add('hidden');
+        }
+    },
     toggle: function(inputId, btnElement) {
         if (typeof document === 'undefined') return;
         this.init();
@@ -180,9 +187,27 @@ export const EmojiPicker = {
         
         this.lastBtn = btnElement;
         var rect = btnElement.getBoundingClientRect();
-        picker.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
+        
+        var bar = btnElement.closest('.chat-input-bar');
+        var bottomVal = 0;
+        if (bar) {
+            var barRect = bar.getBoundingClientRect();
+            bottomVal = window.innerHeight - barRect.top + 2;
+        } else {
+            bottomVal = window.innerHeight - rect.top + 12;
+        }
+        
+        picker.style.bottom = bottomVal + 'px';
         picker.style.right = (window.innerWidth - rect.right - 10) + 'px';
         picker.classList.remove('hidden');
+
+        var input = document.getElementById(inputId);
+        if (input && !input.dataset.hasEmojiKeydown) {
+            input.dataset.hasEmojiKeydown = 'true';
+            input.addEventListener('keydown', () => {
+                this.hide();
+            });
+        }
     },
     select: function(emoji) {
         if (typeof document === 'undefined') return;
@@ -210,8 +235,6 @@ export const EmojiPicker = {
                 input.style.height = Math.min(input.scrollHeight, 120) + 'px';
             }
         }
-        var picker = document.getElementById('global-emoji-picker');
-        if (picker) picker.classList.add('hidden');
     }
 };
 

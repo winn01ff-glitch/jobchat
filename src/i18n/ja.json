@@ -112,7 +112,23 @@
         "uploading": "アップロード中...",
         "uploadSuccess": "アップロードが完了しました！",
         "uploadFailed": "アップロードに失敗しました。もう一度お試しください。",
-        "download": "ダウンロード"
+        "download": "ダウンロード",
+        "clearHistory": "チャット履歴を消去",
+        "confirmCallTitle": "発信確認",
+        "confirmCallManagerMessage": "電話番号07015528761に発信しますか？",
+        "confirmCallMessage": "次の電話番号に発信しますか：",
+        "call": "発信",
+        "callManager": "管理者に連絡",
+        "clearHistoryTitle": "履歴をクリア",
+        "confirmClearHistory": "ローカルチャット履歴をすべて削除してもよろしいですか？この操作は取り消せません。",
+        "historyCleared": "チャット履歴を削除しました",
+        "noPhoneTitle": "電話番号が見つかりません",
+        "noPhoneMessage": "この応募者はシステムに電話番号を登録していません。",
+        "activeStatus": "アクティブ",
+        "translate": "メッセージを翻訳",
+        "translating": "翻訳中...",
+        "showOriginal": "原文を表示",
+        "showTranslation": "翻訳を表示"
     },
     "admin": {
         "loginTitle": "管理者ログイン",
@@ -128,6 +144,7 @@
         "filterUnread": "未読",
         "selectConversation": "チャットを選択してください",
         "newApplicant": "新規応募者",
+        "appliedFrom": "応募元",
         "noConversations": "会話がありません",
         "conversationStarted": "会話開始：",
         "settings": "設定",
@@ -246,6 +263,31 @@
                 "full": "全額支給",
                 "limited": "一部支給（上限あり）",
                 "none": "支給なし"
+            },
+            "dormitory": "社員寮・社宅",
+            "dormitoryOptions": {
+                "full": "家賃・初期費用全額会社負担",
+                "partial": "寮あり（家賃一部補助・家具付き）",
+                "rent_support": "家賃一部補助あり",
+                "none": "サポートなし"
+            },
+            "visa": "ビザサポート",
+            "visaOptions": {
+                "full": "申請・更新手続き＆費用全額会社負担",
+                "support": "更新・変更手続きサポートあり（費用自己負担）",
+                "none": "サポートなし"
+            },
+            "meal": "食事手当・まかない",
+            "mealOptions": {
+                "free": "まかない・食事無料支給あり",
+                "allowance": "食事手当支給（月額）",
+                "none": "サポートなし"
+            },
+            "other": "その他手当・福利厚生",
+            "otherOptions": {
+                "cert": "資格取得支援・受験料補助あり",
+                "health": "定期健康診断あり（会社負担）",
+                "none": "サポートなし"
             }
         },
         "salaryType": "給与形態",
@@ -255,8 +297,13 @@
             "monthly": " / 月",
             "hourly": " / 時"
         },
-        "copyLink": "求人リンクをコピー",
+        "copyLink": "リンクをコピー",
         "linkCopied": "求人リンクをコピーしました！",
-        "copied": "コピー完了！"
+        "copied": "コピー完了！",
+        "translateTo": "日本語に翻訳",
+        "viewOriginal": "原文を表示",
+        "translating": "翻訳中...",
+        "copyContent": "本文をコピー",
+        "contentCopiedToast": "求人詳細をコピーしました！"
     }
 }

@@ -3,16 +3,28 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useLanguage } from '../../../context/LanguageContext';
 import { DB } from '../../../lib/supabase';
-import { formatDate, formatSalary } from '../../../lib/helpers';
+import { formatDate, formatSalary, showToast } from '../../../lib/helpers';
+
+const langNames = {
+  vi: 'Tiếng Việt',
+  en: 'English',
+  ja: '日本語',
+  my: 'မြန်မာဘာသာ',
+  pt: 'Português'
+};
 
 export default function JobDetailPage() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
 
   const [job, setJob] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [translatedJob, setTranslatedJob] = useState(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isTranslated, setIsTranslated] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -24,6 +36,8 @@ export default function JobDetailPage() {
         const data = await DB.getJob(id);
         if (data) {
           setJob(data);
+          setTranslatedJob(null);
+          setIsTranslated(false);
         }
       } catch (err) {
         console.error(err);
@@ -34,7 +48,52 @@ export default function JobDetailPage() {
     load();
   }, [id]);
 
+  const translateText = async (text, targetLang) => {
+    if (!text || !targetLang) return text;
+    try {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+      const res = await fetch(url);
+      const json = await res.json();
+      if (json && json[0]) {
+        return json[0].map(item => item[0]).join('');
+      }
+    } catch (e) {
+      console.error('Translation error:', e);
+    }
+    return text;
+  };
+
+  const handleTranslate = async () => {
+    if (isTranslated) {
+      setIsTranslated(false);
+      return;
+    }
+    setIsTranslating(true);
+    try {
+      const tTitle = await translateText(job.title, lang);
+      const tLocation = await translateText(job.location, lang);
+      const tDesc = await translateText(parsed.description, lang);
+      setTranslatedJob({
+        title: tTitle,
+        location: tLocation,
+        description: tDesc
+      });
+      setIsTranslated(true);
+    } catch (e) {
+      console.error(e);
+      showToast(t('common.error') || 'Có lỗi xảy ra khi dịch.', 'error');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const handleApply = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('uphill_apply_job', JSON.stringify({
+        id: job.id,
+        title: job.title
+      }));
+    }
     router.push(`/register?position=${job.position || ''}`);
   };
 
@@ -92,7 +151,7 @@ export default function JobDetailPage() {
     <div className="job-detail-page">
       <div className="job-detail-content-wrapper">
         <div className="job-detail-inner">
-          <h1 className="job-detail-title">{job.title}</h1>
+          <h1 className="job-detail-title">{isTranslated ? translatedJob.title : job.title}</h1>
           
           <div className="job-detail-meta">
             {job.position && (
@@ -110,7 +169,7 @@ export default function JobDetailPage() {
             {job.location && (
               <div className="job-detail-meta-item location">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block'}}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                <span>{job.location}</span>
+                <span>{isTranslated ? translatedJob.location : job.location}</span>
               </div>
             )}
           </div>
@@ -202,13 +261,40 @@ export default function JobDetailPage() {
           )}
 
           <div className="job-detail-section">
-            <h4 className="section-title">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--messenger-blue)'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-              <span>{t('jobs.description') || 'Chi tiết công việc'}</span>
+            <h4 className="section-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--messenger-blue)'}}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>{t('jobs.description') || 'Chi tiết công việc'}</span>
+              </div>
+              
+              <button 
+                onClick={handleTranslate} 
+                className={`btn-translate ${isTranslated ? 'active' : ''}`}
+                disabled={isTranslating}
+              >
+                {isTranslating ? (
+                  <>
+                    <svg style={{ animation: 'spin 1s linear infinite', width: '12px', height: '12px' }} viewBox="0 0 24 24" fill="none">
+                      <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    <span>{t('jobs.translating') || 'Đang dịch...'}</span>
+                  </>
+                ) : isTranslated ? (
+                  <>
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block', transform: lang === 'ja' ? 'translateY(1.5px)' : 'none'}}><path d="M2.5 12a9.5 9.5 0 0 1 19 0 9.5 9.5 0 0 1-19 0z"></path><path d="M12 2.5a15.3 15.3 0 0 1 4 9.5 15.3 15.3 0 0 1-4 9.5 15.3 15.3 0 0 1-4-9.5 15.3 15.3 0 0 1 4-9.5z"></path><path d="M2.5 12h19"></path></svg>
+                    <span>{t('jobs.viewOriginal') || 'Xem bản gốc'}</span>
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'block', transform: lang === 'ja' ? 'translateY(1.5px)' : 'none'}}><path d="M2.5 12a9.5 9.5 0 0 1 19 0 9.5 9.5 0 0 1-19 0z"></path><path d="M12 2.5a15.3 15.3 0 0 1 4 9.5 15.3 15.3 0 0 1-4 9.5 15.3 15.3 0 0 1-4-9.5 15.3 15.3 0 0 1 4-9.5z"></path><path d="M2.5 12h19"></path></svg>
+                    <span>{t('jobs.translateTo') || 'Dịch bài viết'}</span>
+                  </>
+                )}
+              </button>
             </h4>
             <div className="job-detail-body">
-              {parsed.description}
+              {isTranslated ? translatedJob.description : parsed.description}
             </div>
           </div>
         </div>
