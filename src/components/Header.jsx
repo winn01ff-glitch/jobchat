@@ -46,7 +46,7 @@ export default function Header() {
         // Force scroll reset to keep fixed elements in place when typing
         const isChatActive = document.body.classList.contains('chat-page-active') || 
                              document.body.classList.contains('chat-active-mobile');
-        if (isChatActive) {
+        if (isChatActive && (window.scrollX !== 0 || window.scrollY !== 0)) {
           window.scrollTo(0, 0);
         }
       }
@@ -207,42 +207,40 @@ export default function Header() {
             </button>
             {showMoreMenu && (
               <div ref={menuRef} className="header-more-menu" onClick={(e) => e.stopPropagation()} style={{marginTop: '11.5px'}}>
-                <button 
+                <div 
                   className="header-dropdown-item" 
-                  onClick={() => setShowLangOptions(!showLangOptions)}
-                  style={{display: 'flex', alignItems: 'center', gap: '8px', width: '100%'}}
+                  style={{display: 'flex', alignItems: 'center', gap: '8px', width: '100%', position: 'relative', padding: '10px 12px'}}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--text-secondary)'}}><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
                   <span>
-                    {(t('common.language') || 'Ngôn ngữ') + ': ' + getLangName(lang)}
+                    {t('common.language') || 'Ngôn ngữ'}
                   </span>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--text-secondary)', marginLeft: 'auto', transform: showLangOptions ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease'}}><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </button>
-                
-                {showLangOptions && (
-                  <div style={{background: 'var(--bg-secondary)', borderRadius: '6px', margin: '2px 8px 4px', padding: '4px 0'}}>
-                    {['vi', 'ja', 'en', 'my', 'pt'].map((l) => (
-                      <button
-                        key={l}
-                        className="header-dropdown-item"
-                        onClick={() => { changeLanguage(l); setShowLangOptions(false); setShowMoreMenu(false); }}
-                        style={{
-                          padding: '8px 12px 8px 24px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          background: lang === l ? 'var(--bg-hover)' : 'transparent',
-                          color: lang === l ? 'var(--messenger-blue)' : 'var(--text-primary)',
-                          fontWeight: lang === l ? '600' : '500',
-                          fontSize: '12.5px'
-                        }}
-                      >
-                        <span>{getLangName(l)}</span>
-                        {lang === l && <span style={{fontSize: '12px', color: 'var(--messenger-blue)'}}>✓</span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  <select 
+                    value={lang} 
+                    onChange={(e) => { changeLanguage(e.target.value); setShowMoreMenu(false); }}
+                    style={{
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer',
+                      WebkitAppearance: 'menulist-button',
+                      zIndex: 2
+                    }}
+                  >
+                    <option value="vi">Tiếng Việt</option>
+                    <option value="ja">日本語</option>
+                    <option value="en">English</option>
+                    <option value="my">မြန်မာဘာသာ</option>
+                    <option value="pt">Português</option>
+                  </select>
+                  <span style={{ marginLeft: 'auto', color: 'var(--messenger-blue)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}>
+                    {getLangName(lang)}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--text-secondary)'}}><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </span>
+                </div>
                 <button className="header-dropdown-item" onClick={handleClearHistoryClick}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                   <span>{t('chat.clearHistory') || 'Xóa lịch sử trò chuyện'}</span>

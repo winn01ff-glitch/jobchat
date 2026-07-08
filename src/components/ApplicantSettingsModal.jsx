@@ -120,12 +120,12 @@ export default function ApplicantSettingsModal({ isOpen, onClose, applicantId })
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      showToast(t('chat.invalidImageType') || 'Định dạng ảnh không hợp lệ.', 'error');
+      showToast(t('auth.invalidImageType') || 'Định dạng ảnh không hợp lệ.', 'error');
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      showToast(t('chat.avatarTooLarge') || 'Kích thước ảnh đại diện quá lớn (Tối đa 2MB)', 'error');
+      showToast(t('auth.avatarTooLarge') || 'Kích thước ảnh đại diện quá lớn (Tối đa 2MB)', 'error');
       return;
     }
 
