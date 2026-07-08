@@ -322,7 +322,10 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     try {
       const msgs = await DB.getMessages(applicantId, messagesOffset, 20);
       if (msgs.length > 0) {
-        setMessages(prev => [...msgs, ...prev]);
+        setMessages(prev => {
+          const filtered = msgs.filter(m => !prev.some(pm => pm.id === m.id));
+          return [...filtered, ...prev];
+        });
         setMessagesOffset(prev => prev + msgs.length);
         if (msgs.length < 20) setHasMoreMessages(false);
       } else {
