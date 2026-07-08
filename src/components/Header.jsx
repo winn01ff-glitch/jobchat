@@ -60,6 +60,10 @@ export default function Header() {
       }
     };
 
+    const handleOpenApplicantSettings = () => {
+      setShowApplicantSettings(true);
+    };
+
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateVisualViewport);
       // Run immediately and also delayed to account for loading/rendering delays
@@ -68,12 +72,14 @@ export default function Header() {
     }
 
     window.addEventListener('scroll', handleWindowScroll);
+    window.addEventListener('chat-open-applicant-settings', handleOpenApplicantSettings);
 
     return () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', updateVisualViewport);
       }
       window.removeEventListener('scroll', handleWindowScroll);
+      window.removeEventListener('chat-open-applicant-settings', handleOpenApplicantSettings);
     };
   }, []);
 

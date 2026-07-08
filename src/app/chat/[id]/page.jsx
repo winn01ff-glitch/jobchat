@@ -67,6 +67,8 @@ export default function ChatPage({ params }) {
   const [showMediaSidebar, setShowMediaSidebar] = useState(false);
   const [mediaTab, setMediaTab] = useState('images'); // 'images' or 'files'
   const [activeLightboxImage, setActiveLightboxImage] = useState(null);
+  const [applicantEmail, setApplicantEmail] = useState('');
+  const [showEmailBanner, setShowEmailBanner] = useState(false);
 
   const [messages, setMessages] = useState([]);
   const [applicantName, setApplicantName] = useState('');
@@ -98,12 +100,30 @@ export default function ChatPage({ params }) {
     };
     window.addEventListener('chat-toggle-media-sidebar', handleToggleMediaSidebar);
 
+    const handleAuthChange = async () => {
+      const sessionStr = localStorage.getItem('jobchat_session');
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr);
+          const applicant = await DB.getApplicantByToken(session.token);
+          if (applicant) {
+            setApplicantEmail(applicant.email || '');
+            if (applicant.email) {
+              setShowEmailBanner(false);
+            }
+          }
+        } catch(e) {}
+      }
+    };
+    window.addEventListener('authChange', handleAuthChange);
+
     return () => {
       document.documentElement.classList.remove('chat-page-active');
       document.body.classList.remove('chat-page-active');
       document.removeEventListener('click', handleGlobalClick);
       document.removeEventListener('touchstart', handleGlobalClick);
       window.removeEventListener('chat-toggle-media-sidebar', handleToggleMediaSidebar);
+      window.removeEventListener('authChange', handleAuthChange);
     };
   }, []);
   const [isLoading, setIsLoading] = useState(true);
@@ -168,6 +188,11 @@ export default function ChatPage({ params }) {
         }
 
         setApplicantName(applicant.name);
+        setApplicantEmail(applicant.email || '');
+        const dismissed = localStorage.getItem(`jobchat_email_banner_dismissed_${applicantId}`);
+        if (!applicant.email && !dismissed) {
+          setShowEmailBanner(true);
+        }
         loadInitialMessages(applicantId);
 
         const fetchAdmins = async () => {
@@ -633,6 +658,11 @@ export default function ChatPage({ params }) {
 
   const mediaList = getSharedMedia();
 
+  const handleDismissEmailBanner = () => {
+    setShowEmailBanner(false);
+    localStorage.setItem(`jobchat_email_banner_dismissed_${applicantId}`, 'true');
+  };
+
   if (isLoading) {
     return <div className="chat-container"><div className="spinner"></div></div>;
   }
@@ -640,6 +670,65 @@ export default function ChatPage({ params }) {
   return (
     <div className="chat-container" style={{ flexDirection: 'row' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
+        {showEmailBanner && !applicantEmail && (
+          <div 
+            className="email-banner" 
+            style={{
+              background: 'rgba(255, 152, 0, 0.08)',
+              borderBottom: '1px solid rgba(255, 152, 0, 0.2)',
+              padding: '10px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+              fontSize: '13px',
+              color: 'var(--text-primary)',
+              zIndex: 10
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '16px' }}>✉️</span>
+              <span>
+                {lang === 'vi' 
+                  ? 'Liên kết Email trong phần Cài đặt để nhận thông báo tức thì khi nhà tuyển dụng nhắn tin.'
+                  : lang === 'ja'
+                  ? '設定でメールアドレスを連携すると、採用担当者からメッセージが届いた際に通知を受け取れます。'
+                  : 'Link your Email in Settings to receive instant notifications when the employer messages you.'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('chat-open-applicant-settings'))}
+                style={{
+                  background: 'var(--messenger-blue)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                {lang === 'vi' ? 'Cài đặt' : lang === 'ja' ? '設定' : 'Settings'}
+              </button>
+              <button 
+                onClick={handleDismissEmailBanner}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  padding: '2px'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {connectionStatus !== 'online' && (
           <div className={`network-banner ${connectionStatus}`}>
             {connectionStatus === 'offline' && (t('chat.networkOffline') || '⚠️ Không có kết nối mạng. Vui lòng kiểm tra lại thiết bị.')}

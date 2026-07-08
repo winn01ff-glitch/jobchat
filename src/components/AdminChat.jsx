@@ -672,8 +672,15 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
             </div>
             <div>
               <div className="chat-header-name">{applicant.name}</div>
-              <div className="chat-header-status">
-                {applicant.phone ? `📞 ${applicant.phone}` : ''}
+              <div className="chat-header-status" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                {applicant.phone && <span>📞 {applicant.phone}</span>}
+                {applicant.email ? (
+                  <span style={{ color: 'var(--text-muted)' }}>✉️ {applicant.email}</span>
+                ) : (
+                  <span style={{ color: '#ff9800', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: '500' }} title="Ứng viên chưa cập nhật email nên sẽ không nhận được thông báo qua mail">
+                    ⚠️ Chưa có Email (Không nhận được thông báo mail)
+                  </span>
+                )}
               </div>
             </div>
           </div>

@@ -93,11 +93,43 @@ export async function POST(request) {
           </div>
         </div>
       `;
+    } else if (type === 'admin_message') {
+      const senderDisplayName = body.senderName || 'Nhà tuyển dụng';
+      subject = `[Uphill Jobchat] Bạn có tin nhắn mới từ ${senderDisplayName}`;
+      
+      let displayContent = messageContent;
+      try {
+        const parsed = JSON.parse(messageContent);
+        if (parsed.type === 'image') {
+          displayContent = `[Đã gửi một hình ảnh] - Tên file: ${parsed.name || 'Image'}`;
+        } else if (parsed.type === 'file') {
+          displayContent = `[Đã gửi một tệp đính kèm] - Tên file: ${parsed.name || 'File'}`;
+        } else if (parsed.type === 'location') {
+          displayContent = `[Đã gửi vị trí định vị GPS]`;
+        }
+      } catch (e) {
+        // Not JSON
+      }
+
+      htmlContent = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+          <h2 style="color: #0070f3; margin-top: 0;">Tin nhắn mới nhận</h2>
+          <p>Xin chào <strong>${applicantName}</strong>,</p>
+          <p>Nhà tuyển dụng <strong>${senderDisplayName}</strong> vừa gửi tin nhắn mới cho bạn:</p>
+          <div style="background-color: #f7f9fa; padding: 15px; border-left: 4px solid #0070f3; margin: 20px 0; font-style: italic; white-space: pre-wrap; color: #333;">${displayContent}</div>
+          <p style="color: #666; font-size: 14px;">Vui lòng truy cập ứng dụng để trả lời tin nhắn.</p>
+          <div style="margin-top: 30px; text-align: center;">
+            <a href="https://uphill-jobchat.vercel.app/" style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Mở phòng chat</a>
+          </div>
+        </div>
+      `;
     }
+
+    const toEmail = type === 'admin_message' ? applicantEmail : 'winn01ff@gmail.com';
 
     const mailOptions = {
       from: `"Uphill Jobchat" <${smtpUser}>`,
-      to: 'winn01ff@gmail.com',
+      to: toEmail,
       subject: subject,
       html: htmlContent,
     };

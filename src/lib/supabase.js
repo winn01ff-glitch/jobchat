@@ -350,6 +350,47 @@ export const DB = {
             }
         }
 
+        // If message is sent by admin, check if we need to send email alert to applicant
+        if (senderType === 'admin') {
+            try {
+                // Fetch current applicant to check last_applicant_email_sent_at and email
+                const { data: applicant } = await supabaseClient
+                    .from('applicants')
+                    .select('name, email, last_applicant_email_sent_at')
+                    .eq('id', conversationId)
+                    .single();
+
+                if (applicant && applicant.email) {
+                    const now = new Date();
+                    const lastSent = applicant.last_applicant_email_sent_at ? new Date(applicant.last_applicant_email_sent_at) : null;
+                    const oneHour = 60 * 60 * 1000;
+
+                    if (!lastSent || (now - lastSent) > oneHour) {
+                        const nowStr = now.toISOString();
+                        await supabaseClient
+                            .from('applicants')
+                            .update({ last_applicant_email_sent_at: nowStr })
+                            .eq('id', conversationId);
+
+                        // Trigger email notification to applicant
+                        fetch('/api/send-notification', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                type: 'admin_message',
+                                applicantName: applicant.name,
+                                applicantEmail: applicant.email,
+                                senderName: senderName,
+                                messageContent: content
+                            })
+                        }).catch(err => console.error('[Notification] failed to trigger admin message email:', err));
+                    }
+                }
+            } catch (e) {
+                console.error('[Notification] error in applicant message throttling logic:', e);
+            }
+        }
+
         return data;
     },
 
