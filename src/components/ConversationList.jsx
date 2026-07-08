@@ -15,6 +15,11 @@ export default function ConversationList({
   const { t } = useLanguage();
 
   const parseMessagePreview = (content) => {
+    if (typeof content === 'string' && content.startsWith('【応募】')) {
+      const quoteMatch = content.match(/"([^"]+)"/);
+      const jobTitle = quoteMatch ? quoteMatch[1] : '';
+      return `📝 [${t('chat.jobApplication') || 'Ứng tuyển'}] ${jobTitle}`;
+    }
     try {
       const parsed = JSON.parse(content);
       if (parsed.type === 'image') return '📷 ' + (t('chat.image') || 'Ảnh');

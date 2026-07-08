@@ -95,6 +95,7 @@
         "confirmLogoutTitle": "Confirmar Saída",
         "failed": "Erro ao enviar",
         "loadMore": "Carregar mensagens anteriores",
+        "loading": "Carregando...",
         "networkConnected": "🟢 Conectado com sucesso!",
         "networkOffline": "⚠️ Sem conexão com a internet. Por favor, verifique seu dispositivo.",
         "networkReconnecting": "🔄 Reconectando...",
@@ -130,7 +131,8 @@
         "translating": "Traduzindo...",
         "showOriginal": "Mostrar original",
         "showTranslation": "Mostrar tradução",
-        "appliedJob": "Cargo candidatado:"
+        "appliedJob": "Cargo candidatado:",
+        "jobApplication": "Candidatura"
     },
     "admin": {
         "loginTitle": "Login do Administrador",
@@ -146,6 +148,7 @@
         "filterUnread": "Não lidas",
         "selectConversation": "Selecione uma conversa",
         "newApplicant": "Novo candidato",
+        "applicantInfo": "Informações do candidato",
         "appliedFrom": "Candidatou-se de",
         "noConversations": "Sem conversas ainda",
         "conversationStarted": "Início:",
@@ -159,6 +162,7 @@
         "confirmPassword": "Confirmar senha",
         "confirmPasswordPlaceholder": "Redigite a nova senha",
         "cancel": "Cancelar",
+        "close": "Fechar",
         "save": "Salvar",
         "nameRequired": "O nome não pode ficar vazio",
         "enterCurrentPassword": "Digite a senha atual",
@@ -221,7 +225,8 @@
         "login": "Entrar",
         "register": "Cadastrar-se",
         "back": "Voltar",
-        "language": "Idioma"
+        "language": "Idioma",
+        "later": "Depois"
     },
     "notification": {
         "newMessage": "Nova mensagem",
@@ -318,7 +323,10 @@
         "password": "Senha",
         "passwordPlaceholder": "Mínimo 6 caracteres",
         "emailOptional": "E-mail (Opcional)",
-        "emailOptionalDesc": "Usado para recuperar sua senha se esquecida",
+        "emailOptionalDesc": "Confirmação de OTP necessária",
+        "otpPlaceholder": "Insira 6 dígitos",
+        "otpRegisterPrompt": "Insira o código OTP enviado ao seu e-mail para verificar e registrar.",
+        "confirmAndRegister": "Confirmar e Registrar",
         "rememberMe": "Lembrar de mim",
         "forgotPassword": "Esqueceu a senha?",
         "resetPasswordTitle": "Recuperar Senha",
@@ -352,6 +360,10 @@
         "avatarRemoved": "Foto de perfil removida",
         "errorPasswordMin": "A senha deve ter pelo menos 6 caracteres",
         "changeEmail": "Alterar",
-        "enterNewEmail": "Insira o novo e-mail"
+        "enterNewEmail": "Insira o novo e-mail",
+        "emailRegisterTitle": "Configurar E-mail de Notificação e Segurança",
+        "emailRegisterNote": "Por favor, vincule seu e-mail para receber notificações instantâneas quando o empregador lhe enviar mensagens e para recuperar sua senha se esquecida.",
+        "sendOtp": "Enviar Código de Verificação (OTP)",
+        "errorAccountDeleted": "Sua conta foi excluída ou não existe mais."
     }
 }

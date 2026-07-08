@@ -58,6 +58,7 @@
         "online": "Trực tuyến",
         "placeholder": "Nhập tin nhắn...",
         "loadMore": "Tải thêm tin nhắn cũ",
+        "loading": "Đang tải...",
         "welcomeTitle": "Chào mừng bạn!",
         "welcomeMsg": "Đội ngũ tuyển dụng đang chờ tin nhắn của bạn. Hãy đặt câu hỏi nhé!",
         "attachFile": "Đính kèm file",
@@ -130,7 +131,8 @@
         "translating": "Đang dịch...",
         "showOriginal": "Xem bản gốc",
         "showTranslation": "Xem bản dịch",
-        "appliedJob": "Vị trí ứng tuyển:"
+        "appliedJob": "Vị trí ứng tuyển:",
+        "jobApplication": "Ứng tuyển"
     },
     "admin": {
         "confirmLogoutTitle": "Xác nhận đăng xuất",
@@ -153,6 +155,7 @@
         "filterUnread": "Chưa đọc",
         "selectConversation": "Chọn một cuộc trò chuyện",
         "newApplicant": "Ứng viên mới",
+        "applicantInfo": "Thông tin ứng viên",
         "appliedFrom": "Ứng tuyển từ",
         "noConversations": "Chưa có cuộc trò chuyện",
         "conversationStarted": "Bắt đầu:",
@@ -172,6 +175,7 @@
         "invalidData": "Dữ liệu không hợp lệ",
         "avatarUpdated": "Đã cập nhật ảnh đại diện",
         "cancel": "Hủy",
+        "close": "Đóng",
         "save": "Lưu",
         "nameRequired": "Tên không được để trống",
         "enterCurrentPassword": "Vui lòng nhập mật khẩu hiện tại",
@@ -221,7 +225,8 @@
         "login": "Đăng nhập",
         "register": "Đăng ký",
         "back": "Quay lại",
-        "language": "Ngôn ngữ"
+        "language": "Ngôn ngữ",
+        "later": "Để sau"
     },
     "notification": {
         "newMessage": "Tin nhắn mới",
@@ -318,7 +323,10 @@
         "password": "Mật khẩu",
         "passwordPlaceholder": "Tối thiểu 6 ký tự",
         "emailOptional": "Email (không bắt buộc)",
-        "emailOptionalDesc": "Nhập email giúp lấy lại mật khẩu khi quên",
+        "emailOptionalDesc": "Cần xác nhận OTP",
+        "otpPlaceholder": "Nhập 6 chữ số",
+        "otpRegisterPrompt": "Nhập mã OTP đã được gửi về email để xác nhận và đăng ký.",
+        "confirmAndRegister": "Xác nhận & Đăng ký",
         "rememberMe": "Ghi nhớ đăng nhập",
         "forgotPassword": "Quên mật khẩu?",
         "resetPasswordTitle": "Lấy lại mật khẩu",
@@ -352,6 +360,10 @@
         "avatarRemoved": "Đã gỡ ảnh đại diện",
         "errorPasswordMin": "Mật khẩu phải tối thiểu 6 ký tự",
         "changeEmail": "Thay đổi",
-        "enterNewEmail": "Nhập email mới"
+        "enterNewEmail": "Nhập email mới",
+        "emailRegisterTitle": "Cài đặt Email nhận thông báo & bảo mật",
+        "emailRegisterNote": "Vui lòng liên kết email của bạn để nhận thông báo tức thì từ nhà tuyển dụng và có thể tự khôi phục mật khẩu khi quên.",
+        "sendOtp": "Gửi mã xác thực (OTP)",
+        "errorAccountDeleted": "Tài khoản của bạn đã bị xóa hoặc không còn tồn tại."
     }
 }

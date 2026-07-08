@@ -187,6 +187,7 @@ function DashboardContent() {
       document.body.style.height = '100dvh';
       document.body.style.overflow = 'hidden';
       document.body.classList.add('chat-active-mobile');
+      document.documentElement.classList.add('chat-active-mobile');
     } else {
       if (header) header.style.display = 'flex';
       if (pageContainer) {
@@ -196,6 +197,7 @@ function DashboardContent() {
       document.body.style.height = '';
       document.body.style.overflow = '';
       document.body.classList.remove('chat-active-mobile');
+      document.documentElement.classList.remove('chat-active-mobile');
     }
     return () => {
       if (header) header.style.display = 'flex';
@@ -206,6 +208,7 @@ function DashboardContent() {
       document.body.style.height = '';
       document.body.style.overflow = '';
       document.body.classList.remove('chat-active-mobile');
+      document.documentElement.classList.remove('chat-active-mobile');
     };
   }, [isMobileChatActive]);
 

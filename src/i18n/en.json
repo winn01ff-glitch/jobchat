@@ -58,6 +58,7 @@
         "online": "Online",
         "placeholder": "Type a message...",
         "loadMore": "Load older messages",
+        "loading": "Loading...",
         "welcomeTitle": "Welcome to the chat!",
         "welcomeMsg": "Our recruitment team is ready to help. Feel free to ask any questions!",
         "attachFile": "Attach file",
@@ -130,7 +131,8 @@
         "translating": "Translating...",
         "showOriginal": "Show original",
         "showTranslation": "Show translation",
-        "appliedJob": "Applied Position:"
+        "appliedJob": "Applied Position:",
+        "jobApplication": "Application"
     },
     "admin": {
         "loginTitle": "Admin Login",
@@ -146,6 +148,7 @@
         "filterUnread": "Unread",
         "selectConversation": "Select a conversation",
         "newApplicant": "New Applicant",
+        "applicantInfo": "Applicant Info",
         "appliedFrom": "Applied from",
         "noConversations": "No conversations yet",
         "conversationStarted": "Started:",
@@ -159,6 +162,7 @@
         "confirmPassword": "Confirm Password",
         "confirmPasswordPlaceholder": "Re-enter new password",
         "cancel": "Cancel",
+        "close": "Close",
         "save": "Save",
         "nameRequired": "Name cannot be empty",
         "enterCurrentPassword": "Please enter your current password",
@@ -221,7 +225,8 @@
         "login": "Login",
         "register": "Register",
         "back": "Back",
-        "language": "Language"
+        "language": "Language",
+        "later": "Later"
     },
     "notification": {
         "newMessage": "New message",
@@ -318,7 +323,10 @@
         "password": "Password",
         "passwordPlaceholder": "Min 6 characters",
         "emailOptional": "Email (Optional)",
-        "emailOptionalDesc": "Used to recover your password if forgotten",
+        "emailOptionalDesc": "OTP verification required",
+        "otpPlaceholder": "Enter 6 digits",
+        "otpRegisterPrompt": "Enter the OTP code sent to your email to verify and register.",
+        "confirmAndRegister": "Confirm & Register",
         "rememberMe": "Remember Me",
         "forgotPassword": "Forgot Password?",
         "resetPasswordTitle": "Recover Password",
@@ -352,6 +360,10 @@
         "avatarRemoved": "Avatar picture removed",
         "errorPasswordMin": "Password must be at least 6 characters",
         "changeEmail": "Change",
-        "enterNewEmail": "Enter new email"
+        "enterNewEmail": "Enter new email",
+        "emailRegisterTitle": "Set Up Notification & Security Email",
+        "emailRegisterNote": "Please link your email to receive instant notifications when the employer messages you and to recover your password if forgotten.",
+        "sendOtp": "Send Verification Code (OTP)",
+        "errorAccountDeleted": "Your account has been deleted or no longer exists."
     }
 }

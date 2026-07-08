@@ -34,7 +34,6 @@ function RegisterContent() {
 
   // Register Fields
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [position, setPosition] = useState('');
 
@@ -47,12 +46,6 @@ function RegisterContent() {
   const [isOtpFocused, setIsOtpFocused] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [isResending, setIsResending] = useState(false);
-
-  // Register OTP Fields
-  const [isRegisterOtpStep, setIsRegisterOtpStep] = useState(false);
-  const [registerOtp, setRegisterOtp] = useState('');
-  const [isRegisterOtpLoading, setIsRegisterOtpLoading] = useState(false);
-  const [registerOtpError, setRegisterOtpError] = useState('');
 
   // Real-time unique check for ID
   const [idWarning, setIdWarning] = useState('');
@@ -85,12 +78,8 @@ function RegisterContent() {
 
     // Prefill cached credentials if checked before
     const cachedId = localStorage.getItem('uphill_remembered_id');
-    const cachedHash = localStorage.getItem('uphill_remembered_pw_hash');
     if (cachedId) {
       setLoginId(cachedId);
-      if (cachedHash) {
-        setPassword('******'); // placeholder to indicate cached password
-      }
     }
   }, [router]);
 
@@ -107,13 +96,6 @@ function RegisterContent() {
     }
   }, [countdown]);
 
-  useEffect(() => {
-    if (mode !== 'register') {
-      setIsRegisterOtpStep(false);
-      setRegisterOtp('');
-      setRegisterOtpError('');
-    }
-  }, [mode]);
 
   // ID Validation unique check on Blur
   const handleIdBlur = async () => {
@@ -148,16 +130,7 @@ function RegisterContent() {
 
     setIsLoading(true);
     try {
-      let pwHash;
-      const cachedId = localStorage.getItem('uphill_remembered_id');
-      const cachedHash = localStorage.getItem('uphill_remembered_pw_hash');
-
-      if (enteredPassword === '******' && cachedId === cleanId && cachedHash) {
-        pwHash = cachedHash;
-      } else {
-        pwHash = await hashPassword(enteredPassword);
-      }
-
+      const pwHash = await hashPassword(enteredPassword);
       const applicant = await DB.loginApplicantWithPassword(cleanId, pwHash);
 
       // Save credentials if Remember Me is checked
@@ -206,7 +179,6 @@ function RegisterContent() {
     const cleanId = loginId.trim().toLowerCase();
     const cleanPassword = password.trim();
     const cleanName = name.trim();
-    const cleanEmail = email.trim().toLowerCase();
 
     if (cleanId.length < 4) {
       idInputRef.current?.focus();
@@ -238,57 +210,7 @@ function RegisterContent() {
       return;
     }
 
-    // If an email is provided and we haven't verified the OTP yet, trigger OTP send
-    if (cleanEmail && !isRegisterOtpStep) {
-      setIsRegisterOtpLoading(true);
-      try {
-        const currentLang = (typeof window !== 'undefined' ? localStorage.getItem('jobchat_lang') : 'vi') || 'vi';
-        const res = await fetch('/api/auth/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: cleanEmail, lang: currentLang })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to send OTP');
-        }
-        setIsRegisterOtpStep(true);
-        setRegisterOtpError('');
-        showToast(t('register.otpSent') || 'Mã xác thực đã được gửi tới email của bạn!', 'success');
-      } catch (err) {
-        console.error('Failed to send OTP:', err);
-        showToast(err.message || 'Không thể gửi mã xác thực OTP.', 'error');
-      } finally {
-        setIsRegisterOtpLoading(false);
-        setIsLoading(false);
-      }
-      return;
-    }
-
-    // If in OTP verification step, verify OTP
-    if (cleanEmail && isRegisterOtpStep) {
-      setIsRegisterOtpLoading(true);
-      try {
-        const isValid = await DB.verifyOtp(cleanEmail, registerOtp.trim());
-        if (!isValid) {
-          setRegisterOtpError(t('auth.invalidOtp') || 'Mã xác thực không hợp lệ hoặc đã hết hạn.');
-          setIsRegisterOtpLoading(false);
-          setIsLoading(false);
-          return;
-        }
-      } catch (err) {
-        console.error('OTP verification failed:', err);
-        setRegisterOtpError(t('auth.invalidOtp') || 'Mã xác thực không hợp lệ hoặc đã hết hạn.');
-        setIsRegisterOtpLoading(false);
-        setIsLoading(false);
-        return;
-      } finally {
-        setIsRegisterOtpLoading(false);
-      }
-    }
-
-    // Proceed to register
-    setIsLoading(true);
+    // Proceed to register immediately
     try {
       const pwHash = await hashPassword(cleanPassword);
       const currentLang = (typeof window !== 'undefined' ? localStorage.getItem('jobchat_lang') : 'vi') || 'vi';
@@ -297,7 +219,7 @@ function RegisterContent() {
         name: cleanName,
         loginId: cleanId,
         passwordHash: pwHash,
-        email: cleanEmail || null,
+        email: null,
         phone: phone.trim(),
         position: position || urlPosition || 'other',
         language: currentLang
@@ -315,7 +237,7 @@ function RegisterContent() {
       // Save session
       localStorage.setItem('jobchat_session', JSON.stringify({
         id: result.id, name: result.name,
-        email: result.email || '', token: result.session_token
+        email: '', token: result.session_token
       }));
 
       // Update applied_job_title if pending in localStorage
@@ -473,7 +395,6 @@ function RegisterContent() {
                     value={loginId}
                     onChange={e => {
                       setLoginId(e.target.value);
-                      if (password === '******') setPassword(''); // reset pre-filled password if ID changes
                     }}
                     placeholder={t('auth.loginIdPlaceholder') || 'Tối thiểu 4 ký tự'}
                   />
@@ -655,72 +576,6 @@ function RegisterContent() {
 
               <div className="form-group" style={{ marginBottom: '14px' }}>
                 <label className="form-label">
-                  {t('register.email') || 'Email'}{' '}
-                  <span style={{color:'var(--text-muted)',fontWeight:400,fontSize:'12px'}}>({t('register.optional') || 'không bắt buộc'})</span>
-                </label>
-                <div className="input-with-icon">
-                  <span className="input-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                  </span>
-                  <input 
-                    type="email" 
-                    className="form-input" 
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder={t('register.emailPlaceholder') || 'Ví dụ: example@gmail.com'}
-                    disabled={isRegisterOtpStep}
-                  />
-                </div>
-                <p className="form-helper-text" style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '6px' }}>
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)', flexShrink: 0 }}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                  <span>{t('auth.emailOptionalDesc') || 'Nhập email giúp lấy lại mật khẩu khi quên'}</span>
-                </p>
-              </div>
-
-              {isRegisterOtpStep && (
-                <div className="form-group animate-fade-in" style={{ marginBottom: '14px', background: 'rgba(0, 132, 255, 0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(0, 132, 255, 0.15)' }}>
-                  <label className="form-label" style={{ color: 'var(--messenger-blue)', fontWeight: '600' }}>
-                    {t('auth.enterOtp') || 'Mã xác thực (OTP)'} <span style={{color: 'var(--error)'}}>*</span>
-                  </label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <div className="input-with-icon" style={{ flex: 1 }}>
-                      <span className="input-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 6v6l4 2"></path></svg>
-                      </span>
-                      <input 
-                        type="text" 
-                        maxLength={6}
-                        className={`form-input ${registerOtpError ? 'error' : ''}`}
-                        required 
-                        value={registerOtp}
-                        onChange={e => setRegisterOtp(e.target.value.replace(/\D/g, ''))}
-                        placeholder={t('auth.otpPlaceholder') || 'Nhập 6 chữ số'}
-                        disabled={isRegisterOtpLoading}
-                        style={{ letterSpacing: '2px', fontWeight: 'bold', textAlign: 'center' }}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsRegisterOtpStep(false);
-                        setRegisterOtp('');
-                        setRegisterOtpError('');
-                      }}
-                      className="btn-secondary"
-                      style={{ padding: '0 12px', fontSize: '13px', borderRadius: '8px' }}
-                    >
-                      {t('admin.cancel') || 'Hủy'}
-                    </button>
-                  </div>
-                  {registerOtpError && <div className="form-error" style={{ marginTop: '6px' }}>{registerOtpError}</div>}
-                  <p className="form-helper-text" style={{ marginTop: '6px', color: 'var(--messenger-blue)' }}>
-                    {t('auth.otpRegisterPrompt') || 'Nhập mã OTP đã được gửi về email để xác nhận và đăng ký.'}
-                  </p>
-                </div>
-              )}
-
-              <div className="form-group" style={{ marginBottom: '14px' }}>
-                <label className="form-label">
                   {t('register.phone') || 'Số điện thoại'}{' '}
                   <span style={{color:'var(--text-muted)',fontWeight:400,fontSize:'12px'}}>({t('register.optional') || 'không bắt buộc'})</span>
                 </label>
@@ -738,18 +593,15 @@ function RegisterContent() {
                 </div>
               </div>
 
-
-              <button type="submit" className="form-submit" disabled={isLoading || isRegisterOtpLoading}>
-                {isLoading || isRegisterOtpLoading ? (
-                  <div className="spinner"></div>
-                ) : (
-                  <span>
-                    {isRegisterOtpStep 
-                      ? (t('auth.confirmAndRegister') || 'Xác nhận & Đăng ký') 
-                      : (t('common.register') || 'Đăng ký & Bắt đầu chat')}
-                  </span>
-                )}
-              </button>
+              <div className="form-submit-container" style={{ marginTop: '20px' }}>
+                <button type="submit" className="form-submit" disabled={isLoading}>
+                  {isLoading ? (
+                    <div className="spinner"></div>
+                  ) : (
+                    <span>{t('common.register') || 'Đăng ký & Bắt đầu chat'}</span>
+                  )}
+                </button>
+              </div>
 
               <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: 'var(--text-muted)' }}>
                 {t('auth.haveAccount') || 'Đã có tài khoản?'}{' '}

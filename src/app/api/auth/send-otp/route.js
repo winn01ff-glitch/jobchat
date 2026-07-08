@@ -4,6 +4,36 @@ import { supabaseClient } from '../../../../lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
+let transporterInstance = null;
+
+function getTransporter() {
+  if (transporterInstance) return transporterInstance;
+
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = process.env.SMTP_PORT || 587;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    return null;
+  }
+
+  transporterInstance = nodemailer.createTransport({
+    pool: true, // Enable SMTP connection pooling
+    maxConnections: 5,
+    maxMessages: 100,
+    host: smtpHost,
+    port: Number(smtpPort),
+    secure: Number(smtpPort) === 465,
+    family: 4, // Force IPv4 to bypass IPv6 connection timeout
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  });
+  return transporterInstance;
+}
+
 const emailTemplates = {
   vi: {
     subject: (otp) => `[Uphill Jobchat] Mã xác thực đăng nhập: ${otp}`,
@@ -77,12 +107,9 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Failed to generate OTP' }, { status: 500 });
     }
 
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpPort = process.env.SMTP_PORT || 587;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
+    const transporter = getTransporter();
 
-    if (!smtpHost || !smtpUser || !smtpPass) {
+    if (!transporter) {
       console.warn('[Auth OTP] SMTP is not configured. OTP code is:', otpCode);
       return NextResponse.json({
         status: 'skipped',
@@ -91,18 +118,8 @@ export async function POST(request) {
       });
     }
 
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: Number(smtpPort),
-      secure: Number(smtpPort) === 465,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    });
-
     const mailOptions = {
-      from: `"Uphill Jobchat" <${smtpUser}>`,
+      from: `"Uphill Jobchat" <${process.env.SMTP_USER}>`,
       to: cleanEmail,
       subject: template.subject(otpCode),
       html: `
@@ -131,7 +148,6 @@ export async function POST(request) {
       console.log(`[Auth OTP] Email sent successfully to ${cleanEmail}`);
     } catch (err) {
       console.error(`[Auth OTP] Failed to send email to ${cleanEmail}:`, err);
-      // We can choose to fail the request or proceed. Since the OTP is generated and saved in DB, failing is better so the user knows to resend immediately.
       return NextResponse.json({ error: 'Failed to send OTP email' }, { status: 500 });
     }
 

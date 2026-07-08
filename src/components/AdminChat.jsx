@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useNotification } from '../context/NotificationContext';
 import { DB } from '../lib/supabase';
@@ -124,6 +125,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const isInitialScrollDone = useRef(false);
+  const isProgrammaticScrolling = useRef(false);
 
   useEffect(() => {
     const fetchAdmins = async () => {
@@ -193,31 +195,58 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   }, [showMediaSidebar]);
 
   useEffect(() => {
+    let active = true;
     let sub;
     const load = async () => {
       setIsLoading(true);
+
+      // 1. Try loading from cache first
+      const cached = localStorage.getItem(`jobchat_cache_msgs_${applicantId}`);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.length > 0) {
+            setMessages(parsed);
+            setMessagesOffset(parsed.length);
+            setIsLoading(false);
+          }
+        } catch(e) {}
+      } else {
+        setMessages([]);
+        setMessagesOffset(0);
+      }
+
       try {
         const app = await DB.getApplicant(applicantId);
+        if (!active) return;
         setApplicant(app);
         
         isInitialScrollDone.current = false;
         setIsScrollDone(false);
-        const msgs = await DB.getMessages(applicantId, 0, 20);
+        const msgs = await DB.getMessages(applicantId, 0, 50, 'admin');
+        if (!active) return;
         setMessages(msgs);
-        setMessagesOffset(20);
-        if (msgs.length < 20) setHasMoreMessages(false);
+        setMessagesOffset(50);
+        if (msgs.length < 50) setHasMoreMessages(false);
         else setHasMoreMessages(true);
+
+        // Save to cache
+        localStorage.setItem(`jobchat_cache_msgs_${applicantId}`, JSON.stringify(msgs));
         
         setTimeout(() => {
+          if (!active) return;
           scrollToBottom('auto');
           setIsScrollDone(true);
           setTimeout(() => {
+            if (!active) return;
             isInitialScrollDone.current = true;
           }, 100);
         }, 50);
         DB.markMessagesAsSeen(applicantId, 'applicant');
         
+        if (!active) return;
         sub = DB.subscribeToMessages(applicantId, (msg) => {
+          if (!active) return;
           if (msg.sender_type === 'admin' && msg.sender_id === adminSession.user.id) return;
           
           setMessages(prev => {
@@ -245,15 +274,25 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       } catch (err) {
         console.error(err);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     };
     
     load();
     return () => {
+      active = false;
       if (sub) DB.unsubscribe(sub);
     };
   }, [applicantId, adminSession]);
+
+  useEffect(() => {
+    if (messages.length > 0 && applicantId) {
+      const firstMsg = messages[0];
+      if (firstMsg && firstMsg.conversation_id === applicantId) {
+        localStorage.setItem(`jobchat_cache_msgs_${applicantId}`, JSON.stringify(messages.slice(-100)));
+      }
+    }
+  }, [messages, applicantId]);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -283,13 +322,18 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     const container = listRef.current;
     if (!container) return;
     const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
+    
+    if (isProgrammaticScrolling.current) {
+      if (isAtBottom) {
+        isProgrammaticScrolling.current = false;
+      }
+      setShowScrollBtn(false);
+      return;
+    }
+
     setShowScrollBtn(!isAtBottom);
     if (isAtBottom) {
       setNewMessagesCount(0);
-    }
-
-    if (isInitialScrollDone.current && container.scrollTop <= 50 && hasMoreMessages && !isLoadingMessages) {
-      loadMoreMessages();
     }
   };
 
@@ -317,17 +361,29 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
 
   const loadMoreMessages = async () => {
     if (isLoadingMessages || !hasMoreMessages) return;
+    const container = listRef.current;
+    if (!container) return;
+
+    const prevScrollHeight = container.scrollHeight;
+    const prevScrollTop = container.scrollTop;
+
     setIsLoadingMessages(true);
     
     try {
-      const msgs = await DB.getMessages(applicantId, messagesOffset, 20);
+      const msgs = await DB.getMessages(applicantId, messagesOffset, 50, 'admin');
       if (msgs.length > 0) {
-        setMessages(prev => {
-          const filtered = msgs.filter(m => !prev.some(pm => pm.id === m.id));
-          return [...filtered, ...prev];
+        flushSync(() => {
+          setMessages(prev => {
+            const filtered = msgs.filter(m => !prev.some(pm => pm.id === m.id));
+            return [...filtered, ...prev];
+          });
+          setMessagesOffset(prev => prev + msgs.length);
+          if (msgs.length < 50) setHasMoreMessages(false);
         });
-        setMessagesOffset(prev => prev + msgs.length);
-        if (msgs.length < 20) setHasMoreMessages(false);
+
+        // The DOM is now updated synchronously, so we can adjust scroll position immediately
+        const scrollDiff = container.scrollHeight - prevScrollHeight;
+        container.scrollTop = prevScrollTop + scrollDiff;
       } else {
         setHasMoreMessages(false);
       }
@@ -559,7 +615,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       t('admin.confirmDelete') || 'Bạn có chắc chắn muốn xóa?',
       async () => {
         try {
-          await DB.deleteApplicant(applicant.id);
+          await DB.deleteConversation(applicant.id);
           if (onDelete) {
             onDelete(applicant.id);
           } else {
@@ -702,8 +758,8 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   <span>{t('admin.mediaGallery') || 'Tệp đã chia sẻ'}</span>
                 </button>
                 <button className="header-dropdown-item" onClick={() => { setIsEditingProfile(true); setShowMoreMenu(false); }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  <span>{t('admin.editJob') || 'Sửa hồ sơ'}</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  <span>{t('admin.applicantInfo') || 'Thông tin ứng viên'}</span>
                 </button>
                 <button className="header-dropdown-item danger" onClick={() => { handleDeleteConversation(); setShowMoreMenu(false); }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
@@ -735,12 +791,36 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               <div className="chat-welcome-icon">{applicant.name.charAt(0).toUpperCase()}</div>
               <h3>{applicant.name}</h3>
             </div>
-            {isLoadingMessages && (
-              <div style={{ textAlign: 'center', margin: '15px 0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <svg style={{ animation: 'spin 1s linear infinite', width: '24px', height: '24px', color: 'var(--messenger-blue)' }} viewBox="0 0 24 24" fill="none">
-                  <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
+            {hasMoreMessages && (
+              <div style={{ textAlign: 'center', margin: '15px 0' }}>
+                <button 
+                  onClick={loadMoreMessages} 
+                  disabled={isLoadingMessages}
+                  className="btn-load-more"
+                  style={{
+                    background: 'rgba(0, 132, 255, 0.08)',
+                    color: 'var(--messenger-blue)',
+                    border: '1px solid rgba(0, 132, 255, 0.15)',
+                    borderRadius: '20px',
+                    padding: '6px 16px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isLoadingMessages ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                      <svg style={{ animation: 'spin 1s linear infinite', width: '14px', height: '14px', color: 'var(--messenger-blue)' }} viewBox="0 0 24 24" fill="none">
+                        <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      {t('chat.loading') || 'Đang tải...'}
+                    </span>
+                  ) : (
+                    t('chat.loadMore') || 'Tải thêm tin nhắn cũ'
+                  )}
+                </button>
               </div>
             )}
             
@@ -838,14 +918,25 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
           <button 
             className={`scroll-bottom-btn ${newMessagesCount > 0 ? 'new-msg' : ''}`}
             onClick={() => {
+              isProgrammaticScrolling.current = true;
+              setShowScrollBtn(false);
               scrollToBottom();
               setNewMessagesCount(0);
             }}
+            style={newMessagesCount === 0 ? {
+              width: '32px',
+              height: '32px',
+              padding: 0,
+              justifyContent: 'center',
+              borderRadius: '50%'
+            } : {}}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-            <span>
-              {newMessagesCount > 0 ? `${newMessagesCount} ${t('chat.newMessages') || 'tin nhắn mới'}` : (t('chat.scrollDown') || 'Cuộn xuống')}
-            </span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+            {newMessagesCount > 0 && (
+              <span>
+                {newMessagesCount} {t('chat.newMessages') || 'tin nhắn mới'}
+              </span>
+            )}
           </button>
         )}
 
@@ -931,7 +1022,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 }}
                 onKeyDown={handleKeyDown}
                 rows="1"
-                style={{background:'transparent', margin:0, flex:1, border:'none', outline:'none', resize:'none', overflow:'hidden'}}
+                style={{background:'transparent', margin:0, flex:1, border:'none', outline:'none', resize:'none', overflowY:'auto', maxHeight:'120px'}}
               ></textarea>
               <button className="emoji-toggle-btn" onClick={(e) => EmojiPicker.toggle('admin-chat-input', e.currentTarget)}>😊</button>
 
@@ -1040,60 +1131,42 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
           <div className="job-form-card" style={{ maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
             <div className="job-form-header">
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--messenger-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
-                {t('admin.editJob') || 'Sửa'}
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--messenger-blue)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                {t('admin.applicantInfo') || 'Thông tin ứng viên'}
               </h3>
               <button className="job-form-close-flat" onClick={() => setIsEditingProfile(false)}>✕</button>
             </div>
-            <div className="job-form-body">
-              <div className="form-group">
-                <label className="form-label">{t('register.name')}</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                  required 
-                />
+            <div className="job-form-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>{t('register.name') || 'Tên hiển thị'}</span>
+                <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: '12px', fontSize: '15px', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontWeight: '500' }}>
+                  {applicant?.name || '--'}
+                </div>
               </div>
-              <div className="form-group" style={{ marginTop: '12px' }}>
-                <label className="form-label">{t('register.phone')}</label>
-                <input 
-                  type="tel" 
-                  className="form-input" 
-                  value={editPhone}
-                  onChange={e => setEditPhone(e.target.value)}
-                />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>{t('register.phone') || 'Số điện thoại'}</span>
+                <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: '12px', fontSize: '15px', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontWeight: '500' }}>
+                  {applicant?.phone || (t('chat.noPhoneMessage') || 'Chưa cung cấp số điện thoại')}
+                </div>
               </div>
-              <div className="form-group" style={{ marginTop: '12px' }}>
-                <label className="form-label">Email</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  value={applicant?.email || ''} 
-                  disabled 
-                  style={{ background: 'var(--bg-secondary)', cursor: 'not-allowed' }}
-                  placeholder={t('auth.noEmailLinked') || 'Chưa liên kết Email'}
-                />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>Email</span>
+                <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: '12px', fontSize: '15px', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontWeight: '500' }}>
+                  {applicant?.email || (t('auth.noEmailLinked') || 'Chưa liên kết Email')}
+                </div>
               </div>
-              <div className="form-group" style={{ marginTop: '12px' }}>
-                <label className="form-label">{t('register.position')}</label>
-                <select 
-                  className="form-select" 
-                  value={editPosition}
-                  onChange={e => setEditPosition(e.target.value)}
-                >
-                  <option value="">-- {t('register.positionPlaceholder') || 'Chọn vị trí'} --</option>
-                  <option value="factory">{t('register.positions.factory')}</option>
-                  <option value="office">{t('register.positions.office')}</option>
-                  <option value="nursing">{t('register.positions.nursing')}</option>
-                </select>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>
+                  {applicant?.applied_job_title ? ((t('chat.appliedJob') || 'Vị trí ứng tuyển').replace(/:$/, '').trim()) : (t('register.position') || 'Vị trí mong muốn')}
+                </span>
+                <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: '12px', fontSize: '15px', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontWeight: '500' }}>
+                  {applicant?.applied_job_title || (applicant?.position ? (t('register.positions.' + applicant.position) || applicant.position) : '--')}
+                </div>
               </div>
             </div>
-            <div className="job-form-footer" style={{ marginTop: '20px' }}>
-              <button className="btn-job-cancel" onClick={() => setIsEditingProfile(false)}>{t('admin.cancel') || 'Cancel'}</button>
-              <button className="btn-job-publish" onClick={handleSaveProfile} disabled={isSavingProfile}>
-                {isSavingProfile ? <div className="spinner"></div> : t('admin.save') || 'Lưu'}
+            <div className="job-form-footer" style={{ marginTop: '24px', justifyContent: 'flex-end' }}>
+              <button className="btn-job-cancel" onClick={() => setIsEditingProfile(false)} style={{ background: 'var(--messenger-blue)', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer' }}>
+                {t('admin.close') || 'Đóng'}
               </button>
             </div>
           </div>

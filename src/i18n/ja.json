@@ -58,6 +58,7 @@
         "online": "オンライン",
         "placeholder": "メッセージを入力...",
         "loadMore": "過去のメッセージを読み込む",
+        "loading": "読み込み中...",
         "welcomeTitle": "チャットへようこそ！",
         "welcomeMsg": "採用チームがあなたのメッセージをお待ちしています。お気軽にご質問ください。",
         "attachFile": "ファイルを添付",
@@ -130,7 +131,8 @@
         "translating": "翻訳中...",
         "showOriginal": "原文を表示",
         "showTranslation": "翻訳を表示",
-        "appliedJob": "応募職種:"
+        "appliedJob": "応募職種:",
+        "jobApplication": "応募"
     },
     "admin": {
         "loginTitle": "管理者ログイン",
@@ -146,6 +148,7 @@
         "filterUnread": "未読",
         "selectConversation": "チャットを選択してください",
         "newApplicant": "新規応募者",
+        "applicantInfo": "応募者情報",
         "appliedFrom": "応募元",
         "noConversations": "会話がありません",
         "conversationStarted": "会話開始：",
@@ -159,6 +162,7 @@
         "confirmPassword": "パスワード確認",
         "confirmPasswordPlaceholder": "新しいパスワードを再入力",
         "cancel": "キャンセル",
+        "close": "閉じる",
         "save": "保存",
         "nameRequired": "名前は必須です",
         "enterCurrentPassword": "現在のパスワードを入力してください",
@@ -221,7 +225,8 @@
         "login": "ログイン",
         "register": "新規登録",
         "back": "戻る",
-        "language": "言語"
+        "language": "言語",
+        "later": "後で"
     },
     "notification": {
         "newMessage": "新しいメッセージ",
@@ -318,7 +323,10 @@
         "password": "パスワード",
         "passwordPlaceholder": "6文字以上",
         "emailOptional": "メールアドレス（任意）",
-        "emailOptionalDesc": "設定するとパスワードを忘れた際に再設定できます",
+        "emailOptionalDesc": "OTP認証が必要です",
+        "otpPlaceholder": "6桁の数字を入力",
+        "otpRegisterPrompt": "確認と登録のため、メールに送信されたOTPコードを入力してください。",
+        "confirmAndRegister": "確認して登録",
         "rememberMe": "ログイン情報を記憶する",
         "forgotPassword": "パスワードをお忘れですか？",
         "resetPasswordTitle": "パスワードの再設定",
@@ -352,6 +360,10 @@
         "avatarRemoved": "プロフィール画像を削除しました",
         "errorPasswordMin": "パスワードは6文字以上で入力してください",
         "changeEmail": "変更",
-        "enterNewEmail": "新しいメールアドレスを入力"
+        "enterNewEmail": "新しいメールアドレスを入力",
+        "emailRegisterTitle": "通知＆セキュリティメールの設定",
+        "emailRegisterNote": "採用担当者からメッセージが届いた際に即時通知を受け取り、パスワードを忘れた際に復旧できるよう、メールアドレスを連携してください。",
+        "sendOtp": "認証コード（OTP）を送信",
+        "errorAccountDeleted": "アカウントが削除されたか、存在しません。"
     }
 }

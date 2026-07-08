@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef, use } from 'react';
+import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../../context/LanguageContext';
 import { useNotification } from '../../../context/NotificationContext';
@@ -69,6 +70,14 @@ export default function ChatPage({ params }) {
   const [activeLightboxImage, setActiveLightboxImage] = useState(null);
   const [applicantEmail, setApplicantEmail] = useState('');
   const [showEmailBanner, setShowEmailBanner] = useState(false);
+  const [showEmailReminderModal, setShowEmailReminderModal] = useState(false);
+  const [reminderEmail, setReminderEmail] = useState('');
+  const [reminderOtp, setReminderOtp] = useState('');
+  const [reminderOtpStep, setReminderOtpStep] = useState(false);
+  const [reminderOtpLoading, setReminderOtpLoading] = useState(false);
+  const [reminderOtpError, setReminderOtpError] = useState('');
+  const [reminderCountdown, setReminderCountdown] = useState(0);
+  const [isReminderResending, setIsReminderResending] = useState(false);
 
   const [messages, setMessages] = useState([]);
   const [applicantName, setApplicantName] = useState('');
@@ -149,6 +158,7 @@ export default function ChatPage({ params }) {
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
   const isInitialScrollDone = useRef(false);
+  const isProgrammaticScrolling = useRef(false);
 
   const getReplyText = (msg) => {
     if (!msg) return '';
@@ -162,28 +172,31 @@ export default function ChatPage({ params }) {
   };
 
   useEffect(() => {
+    let active = true;
     let subChannel = null;
 
     const checkAuthAndInit = async () => {
       const sessionStr = localStorage.getItem('jobchat_session');
       if (!sessionStr) {
-        router.push('/register');
+        if (active) router.push('/register');
         return;
       }
       try {
         const session = JSON.parse(sessionStr);
         if (session.id !== applicantId) {
-          router.push('/register');
+          if (active) router.push('/register');
           return;
         }
 
         // Verify applicant still exists in database
         const applicant = await DB.getApplicantByToken(session.token);
+        if (!active) return;
         if (!applicant) {
           console.warn('Session is invalid or applicant was deleted in database.');
           localStorage.removeItem('jobchat_session');
           window.dispatchEvent(new Event('authChange'));
-          router.push('/');
+          showToast(t('auth.errorAccountDeleted') || 'Tài khoản của bạn đã bị xóa hoặc không còn tồn tại.', 'error');
+          router.push('/register');
           return;
         }
 
@@ -193,11 +206,16 @@ export default function ChatPage({ params }) {
         if (!applicant.email && !dismissed) {
           setShowEmailBanner(true);
         }
+        const modalDismissed = sessionStorage.getItem(`jobchat_email_reminder_dismissed_${applicantId}`);
+        if (!applicant.email && !modalDismissed) {
+          setShowEmailReminderModal(true);
+        }
         loadInitialMessages(applicantId);
 
         const fetchAdmins = async () => {
           try {
             const list = await DB.getAllAdmins();
+            if (!active) return;
             const map = {};
             list.forEach(adm => {
               map[adm.id] = adm;
@@ -207,7 +225,9 @@ export default function ChatPage({ params }) {
         };
         fetchAdmins();
 
+        if (!active) return;
         subChannel = DB.subscribeToMessages(applicantId, (msg) => {
+          if (!active) return;
           const sStr = localStorage.getItem('jobchat_session');
           if (sStr) {
             try {
@@ -221,19 +241,31 @@ export default function ChatPage({ params }) {
         });
         setSubscription(subChannel);
       } catch(e) {
-        localStorage.removeItem('jobchat_session');
-        router.push('/register');
+        if (active) {
+          localStorage.removeItem('jobchat_session');
+          router.push('/register');
+        }
       }
     };
 
     checkAuthAndInit();
 
     return () => {
+      active = false;
       if (subChannel) {
         DB.unsubscribe(subChannel);
       }
     };
   }, [applicantId]);
+
+  useEffect(() => {
+    if (messages.length > 0 && applicantId) {
+      const firstMsg = messages[0];
+      if (firstMsg && firstMsg.conversation_id === applicantId) {
+        localStorage.setItem(`jobchat_cache_msgs_${applicantId}`, JSON.stringify(messages.slice(-100)));
+      }
+    }
+  }, [messages, applicantId]);
 
   useEffect(() => {
     if (!applicantId || !applicantName) return;
@@ -270,6 +302,106 @@ export default function ChatPage({ params }) {
 
     processPendingApplication();
   }, [applicantId, applicantName]);
+
+  useEffect(() => {
+    if (reminderCountdown > 0) {
+      const timer = setTimeout(() => setReminderCountdown(reminderCountdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [reminderCountdown]);
+
+  const handleSendReminderOtp = async () => {
+    const cleanEmail = reminderEmail.trim().toLowerCase();
+    if (!cleanEmail) {
+      showToast(t('common.error') || 'Vui lòng nhập email', 'error');
+      return;
+    }
+    setReminderOtpLoading(true);
+    try {
+      const currentLang = (typeof window !== 'undefined' ? localStorage.getItem('jobchat_lang') : 'vi') || 'vi';
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, lang: currentLang })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send OTP');
+      }
+      showToast(t('register.otpSent') || 'Mã xác thực đã được gửi tới email của bạn!', 'success');
+      setReminderOtpStep(true);
+      setReminderOtpError('');
+      setReminderCountdown(60);
+    } catch (err) {
+      console.error(err);
+      showToast(t('register.sendOtpFailed') || 'Gửi mã xác thực thất bại.', 'error');
+    } finally {
+      setReminderOtpLoading(false);
+    }
+  };
+
+  const handleVerifyReminderOtp = async () => {
+    const cleanEmail = reminderEmail.trim().toLowerCase();
+    const cleanOtp = reminderOtp.trim();
+    if (!cleanOtp) {
+      setReminderOtpError(t('auth.enterOtp') || 'Vui lòng nhập mã OTP');
+      return;
+    }
+    setReminderOtpLoading(true);
+    try {
+      const result = await DB.verifyOtp(cleanEmail, cleanOtp);
+      if (!result || !result.success) {
+        setReminderOtpError(t('register.invalidOtp') || 'Mã xác thực không chính xác.');
+        return;
+      }
+      
+      // Update email immediately in DB & LocalState
+      await DB.updateApplicant(applicantId, { email: cleanEmail });
+      setApplicantEmail(cleanEmail);
+
+      // Update session Storage
+      const sessionStr = localStorage.getItem('jobchat_session');
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr);
+          session.email = cleanEmail;
+          localStorage.setItem('jobchat_session', JSON.stringify(session));
+        } catch (e) {}
+      }
+
+      showToast(t('auth.emailLinkedSuccess') || 'Đã liên kết email thành công!', 'success');
+      setShowEmailReminderModal(false);
+    } catch (err) {
+      console.error(err);
+      setReminderOtpError(t('common.error') || 'Đã xảy ra lỗi');
+    } finally {
+      setReminderOtpLoading(false);
+    }
+  };
+
+  const handleReminderResendOtp = async () => {
+    if (reminderCountdown > 0 || isReminderResending) return;
+    const cleanEmail = reminderEmail.trim().toLowerCase();
+    if (!cleanEmail) return;
+    setIsReminderResending(true);
+    try {
+      const currentLang = (typeof window !== 'undefined' ? localStorage.getItem('jobchat_lang') : 'vi') || 'vi';
+      const res = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, lang: currentLang })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      showToast(t('auth.otpSentSuccess') || 'Mã xác thực đã được gửi lại!', 'success');
+      setReminderCountdown(60);
+    } catch (err) {
+      console.error(err);
+      showToast(t('register.sendOtpFailed') || 'Gửi lại mã thất bại.', 'error');
+    } finally {
+      setIsReminderResending(false);
+    }
+  };
 
   useEffect(() => {
     if (!applicantId) return;
@@ -330,7 +462,7 @@ export default function ChatPage({ params }) {
 
     const interval = setInterval(async () => {
       try {
-        const msgs = await DB.getMessages(applicantId, 0, 20);
+        const msgs = await DB.getMessages(applicantId, 0, 50, 'applicant');
         setMessages(prev => {
           // Use an object map to merge messages and prevent duplicates
           const prevMap = {};
@@ -386,12 +518,30 @@ export default function ChatPage({ params }) {
   const loadInitialMessages = async (id) => {
     isInitialScrollDone.current = false;
     setIsScrollDone(false);
+
+    // 1. Try loading from cache first
+    const cached = localStorage.getItem(`jobchat_cache_msgs_${id}`);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed && parsed.length > 0) {
+          setMessages(parsed);
+          setMessagesOffset(parsed.length);
+          setIsLoading(false);
+        }
+      } catch(e) {}
+    }
+
     try {
-      const msgs = await DB.getMessages(id, 0, 20);
+      const msgs = await DB.getMessages(id, 0, 50, 'applicant');
       setMessages(msgs);
-      setMessagesOffset(20);
-      if (msgs.length < 20) setHasMoreMessages(false);
+      setMessagesOffset(50);
+      if (msgs.length < 50) setHasMoreMessages(false);
+      else setHasMoreMessages(true);
       
+      // Save to cache
+      localStorage.setItem(`jobchat_cache_msgs_${id}`, JSON.stringify(msgs));
+
       setIsLoading(false);
       
       // Scroll to bottom instantly
@@ -413,17 +563,29 @@ export default function ChatPage({ params }) {
 
   const loadMoreMessages = async () => {
     if (isLoadingMessages || !hasMoreMessages) return;
+    const container = listRef.current;
+    if (!container) return;
+
+    const prevScrollHeight = container.scrollHeight;
+    const prevScrollTop = container.scrollTop;
+
     setIsLoadingMessages(true);
     
     try {
-      const msgs = await DB.getMessages(applicantId, messagesOffset, 20);
+      const msgs = await DB.getMessages(applicantId, messagesOffset, 50, 'applicant');
       if (msgs.length > 0) {
-        setMessages(prev => {
-          const filtered = msgs.filter(m => !prev.some(pm => pm.id === m.id));
-          return [...filtered, ...prev];
+        flushSync(() => {
+          setMessages(prev => {
+            const filtered = msgs.filter(m => !prev.some(pm => pm.id === m.id));
+            return [...filtered, ...prev];
+          });
+          setMessagesOffset(prev => prev + msgs.length);
+          if (msgs.length < 50) setHasMoreMessages(false);
         });
-        setMessagesOffset(prev => prev + msgs.length);
-        if (msgs.length < 20) setHasMoreMessages(false);
+
+        // The DOM is now updated synchronously, so we can adjust scroll position immediately
+        const scrollDiff = container.scrollHeight - prevScrollHeight;
+        container.scrollTop = prevScrollTop + scrollDiff;
       } else {
         setHasMoreMessages(false);
       }
@@ -469,14 +631,19 @@ export default function ChatPage({ params }) {
     if (!container) return;
     
     const isScrolledUp = container.scrollHeight - container.scrollTop - container.clientHeight > 150;
+    
+    if (isProgrammaticScrolling.current) {
+      if (!isScrolledUp) {
+        isProgrammaticScrolling.current = false;
+      }
+      setShowScrollBtn(false);
+      return;
+    }
+
     setShowScrollBtn(isScrolledUp);
     
     if (!isScrolledUp) {
       setNewMessagesCount(0);
-    }
-
-    if (isInitialScrollDone.current && container.scrollTop <= 50 && hasMoreMessages && !isLoadingMessages) {
-      loadMoreMessages();
     }
   };
 
@@ -566,9 +733,10 @@ export default function ChatPage({ params }) {
       setMessages(prev => prev.map(m => m.id === tempId ? { ...actualMsg, tempId: tempId } : m));
     } catch(err) {
       console.error('Send failed', err);
-      if (err && (err.code === '23503' || (err.message && err.message.includes('foreign key')))) {
-        showToast(t('register.invalidOtp') || 'Phiên làm việc đã hết hạn hoặc không tồn tại.', 'error');
+      if (err && (err.code === '23503' || err.code === '42501' || (err.message && (err.message.includes('foreign key') || err.message.includes('permission') || err.message.includes('policy'))))) {
+        showToast(t('auth.errorAccountDeleted') || 'Tài khoản của bạn đã bị xóa hoặc không còn tồn tại.', 'error');
         localStorage.removeItem('jobchat_session');
+        window.dispatchEvent(new Event('authChange'));
         router.push('/register');
         return;
       }
@@ -767,12 +935,36 @@ export default function ChatPage({ params }) {
               <h3>{t('chat.welcomeTitle')}</h3>
               <p>{t('chat.welcomeMsg')}</p>
             </div>
-            {isLoadingMessages && (
-              <div style={{ textAlign: 'center', margin: '15px 0', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <svg style={{ animation: 'spin 1s linear infinite', width: '24px', height: '24px', color: 'var(--messenger-blue)' }} viewBox="0 0 24 24" fill="none">
-                  <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
+            {hasMoreMessages && (
+              <div style={{ textAlign: 'center', margin: '15px 0' }}>
+                <button 
+                  onClick={loadMoreMessages} 
+                  disabled={isLoadingMessages}
+                  className="btn-load-more"
+                  style={{
+                    background: 'rgba(0, 132, 255, 0.08)',
+                    color: 'var(--messenger-blue)',
+                    border: '1px solid rgba(0, 132, 255, 0.15)',
+                    borderRadius: '20px',
+                    padding: '6px 16px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {isLoadingMessages ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                      <svg style={{ animation: 'spin 1s linear infinite', width: '14px', height: '14px', color: 'var(--messenger-blue)' }} viewBox="0 0 24 24" fill="none">
+                        <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      {t('chat.loading') || 'Đang tải...'}
+                    </span>
+                  ) : (
+                    t('chat.loadMore') || 'Tải thêm tin nhắn cũ'
+                  )}
+                </button>
               </div>
             )}
             
@@ -871,14 +1063,25 @@ export default function ChatPage({ params }) {
           <button 
             className={`scroll-bottom-btn ${newMessagesCount > 0 ? 'new-msg' : ''}`}
             onClick={() => {
+              isProgrammaticScrolling.current = true;
+              setShowScrollBtn(false);
               scrollToBottom();
               setNewMessagesCount(0);
             }}
+            style={newMessagesCount === 0 ? {
+              width: '32px',
+              height: '32px',
+              padding: 0,
+              justifyContent: 'center',
+              borderRadius: '50%'
+            } : {}}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-            <span>
-              {newMessagesCount > 0 ? `${newMessagesCount} ${t('chat.newMessages') || 'tin nhắn mới'}` : (t('chat.scrollDown') || 'Cuộn xuống')}
-            </span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+            {newMessagesCount > 0 && (
+              <span>
+                {newMessagesCount} {t('chat.newMessages') || 'tin nhắn mới'}
+              </span>
+            )}
           </button>
         )}
 
@@ -957,7 +1160,7 @@ export default function ChatPage({ params }) {
                 }}
                 onKeyDown={handleKeyDown}
                 rows="1"
-                style={{background:'transparent', margin:0, flex:1, border:'none', outline:'none', resize:'none', overflow:'hidden'}}
+                style={{background:'transparent', margin:0, flex:1, border:'none', outline:'none', resize:'none', overflowY:'auto', maxHeight:'120px'}}
               ></textarea>
               <button className="emoji-toggle-btn" onClick={(e) => EmojiPicker.toggle('chat-input', e.currentTarget)}>😊</button>
             </div>
@@ -1060,6 +1263,186 @@ export default function ChatPage({ params }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
               {t('chat.download') || 'Tải xuống'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {showEmailReminderModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '440px',
+            padding: '24px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => {
+                sessionStorage.setItem(`jobchat_email_reminder_dismissed_${applicantId}`, 'true');
+                setShowEmailReminderModal(false);
+              }}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                fontSize: '18px',
+                padding: '4px'
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ fontSize: '40px', marginBottom: '12px' }}>✉️</div>
+              <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {t('auth.emailRegisterTitle') || 'Cài đặt Email nhận thông báo & bảo mật'}
+              </h3>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+                {t('auth.emailRegisterNote') || 'Vui lòng liên kết email của bạn để nhận thông báo tức thì từ nhà tuyển dụng và có thể tự khôi phục mật khẩu khi quên.'}
+              </p>
+            </div>
+
+            {!reminderOtpStep ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontSize: '13px', fontWeight: '600' }}>
+                    Email <span style={{ color: 'var(--error)' }}>*</span>
+                  </label>
+                  <div className="input-with-icon">
+                    <span className="input-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    </span>
+                    <input 
+                      type="email" 
+                      className="form-input" 
+                      value={reminderEmail}
+                      onChange={e => setReminderEmail(e.target.value)}
+                      placeholder="example@gmail.com"
+                      disabled={reminderOtpLoading}
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="button" 
+                  onClick={handleSendReminderOtp}
+                  disabled={reminderOtpLoading || !reminderEmail.trim()}
+                  className="btn-primary"
+                  style={{ width: '100%', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}
+                >
+                  {reminderOtpLoading ? <div className="spinner" style={{ width: '18px', height: '18px' }}></div> : (t('auth.sendOtp') || 'Gửi mã xác thực (OTP)')}
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ color: 'var(--messenger-blue)', fontWeight: '600' }}>
+                    {t('auth.enterOtp') || 'Mã xác thực (OTP)'} <span style={{ color: 'var(--error)' }}>*</span>
+                  </label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="input-with-icon" style={{ flex: 1 }}>
+                      <span className="input-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path><path d="M12 6v6l4 2"></path></svg>
+                      </span>
+                      <input 
+                        type="text" 
+                        maxLength={6}
+                        className={`form-input ${reminderOtpError ? 'error' : ''}`}
+                        required 
+                        value={reminderOtp}
+                        onChange={e => setReminderOtp(e.target.value.replace(/\D/g, ''))}
+                        placeholder={t('auth.otpPlaceholder') || 'Nhập 6 chữ số'}
+                        disabled={reminderOtpLoading}
+                        style={{ letterSpacing: '2px', fontWeight: 'bold', textAlign: 'center' }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReminderOtpStep(false);
+                        setReminderOtp('');
+                        setReminderOtpError('');
+                      }}
+                      className="btn-secondary"
+                      style={{ padding: '0 16px', fontSize: '13px', borderRadius: '20px' }}
+                    >
+                      {t('common.back') || 'Quay lại'}
+                    </button>
+                  </div>
+                  {reminderOtpError && <div className="form-error" style={{ marginTop: '6px' }}>{reminderOtpError}</div>}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', fontSize: '13px' }}>
+                  {reminderCountdown > 0 ? (
+                    <span style={{ color: 'var(--text-muted)' }}>
+                      {t('register.resendCountdown') ? t('register.resendCountdown').replace('{seconds}', reminderCountdown) : `Gửi lại mã sau ${reminderCountdown}s`}
+                    </span>
+                  ) : (
+                    <button 
+                      type="button" 
+                      onClick={handleReminderResendOtp}
+                      disabled={isReminderResending}
+                      style={{
+                        background: 'none', border: 'none', 
+                        color: 'var(--messenger-blue)', fontSize: '13px', cursor: 'pointer',
+                        textDecoration: 'underline', padding: 0
+                      }}
+                    >
+                      {isReminderResending ? '...' : (t('register.resendOtp') || 'Gửi lại mã OTP')}
+                    </button>
+                  )}
+                </div>
+
+                <button 
+                  type="button" 
+                  onClick={handleVerifyReminderOtp}
+                  disabled={reminderOtpLoading || reminderOtp.length < 6}
+                  className="btn-primary"
+                  style={{ width: '100%', height: '42px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}
+                >
+                  {reminderOtpLoading ? <div className="spinner" style={{ width: '18px', height: '18px' }}></div> : (t('auth.confirmAndRegister') || 'Xác thực & Hoàn thành')}
+                </button>
+              </div>
+            )}
+
+            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'center' }}>
+              <button 
+                type="button"
+                onClick={() => {
+                  sessionStorage.setItem(`jobchat_email_reminder_dismissed_${applicantId}`, 'true');
+                  setShowEmailReminderModal(false);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  textDecoration: 'underline'
+                }}
+              >
+                {t('common.later') || 'Để sau'}
+              </button>
+            </div>
           </div>
         </div>
       )}

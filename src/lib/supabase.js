@@ -288,6 +288,14 @@ export const DB = {
         if (error) throw error;
     },
 
+    deleteConversation: async function (id) {
+        const { error } = await supabaseClient
+            .from('messages')
+            .update({ deleted_by_admin: true })
+            .eq('conversation_id', id);
+        if (error) throw error;
+    },
+
     // ---- Messages ----
     sendMessage: async function (conversationId, senderType, senderName, senderId, content, payload = null) {
         const insertData = {
@@ -485,13 +493,22 @@ export const DB = {
         if (error) throw error;
     },
 
-    getMessages: async function (conversationId, offset = 0, limit = 20) {
-        const { data, error } = await supabaseClient
+    getMessages: async function (conversationId, offset = 0, limit = 20, userType = null) {
+        let query = supabaseClient
             .from('messages')
             .select('*')
-            .eq('conversation_id', conversationId)
+            .eq('conversation_id', conversationId);
+            
+        if (userType === 'admin') {
+            query = query.eq('deleted_by_admin', false);
+        } else if (userType === 'applicant') {
+            query = query.eq('deleted_by_applicant', false);
+        }
+
+        const { data, error } = await query
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
+            
         if (error) throw error;
         return (data || []).reverse();
     },
@@ -501,6 +518,7 @@ export const DB = {
             .from('messages')
             .select('*')
             .eq('conversation_id', conversationId)
+            .eq('deleted_by_admin', false)
             .order('created_at', { ascending: false })
             .limit(1)
             .single();

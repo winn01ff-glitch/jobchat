@@ -109,6 +109,7 @@
         },
         "adminName": "ခေါ်ယူရေးအဖွဲ့",
         "loadMore": "ယခင်မက်ဆေ့ခ်ျများ ထပ်မံရယူရန်",
+        "loading": "လုပ်ဆောင်နေသည်...",
         "systemConnected": "ချိတ်ဆက်မှု အောင်မြင်ပါသည်။ စကားပြောဆိုနိုင်ပါပြီ။",
         "uploading": "တင်နေသည်...",
         "uploadSuccess": "တင်ခြင်း အောင်မြင်သည်!",
@@ -130,7 +131,8 @@
         "translating": "ဘာသာပြန်နေသည်...",
         "showOriginal": "မူရင်းကို ပြပါ",
         "showTranslation": "ဘာသာပြန်ချက်ကို ပြပါ",
-        "appliedJob": "လျှောက်ထားသော ရာထူး:"
+        "appliedJob": "လျှောက်ထားသော ရာထူး:",
+        "jobApplication": "လျှောက်လွှာ"
     },
     "admin": {
         "loginTitle": "စီမံခန့်ခွဲသူ ဝင်ရောက်ခြင်း",
@@ -146,6 +148,7 @@
         "filterUnread": "မဖတ်ရသေး",
         "selectConversation": "ချတ်ရွေးပါ",
         "newApplicant": "လျှောက်ထားသူအသစ်",
+        "applicantInfo": "လျှောက်ထားသူ အချက်အလက်",
         "appliedFrom": "မှလျှောက်ထားသည်",
         "noConversations": "ချတ်မရှိသေးပါ",
         "conversationStarted": "စတင်:",
@@ -159,6 +162,7 @@
         "confirmPassword": "စကား၀ှက်အတည်ပြု",
         "confirmPasswordPlaceholder": "စကား၀ှက်အသစ်ပြန်ထည့်ပါ",
         "cancel": "ပယ်ဖျက်",
+        "close": "ပိတ်ပါ",
         "save": "သိမ်းဆည်း",
         "nameRequired": "အမည်ထည့်ရန်လိုအပ်ပါသည်",
         "enterCurrentPassword": "လက်ရှိစကား၀ှက်ထည့်ပါ",
@@ -221,7 +225,8 @@
         "login": "လော့ဂ်အင်",
         "register": "အကောင့်ဖွင့်ရန်",
         "back": "ပြန်သွားရန်",
-        "language": "ဘာသာစကား"
+        "language": "ဘာသာစကား",
+        "later": "နောက်မှလုပ်ရန်"
     },
     "notification": {
         "newMessage": "မက်ဆေ့ချ်အသစ်",
@@ -318,7 +323,10 @@
         "password": "စကားဝှက်",
         "passwordPlaceholder": "အနည်းဆုံး ၆ လုံး",
         "emailOptional": "အီးမေးလ် (မထည့်လည်းရသည်)",
-        "emailOptionalDesc": "စကားဝှက်မေ့ပါက ပြန်လည်ရယူရန် အသုံးပြုပါမည်",
+        "emailOptionalDesc": "OTP အတည်ပြုရန် လိုအပ်သည်",
+        "otpPlaceholder": "၆ လုံးဂဏန်းထည့်ပါ",
+        "otpRegisterPrompt": "အတည်ပြုပြီး မှတ်ပုံတင်ရန် သင့်အီးမေးလ်သို့ ပို့ထားသော OTP ကုဒ်ကို ထည့်ပါ။",
+        "confirmAndRegister": "အတည်ပြုပြီး မှတ်ပုံတင်ပါ",
         "rememberMe": "အကောင့်ဝင်ခြင်းကို မှတ်သားထားပါ",
         "forgotPassword": "စကားဝှက်မေ့နေပါသလား။",
         "resetPasswordTitle": "စကားဝှက် ပြန်လည်ရယူရန်",
@@ -352,6 +360,10 @@
         "avatarRemoved": "ပရိုဖိုင်ပုံကို ဖယ်ရှားပြီးပါပြီ",
         "errorPasswordMin": "စကားဝှက်သည် အနည်းဆုံး ၆ လုံး ရှိရပါမည်",
         "changeEmail": "ပြောင်းလဲရန်",
-        "enterNewEmail": "အီးမေးလ်အသစ်ထည့်ပါ"
+        "enterNewEmail": "အီးမေးလ်အသစ်ထည့်ပါ",
+        "emailRegisterTitle": "အသိပေးချက်နှင့် လုံခြုံရေးအီးမေးလ် သတ်မှတ်ရန်",
+        "emailRegisterNote": "အလုပ်ရှင်က သင့်အား မက်ဆေ့ချ်ပို့သည့်အခါ ချက်ချင်းအကြောင်းကြားစာ ရရှိရန်နှင့် စကားဝှက်မေ့သွားပါက ပြန်လည်ရယူနိုင်ရန် သင့်အီးမေးလ်ကို ချိတ်ဆက်ပါ။",
+        "sendOtp": "အတည်ပြုကုဒ် ပို့ပါ (OTP)",
+        "errorAccountDeleted": "သင့်အကောင့်ကို ဖျek္လိုက်ပြီ သို့မဟုတ် မရှိတော့ပါ။"
     }
 }
