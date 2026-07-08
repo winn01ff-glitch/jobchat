@@ -52,6 +52,14 @@ export default function Header() {
       }
     };
 
+    const handleWindowScroll = () => {
+      const isChatActive = document.body.classList.contains('chat-page-active') || 
+                           document.body.classList.contains('chat-active-mobile');
+      if (isChatActive && (window.scrollY !== 0 || window.scrollX !== 0)) {
+        window.scrollTo(0, 0);
+      }
+    };
+
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateVisualViewport);
       // Run immediately and also delayed to account for loading/rendering delays
@@ -59,10 +67,13 @@ export default function Header() {
       setTimeout(updateVisualViewport, 300);
     }
 
+    window.addEventListener('scroll', handleWindowScroll);
+
     return () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', updateVisualViewport);
       }
+      window.removeEventListener('scroll', handleWindowScroll);
     };
   }, []);
 
