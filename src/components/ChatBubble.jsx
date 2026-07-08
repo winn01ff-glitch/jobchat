@@ -1,9 +1,11 @@
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { formatTime, getInitials, showConfirmModal, downloadFile } from '../lib/helpers';
 import { useLanguage } from '../context/LanguageContext';
 
 export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, adminInfo = null, applicantAvatar = null, showAvatar = true, activeMessageId = null, setActiveMessageId = null }) {
   const { lang, t } = useLanguage();
+  const router = useRouter();
   const [localShowTime, setLocalShowTime] = React.useState(false);
   const showTime = setActiveMessageId ? (activeMessageId === msg.id) : localShowTime;
   const [contextMenu, setContextMenu] = React.useState(null);
@@ -221,7 +223,123 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
     );
   };
 
+  const parseApplyMessage = (content) => {
+    if (typeof content !== 'string') return null;
+    if (!content.startsWith('【応募】')) return null;
+
+    const quoteMatch = content.match(/"([^"]+)"/);
+    const urlMatch = content.match(/\((https?:\/\/[^\s)]+)\)/);
+
+    if (quoteMatch && urlMatch) {
+      return {
+        title: quoteMatch[1],
+        url: urlMatch[1]
+      };
+    }
+    return null;
+  };
+
+  const handleJobCardClick = (e, url) => {
+    e.preventDefault();
+    try {
+      const parsedUrl = new URL(url);
+      if (parsedUrl.host === window.location.host) {
+        router.push(parsedUrl.pathname);
+      } else {
+        window.open(url, '_blank');
+      }
+    } catch (err) {
+      window.open(url, '_blank');
+    }
+  };
+
+  const renderJobCard = (applyData) => {
+    return (
+      <div 
+        className="message-job-card" 
+        style={{
+          background: 'var(--bg-primary)',
+          border: '1px solid var(--border-light)',
+          borderRadius: '16px',
+          padding: '16px',
+          width: '280px',
+          maxWidth: '100%',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px',
+          color: 'var(--text-primary)',
+          textAlign: 'left'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            background: 'rgba(0, 132, 255, 0.1)',
+            color: 'var(--messenger-blue)',
+            borderRadius: '50%',
+            width: '32px',
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px'
+          }}>
+            📋
+          </div>
+          <div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {t('jobs.applyNow') || 'Ứng tuyển'}
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+              Uphill Job Board
+            </div>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            {t('chat.appliedJob') || 'Vị trí muốn ứng tuyển:'}
+          </div>
+          <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', lineHeight: '1.3' }}>
+            {applyData.title}
+          </div>
+        </div>
+
+        <div style={{ height: '1px', background: 'var(--border-light)', margin: '4px 0 0 0' }}></div>
+        
+        <button 
+          onClick={(e) => handleJobCardClick(e, applyData.url)}
+          className="btn-view-job"
+          style={{
+            background: 'var(--messenger-blue)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '10px 16px',
+            fontSize: '13px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            transition: 'opacity 0.2s ease',
+            width: '100%'
+          }}
+        >
+          <span>{t('jobs.viewDetail') || 'Xem chi tiết'}</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    );
+  };
+
   const renderContent = () => {
+    const applyData = parseApplyMessage(msg.content);
+    if (applyData) {
+      return renderJobCard(applyData);
+    }
+
     let mainContent = null;
     try {
       const parsed = JSON.parse(msg.content);
