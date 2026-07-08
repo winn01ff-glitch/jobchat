@@ -675,9 +675,9 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               <div className="chat-header-status" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 {applicant.phone && <span>📞 {applicant.phone}</span>}
                 {applicant.email ? (
-                  <span style={{ color: 'var(--text-muted)' }}>✉️ {applicant.email}</span>
+                  <span style={{ color: 'var(--text-muted)' }} className="header-email-detail">✉️ {applicant.email}</span>
                 ) : (
-                  <span style={{ color: '#ff9800', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: '500' }} title="Ứng viên chưa cập nhật email nên sẽ không nhận được thông báo qua mail">
+                  <span style={{ color: '#ff9800', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: '500' }} className="header-email-detail" title="Ứng viên chưa cập nhật email nên sẽ không nhận được thông báo qua mail">
                     ⚠️ Chưa có Email (Không nhận được thông báo mail)
                   </span>
                 )}
@@ -1059,6 +1059,17 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   className="form-input" 
                   value={editPhone}
                   onChange={e => setEditPhone(e.target.value)}
+                />
+              </div>
+              <div className="form-group" style={{ marginTop: '12px' }}>
+                <label className="form-label">Email</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={applicant?.email || ''} 
+                  disabled 
+                  style={{ background: 'var(--bg-secondary)', cursor: 'not-allowed' }}
+                  placeholder={t('auth.noEmailLinked') || 'Chưa liên kết Email'}
                 />
               </div>
               <div className="form-group" style={{ marginTop: '12px' }}>

@@ -79,6 +79,17 @@ body.chat-page-active #page-container {
     gap: 4px;
 }
 
+.header-email-detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+@media (max-width: 768px) {
+    .header-email-detail {
+        display: none !important;
+    }
+}
+
 .chat-messages {
     flex: 1;
     overflow-y: auto;
