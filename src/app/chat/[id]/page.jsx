@@ -562,8 +562,8 @@ export default function ChatPage({ params }) {
 
     try {
       const actualMsg = await DB.sendMessage(applicantId, 'applicant', applicantName, applicantId, contentVal || text, payload);
-      // Replace temp with actual
-      setMessages(prev => prev.map(m => m.id === tempId ? actualMsg : m));
+       // Replace temp with actual, carrying over tempId to keep React key stable
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...actualMsg, tempId: tempId } : m));
     } catch(err) {
       console.error('Send failed', err);
       if (err && (err.code === '23503' || (err.message && err.message.includes('foreign key')))) {
@@ -831,7 +831,7 @@ export default function ChatPage({ params }) {
               const msgAdminInfo = msg.sender_type === 'admin' ? (adminsMap[msg.sender_id] || { display_name: msg.sender_name || t('chat.adminName') }) : null;
 
               return (
-                <React.Fragment key={msg.id}>
+                <React.Fragment key={msg.tempId || msg.id}>
                   {showDateSeparator && (
                     <div className="date-separator">
                       <span>{dateLabel}</span>

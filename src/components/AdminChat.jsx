@@ -439,7 +439,8 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
 
     try {
       const actualMsg = await DB.sendMessage(applicantId, 'admin', adminSession.profile.display_name, adminSession.user.id, contentVal || text, payload);
-      setMessages(prev => prev.map(m => m.id === tempId ? actualMsg : m));
+      // Replace temp with actual, carrying over tempId to keep React key stable
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...actualMsg, tempId: tempId } : m));
     } catch(err) {
       console.error('Send failed', err);
       showToast(t('common.error'), 'error');
@@ -797,7 +798,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               const isCurrentAdminMsg = msg.sender_type === 'admin' && msg.sender_id === adminSession?.user?.id;
 
               return (
-                <React.Fragment key={msg.id}>
+                <React.Fragment key={msg.tempId || msg.id}>
                   {showDateSeparator && (
                     <div className="date-separator">
                       <span>{dateLabel}</span>
