@@ -227,7 +227,7 @@ export const EmojiPicker = {
             input.dispatchEvent(event);
             
             // Focus the input to keep keyboard open
-            input.focus();
+            input.focus({ preventScroll: true });
             
             // Auto resize if textarea
             if (input.tagName === 'TEXTAREA') {

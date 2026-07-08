@@ -540,7 +540,7 @@ export default function ChatPage({ params }) {
       if (textareaRef.current) {
         textareaRef.current.value = '';
         textareaRef.current.style.height = 'auto';
-        textareaRef.current.focus();
+        textareaRef.current.focus({ preventScroll: true });
       }
     }
     setTimeout(scrollToBottom, 50);

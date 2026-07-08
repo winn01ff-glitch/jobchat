@@ -429,7 +429,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       if (textareaRef.current) {
         textareaRef.current.value = '';
         textareaRef.current.style.height = 'auto';
-        textareaRef.current.focus();
+        textareaRef.current.focus({ preventScroll: true });
       }
     }
     setTimeout(scrollToBottom, 50);
@@ -948,7 +948,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                           handleTextChange(res.text);
                           if (textareaRef.current) {
                             textareaRef.current.value = res.text;
-                            textareaRef.current.focus();
+                            textareaRef.current.focus({ preventScroll: true });
                             autoResize(textareaRef.current);
                           }
                           setShowCannedPopup(false);
