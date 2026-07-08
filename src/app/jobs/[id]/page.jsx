@@ -93,6 +93,16 @@ export default function JobDetailPage() {
         id: job.id,
         title: job.title
       }));
+      const sessionStr = localStorage.getItem('jobchat_session');
+      if (sessionStr) {
+        try {
+          const session = JSON.parse(sessionStr);
+          if (session && session.id) {
+            router.push(`/chat/${session.id}`);
+            return;
+          }
+        } catch (e) {}
+      }
     }
     router.push(`/register?position=${job.position || ''}`);
   };
