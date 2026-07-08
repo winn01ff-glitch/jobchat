@@ -332,36 +332,48 @@ export default function ChatPage({ params }) {
       try {
         const msgs = await DB.getMessages(applicantId, 0, 20);
         setMessages(prev => {
-          const prevIds = prev.map(m => m.id).join(',');
-          const newIds = msgs.map(m => m.id).join(',');
-          if (prevIds !== newIds) {
-            const sending = prev.filter(m => m.status === 'sending' || m.status === 'failed');
-            const merged = [...msgs];
-            sending.forEach(s => {
-              if (!merged.find(m => m.id === s.id)) {
-                merged.push(s);
-              }
-            });
-            merged.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-            
-            const hasNewAdminMsg = msgs.length > 0 && 
-              msgs[msgs.length - 1].sender_type === 'admin' && 
-              !prev.find(m => m.id === msgs[msgs.length - 1].id);
-              
-            if (hasNewAdminMsg) {
-              const container = listRef.current;
-              const isAtBottom = container ? (container.scrollHeight - container.scrollTop - container.clientHeight <= 150) : true;
-              if (isAtBottom) {
-                setTimeout(scrollToBottom, 50);
-                DB.markMessagesAsSeen(applicantId, 'admin');
-              } else {
-                setNewMessagesCount(prevCount => prevCount + 1);
+          // Use an object map to merge messages and prevent duplicates
+          const prevMap = {};
+          prev.forEach(m => {
+            prevMap[m.id] = m;
+          });
+
+          let changed = false;
+          // Check if there are any new messages or status changes
+          msgs.forEach(m => {
+            if (!prevMap[m.id]) {
+              prevMap[m.id] = m;
+              changed = true;
+            } else {
+              // Update status/content if changed (e.g. status goes from sending to sent)
+              if (prevMap[m.id].status !== m.status || prevMap[m.id].content !== m.content) {
+                prevMap[m.id] = m;
+                changed = true;
               }
             }
+          });
+
+          if (!changed) return prev;
+
+          // Detect if a new admin message was received
+          const hasNewAdminMsg = msgs.length > 0 && 
+            msgs[msgs.length - 1].sender_type === 'admin' && 
+            !prev.some(m => m.id === msgs[msgs.length - 1].id);
             
-            return merged;
+          if (hasNewAdminMsg) {
+            const container = listRef.current;
+            const isAtBottom = container ? (container.scrollHeight - container.scrollTop - container.clientHeight <= 150) : true;
+            if (isAtBottom) {
+              setTimeout(scrollToBottom, 50);
+              DB.markMessagesAsSeen(applicantId, 'admin');
+            } else {
+              setNewMessagesCount(prevCount => prevCount + 1);
+            }
           }
-          return prev;
+
+          const merged = Object.values(prevMap);
+          merged.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+          return merged;
         });
       } catch (e) {
         console.error('Polling failed:', e);
@@ -406,7 +418,10 @@ export default function ChatPage({ params }) {
     try {
       const msgs = await DB.getMessages(applicantId, messagesOffset, 20);
       if (msgs.length > 0) {
-        setMessages(prev => [...msgs, ...prev]);
+        setMessages(prev => {
+          const filtered = msgs.filter(m => !prev.some(pm => pm.id === m.id));
+          return [...filtered, ...prev];
+        });
         setMessagesOffset(prev => prev + msgs.length);
         if (msgs.length < 20) setHasMoreMessages(false);
       } else {
