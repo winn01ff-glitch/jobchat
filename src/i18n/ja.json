@@ -129,7 +129,8 @@
         "translate": "メッセージを翻訳",
         "translating": "翻訳中...",
         "showOriginal": "原文を表示",
-        "showTranslation": "翻訳を表示"
+        "showTranslation": "翻訳を表示",
+        "appliedJob": "応募職種:"
     },
     "admin": {
         "loginTitle": "管理者ログイン",

@@ -287,11 +287,8 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
             📋
           </div>
           <div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-primary)', fontWeight: '700', letterSpacing: '0.2px' }}>
               {t('jobs.applyNow') || 'Ứng tuyển'}
-            </div>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '500' }}>
-              Uphill Job Board
             </div>
           </div>
         </div>

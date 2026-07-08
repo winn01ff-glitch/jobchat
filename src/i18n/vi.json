@@ -129,7 +129,8 @@
         "translate": "Dịch tin nhắn",
         "translating": "Đang dịch...",
         "showOriginal": "Xem bản gốc",
-        "showTranslation": "Xem bản dịch"
+        "showTranslation": "Xem bản dịch",
+        "appliedJob": "Vị trí ứng tuyển:"
     },
     "admin": {
         "confirmLogoutTitle": "Xác nhận đăng xuất",

@@ -129,7 +129,8 @@
         "translate": "Translate message",
         "translating": "Translating...",
         "showOriginal": "Show original",
-        "showTranslation": "Show translation"
+        "showTranslation": "Show translation",
+        "appliedJob": "Applied Position:"
     },
     "admin": {
         "loginTitle": "Admin Login",

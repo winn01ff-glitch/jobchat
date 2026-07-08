@@ -129,7 +129,8 @@
         "translate": "မက်ဆေ့ခ်ျကို ဘာသာပြန်ပါ",
         "translating": "ဘာသာပြန်နေသည်...",
         "showOriginal": "မူရင်းကို ပြပါ",
-        "showTranslation": "ဘာသာပြန်ချက်ကို ပြပါ"
+        "showTranslation": "ဘာသာပြန်ချက်ကို ပြပါ",
+        "appliedJob": "လျှောက်ထားသော ရာထူး:"
     },
     "admin": {
         "loginTitle": "စီမံခန့်ခွဲသူ ဝင်ရောက်ခြင်း",
