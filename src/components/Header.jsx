@@ -54,7 +54,6 @@ export default function Header() {
 
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', updateVisualViewport);
-      window.visualViewport.addEventListener('scroll', updateVisualViewport);
       // Run immediately and also delayed to account for loading/rendering delays
       updateVisualViewport();
       setTimeout(updateVisualViewport, 300);
@@ -63,7 +62,6 @@ export default function Header() {
     return () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', updateVisualViewport);
-        window.visualViewport.removeEventListener('scroll', updateVisualViewport);
       }
     };
   }, []);
