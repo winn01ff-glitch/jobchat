@@ -549,7 +549,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
         mimeType: fileToUpload.type
       });
       
-      handleSend(content);
+      handleSend(content, window.expandBtnFocused);
       showToast(t('chat.uploadSuccess') || 'Tải lên thành công!', 'success');
     } catch (err) {
       console.error('File upload failed:', err);
@@ -573,7 +573,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
           lng: pos.coords.longitude,
           accuracy: pos.coords.accuracy
         });
-        handleSend(content);
+        handleSend(content, window.expandBtnFocused);
       },
       (err) => {
         showToast(t('chat.locationError') || 'Không thể lấy vị trí', 'error');
