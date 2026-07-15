@@ -433,6 +433,16 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
+  useEffect(() => {
+    const handleScrollToBottom = () => {
+      scrollToBottom('smooth');
+    };
+    window.addEventListener('chat-scroll-to-bottom', handleScrollToBottom);
+    return () => {
+      window.removeEventListener('chat-scroll-to-bottom', handleScrollToBottom);
+    };
+  }, []);
+
   const handleSend = async (customContent = null, keepFocus = false) => {
     EmojiPicker.hide();
     const contentVal = typeof customContent === 'string' ? customContent : null;

@@ -350,6 +350,11 @@ export function ChatBubble({ msg, isSent, showSender = true, onDelete, onReply, 
               alt={parsed.name} 
               onClick={(e) => { e.stopPropagation(); setLightboxOpen(true); }}
               style={{cursor: 'pointer'}}
+              onLoad={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('chat-scroll-to-bottom'));
+                }
+              }}
             />
              {lightboxOpen && (
               <div 

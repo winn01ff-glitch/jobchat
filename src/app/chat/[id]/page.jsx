@@ -626,6 +626,16 @@ export default function ChatPage({ params }) {
     messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
+  useEffect(() => {
+    const handleScrollToBottom = () => {
+      scrollToBottom('smooth');
+    };
+    window.addEventListener('chat-scroll-to-bottom', handleScrollToBottom);
+    return () => {
+      window.removeEventListener('chat-scroll-to-bottom', handleScrollToBottom);
+    };
+  }, []);
+
   const handleScroll = () => {
     const container = listRef.current;
     if (!container) return;
