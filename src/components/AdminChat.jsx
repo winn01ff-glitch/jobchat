@@ -635,6 +635,9 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
 
   const handleTextChange = (val) => {
     setInputText(val);
+    if (val.length > 0) {
+      setAreActionsCollapsed(true);
+    }
     
     // Broadcast typing state
     if (typingChannelRef.current) {
@@ -992,13 +995,31 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
             </button>
             
             <div className={`chat-actions ${areActionsCollapsed ? 'collapsed' : ''}`}>
-              <button className="chat-action-btn" title={t('chat.attachFile') || 'Đính kèm file'} onClick={() => fileInputRef.current?.click()}>
+              <button 
+                className="chat-action-btn" 
+                title={t('chat.attachFile') || 'Đính kèm file'} 
+                onMouseDown={(e) => e.preventDefault()}
+                onTouchStart={(e) => e.preventDefault()}
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
               </button>
-              <button className="chat-action-btn" title={t('chat.sendImage') || 'Gửi ảnh'} onClick={() => imageInputRef.current?.click()}>
+              <button 
+                className="chat-action-btn" 
+                title={t('chat.sendImage') || 'Gửi ảnh'} 
+                onMouseDown={(e) => e.preventDefault()}
+                onTouchStart={(e) => e.preventDefault()}
+                onClick={() => imageInputRef.current?.click()}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
               </button>
-              <button className="chat-action-btn" title={t('chat.sendLocation') || 'Gửi vị trí'} onClick={handleLocationSend}>
+              <button 
+                className="chat-action-btn" 
+                title={t('chat.sendLocation') || 'Gửi vị trí'} 
+                onMouseDown={(e) => e.preventDefault()}
+                onTouchStart={(e) => e.preventDefault()}
+                onClick={handleLocationSend}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
               </button>
             </div>
@@ -1006,6 +1027,8 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
             <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
               <button 
                 className={`emoji-toggle-btn canned-toggle-btn ${areActionsCollapsed ? 'collapsed-mobile' : ''}`} 
+                onMouseDown={(e) => e.preventDefault()}
+                onTouchStart={(e) => e.preventDefault()}
                 onClick={() => setShowCannedPopup(!showCannedPopup)} 
                 title="Trả lời nhanh"
               >
