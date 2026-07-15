@@ -47,7 +47,7 @@ export default function Header() {
         const isChatActive = document.body.classList.contains('chat-page-active') || 
                              document.body.classList.contains('chat-active-mobile');
         if (isChatActive && (window.scrollX !== 0 || window.scrollY !== 0)) {
-          window.scrollTo(0, 0);
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         }
       }
     };
@@ -56,7 +56,7 @@ export default function Header() {
       const isChatActive = document.body.classList.contains('chat-page-active') || 
                            document.body.classList.contains('chat-active-mobile');
       if (isChatActive && (window.scrollY !== 0 || window.scrollX !== 0)) {
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
     };
 
