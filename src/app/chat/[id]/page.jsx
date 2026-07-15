@@ -159,6 +159,8 @@ export default function ChatPage({ params }) {
   const imageInputRef = useRef(null);
   const isInitialScrollDone = useRef(false);
   const isProgrammaticScrolling = useRef(false);
+  const lastTypingBroadcastTimeRef = useRef(0);
+  const lastTypingStateRef = useRef(false);
 
   const getReplyText = (msg) => {
     if (!msg) return '';
@@ -663,13 +665,19 @@ export default function ChatPage({ params }) {
       setAreActionsCollapsed(true);
     }
     
-    // Broadcast typing state
+    // Broadcast typing state (throttled to once every 2.5 seconds)
     if (typingChannelRef.current) {
-      typingChannelRef.current.send({
-        type: 'broadcast',
-        event: 'typing',
-        payload: { sender_type: 'applicant', isTyping: val.length > 0 }
-      });
+      const now = Date.now();
+      const isTyping = val.length > 0;
+      if (isTyping !== lastTypingStateRef.current || now - lastTypingBroadcastTimeRef.current > 2500) {
+        lastTypingBroadcastTimeRef.current = now;
+        lastTypingStateRef.current = isTyping;
+        typingChannelRef.current.send({
+          type: 'broadcast',
+          event: 'typing',
+          payload: { sender_type: 'applicant', isTyping }
+        });
+      }
     }
     
     // Auto-clear typing status after 3s of inactivity
@@ -1195,9 +1203,14 @@ export default function ChatPage({ params }) {
                   }
                 }}
                 onChange={(e) => {
-                  handleTextChange(e.target.value);
-                  autoResize(e.target);
-                  if (e.target.value.trim()) {
+                  const val = e.target.value;
+                  handleTextChange(val);
+                  if (val.includes('\n') || val.length > 25) {
+                    autoResize(e.target);
+                  } else {
+                    e.target.style.height = '';
+                  }
+                  if (val.trim()) {
                     setAreActionsCollapsed(true);
                   }
                 }}
