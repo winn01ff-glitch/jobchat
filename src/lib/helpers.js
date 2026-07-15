@@ -153,6 +153,17 @@ export const EmojiPicker = {
             span.className = 'emoji-item';
             span.textContent = e;
             span.style.cursor = 'pointer';
+            
+            // Record focus state before blur occurs
+            span.addEventListener('mousedown', () => {
+                var input = document.getElementById(this.currentInputId);
+                this.wasFocusedBeforeSelect = input && (document.activeElement === input);
+            });
+            span.addEventListener('touchstart', () => {
+                var input = document.getElementById(this.currentInputId);
+                this.wasFocusedBeforeSelect = input && (document.activeElement === input);
+            });
+            
             span.addEventListener('click', () => {
                 this.select(e);
             });
@@ -174,7 +185,7 @@ export const EmojiPicker = {
             picker.classList.add('hidden');
         }
     },
-    toggle: function(inputId, btnElement) {
+    toggle: function(inputId, btnElement, keepFocus) {
         if (typeof document === 'undefined') return;
         this.init();
         var picker = document.getElementById('global-emoji-picker');
@@ -207,10 +218,12 @@ export const EmojiPicker = {
         }
         
         picker.classList.remove('hidden');
-
+ 
         var input = document.getElementById(inputId);
         if (input) {
-            input.focus({ preventScroll: true });
+            if (keepFocus) {
+                input.focus({ preventScroll: true });
+            }
             if (!input.dataset.hasEmojiKeydown) {
                 input.dataset.hasEmojiKeydown = 'true';
                 input.addEventListener('keydown', () => {
@@ -236,8 +249,10 @@ export const EmojiPicker = {
             var event = new Event('input', { bubbles: true });
             input.dispatchEvent(event);
             
-            // Focus the input to keep keyboard open
-            input.focus({ preventScroll: true });
+            // Focus ONLY if it was focused before selecting
+            if (this.wasFocusedBeforeSelect) {
+                input.focus({ preventScroll: true });
+            }
             
             // Auto resize if textarea
             if (input.tagName === 'TEXTAREA') {

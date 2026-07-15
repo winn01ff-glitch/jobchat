@@ -674,7 +674,7 @@ export default function ChatPage({ params }) {
     }
   };
 
-  const handleSend = async (customContent = null) => {
+  const handleSend = async (customContent = null, keepFocus = false) => {
     EmojiPicker.hide();
     const contentVal = typeof customContent === 'string' ? customContent : null;
     const text = (textareaRef.current?.value || inputText).trim();
@@ -721,7 +721,9 @@ export default function ChatPage({ params }) {
     if (textareaRef.current) {
       textareaRef.current.value = '';
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.focus({ preventScroll: true });
+      if (keepFocus) {
+        textareaRef.current.focus({ preventScroll: true });
+      }
     }
     setTimeout(scrollToBottom, 50);
 
@@ -819,7 +821,7 @@ export default function ChatPage({ params }) {
       );
       if (!isMobileOrTablet && !e.shiftKey) {
         e.preventDefault();
-        handleSend();
+        handleSend(null, true);
       }
     }
   };
@@ -1160,9 +1162,29 @@ export default function ChatPage({ params }) {
                 rows="1"
                 style={{background:'transparent', margin:0, flex:1, border:'none', outline:'none', resize:'none', overflowY:'auto', maxHeight:'120px'}}
               ></textarea>
-              <button className="emoji-toggle-btn" onClick={(e) => EmojiPicker.toggle('chat-input', e.currentTarget)}>😊</button>
+              <button 
+                className="emoji-toggle-btn" 
+                onMouseDown={() => {
+                  window.emojiToggleFocused = (document.activeElement === textareaRef.current);
+                }}
+                onTouchStart={() => {
+                  window.emojiToggleFocused = (document.activeElement === textareaRef.current);
+                }}
+                onClick={(e) => EmojiPicker.toggle('chat-input', e.currentTarget, window.emojiToggleFocused)}
+              >
+                😊
+              </button>
             </div>
-            <button className="btn-send" onClick={() => handleSend(inputText.trim() ? null : '👍')}>
+            <button 
+              className="btn-send" 
+              onMouseDown={() => {
+                window.sendButtonFocused = (document.activeElement === textareaRef.current);
+              }}
+              onTouchStart={() => {
+                window.sendButtonFocused = (document.activeElement === textareaRef.current);
+              }}
+              onClick={() => handleSend(inputText.trim() ? null : '👍', window.sendButtonFocused)}
+            >
               {inputText.trim() ? (
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M21.72 11.27l-18-9c-.53-.26-1.16-.16-1.58.26-.42.42-.52 1.05-.26 1.58l3.62 7.24a1 1 0 0 0 .89.55h8.11c.55 0 1 .45 1 1s-.45 1-1 1H6.39a1 1 0 0 0-.89.55l-3.62 7.24c-.26.53-.16 1.16.26 1.58.29.29.69.45 1.09.45.17 0 .34-.03.5-.1l18-9c.67-.34.94-1.15.6-1.82-.14-.28-.38-.52-.66-.66z"/></svg>
               ) : (
