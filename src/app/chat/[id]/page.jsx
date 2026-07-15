@@ -1203,7 +1203,15 @@ export default function ChatPage({ params }) {
                     className="chat-input-preview"
                     onClick={() => {
                       setAreActionsCollapsed(true);
-                      setTimeout(() => textareaRef.current?.focus(), 50);
+                      setTimeout(() => {
+                        const el = textareaRef.current;
+                        if (el) {
+                          el.focus();
+                          const len = el.value.length;
+                          el.setSelectionRange(len, len);
+                          el.scrollTop = el.scrollHeight;
+                        }
+                      }, 50);
                     }}
                     style={{
                       position: 'absolute',
@@ -1234,6 +1242,7 @@ export default function ChatPage({ params }) {
                   className="chat-input" 
                   placeholder={t('chat.placeholder')}
                   value={inputText}
+                  wrap={!areActionsCollapsed ? "off" : "soft"}
                   onFocus={() => {
                     setIsInputFocused(true);
                     setAreActionsCollapsed(true);
@@ -1273,7 +1282,8 @@ export default function ChatPage({ params }) {
                     overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
                     maxHeight: '120px',
                     whiteSpace: !areActionsCollapsed ? 'nowrap' : 'normal',
-                    height: (!areActionsCollapsed && !isInputFocused && inputText) ? '20px' : (!areActionsCollapsed ? '20px' : undefined),
+                    minHeight: !areActionsCollapsed ? '36px' : undefined,
+                    height: (!areActionsCollapsed && !isInputFocused && inputText) ? '36px' : (!areActionsCollapsed ? '36px' : undefined),
                     visibility: (!areActionsCollapsed && !isInputFocused && inputText) ? 'hidden' : 'visible',
                     opacity: (!areActionsCollapsed && !isInputFocused && inputText) ? 0 : 1,
                     pointerEvents: (!areActionsCollapsed && !isInputFocused && inputText) ? 'none' : 'auto'
