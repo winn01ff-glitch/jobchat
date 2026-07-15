@@ -307,7 +307,7 @@ export default function ApplicantSettingsModal({ isOpen, onClose, applicantId })
   };
 
   return (
-    <div className="settings-modal" style={{position:'fixed', top:0, left:0, width:'100vw', height:'100vh', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center'}}>
+    <div className="settings-modal" style={{position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center'}}>
       <div className="settings-overlay" onClick={onClose} style={{position:'absolute', top:0, left:0, width:'100%', height:'100%', background:'rgba(0,0,0,0.4)'}}></div>
       
       <div className="settings-card" style={{
@@ -316,7 +316,7 @@ export default function ApplicantSettingsModal({ isOpen, onClose, applicantId })
         borderRadius:'var(--radius-md)', 
         width:'90%', 
         maxWidth:'380px', 
-        maxHeight:'85vh', 
+        maxHeight:'90%', 
         display:'flex', 
         flexDirection:'column', 
         overflow:'hidden', 
@@ -346,15 +346,17 @@ export default function ApplicantSettingsModal({ isOpen, onClose, applicantId })
               background: isCloseHovered ? 'var(--border-light)' : 'none',
               border: 'none',
               borderRadius: '50%',
-              width: '32px',
-              height: '32px',
+              width: '36px',
+              height: '36px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
               color: 'var(--text-secondary)',
               transition: 'background 0.2s ease',
-              marginRight: '-6px'
+              marginRight: '-6px',
+              fontSize: '20px',
+              lineHeight: 1
             }}
           >
             ✕
