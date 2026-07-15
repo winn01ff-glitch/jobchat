@@ -556,7 +556,7 @@ body.chat-page-active #page-container {
 /* ============ Mobile Keyboard Fix ============ */
 @supports (height: 100dvh) {
     .chat-container {
-        height: calc(100dvh - var(--header-height));
+        height: calc(var(--visual-viewport-height, 100dvh) - var(--header-height));
     }
 }
 .chat-header-bar {
