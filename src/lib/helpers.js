@@ -193,6 +193,10 @@ export const EmojiPicker = {
         
         if (!picker.classList.contains('hidden') && this.lastBtn === btnElement) {
             picker.classList.add('hidden');
+            var input = document.getElementById(inputId);
+            if (input && keepFocus) {
+                input.focus({ preventScroll: true });
+            }
             return;
         }
         

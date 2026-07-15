@@ -1207,10 +1207,12 @@ export default function ChatPage({ params }) {
               ></textarea>
               <button 
                 className="emoji-toggle-btn" 
-                onMouseDown={() => {
+                onMouseDown={(e) => {
+                  e.preventDefault();
                   window.emojiToggleFocused = (document.activeElement === textareaRef.current);
                 }}
-                onTouchStart={() => {
+                onTouchStart={(e) => {
+                  e.preventDefault();
                   window.emojiToggleFocused = (document.activeElement === textareaRef.current);
                 }}
                 onClick={(e) => EmojiPicker.toggle('chat-input', e.currentTarget, window.emojiToggleFocused)}
