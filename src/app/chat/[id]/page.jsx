@@ -639,6 +639,12 @@ export default function ChatPage({ params }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (areActionsCollapsed && textareaRef.current) {
+      autoResize(textareaRef.current);
+    }
+  }, [areActionsCollapsed]);
+
   const handleScroll = () => {
     const container = listRef.current;
     if (!container) return;
@@ -1236,6 +1242,11 @@ export default function ChatPage({ params }) {
                     setIsInputFocused(false);
                     if (!inputText.trim()) {
                       setAreActionsCollapsed(false);
+                    }
+                  }}
+                  onClick={() => {
+                    if (!areActionsCollapsed) {
+                      setAreActionsCollapsed(true);
                     }
                   }}
                   onChange={(e) => {

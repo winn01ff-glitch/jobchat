@@ -446,6 +446,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     };
   }, []);
 
+  useEffect(() => {
+    if (areActionsCollapsed && textareaRef.current) {
+      autoResize(textareaRef.current);
+    }
+  }, [areActionsCollapsed]);
+
   const handleSend = async (customContent = null, keepFocus = false) => {
     EmojiPicker.hide();
     const contentVal = typeof customContent === 'string' ? customContent : null;
@@ -1100,6 +1106,11 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     setIsInputFocused(false);
                     if (!inputText.trim()) {
                       setAreActionsCollapsed(false);
+                    }
+                  }}
+                  onClick={() => {
+                    if (!areActionsCollapsed) {
+                      setAreActionsCollapsed(true);
                     }
                   }}
                   onChange={(e) => {
