@@ -148,6 +148,7 @@ export default function ChatPage({ params }) {
   const [subscription, setSubscription] = useState(null);
   const [adminsMap, setAdminsMap] = useState({});
   const [areActionsCollapsed, setAreActionsCollapsed] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   const typingTimeoutRef = useRef(null);
   const typingChannelRef = useRef(null);
@@ -1191,7 +1192,7 @@ export default function ChatPage({ params }) {
 
             <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                {(!areActionsCollapsed && inputText) && (
+                {(!areActionsCollapsed && !isInputFocused && inputText) && (
                   <div 
                     className="chat-input-preview"
                     onClick={() => {
@@ -1215,8 +1216,7 @@ export default function ChatPage({ params }) {
                       cursor: 'text',
                       userSelect: 'none',
                       background: 'transparent',
-                      display: 'flex',
-                      alignItems: 'center'
+                      display: 'block'
                     }}
                   >
                     {inputText}
@@ -1228,8 +1228,12 @@ export default function ChatPage({ params }) {
                   className="chat-input" 
                   placeholder={t('chat.placeholder')}
                   value={inputText}
-                  onFocus={() => setAreActionsCollapsed(true)}
+                  onFocus={() => {
+                    setIsInputFocused(true);
+                    setAreActionsCollapsed(true);
+                  }}
                   onBlur={() => {
+                    setIsInputFocused(false);
                     if (!inputText.trim()) {
                       setAreActionsCollapsed(false);
                     }
@@ -1255,12 +1259,13 @@ export default function ChatPage({ params }) {
                     border: 'none', 
                     outline: 'none', 
                     resize: 'none', 
-                    overflowY: 'auto', 
+                    overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
                     maxHeight: '120px',
-                    height: (!areActionsCollapsed && inputText) ? '20px' : undefined,
-                    visibility: (!areActionsCollapsed && inputText) ? 'hidden' : 'visible',
-                    opacity: (!areActionsCollapsed && inputText) ? 0 : 1,
-                    pointerEvents: (!areActionsCollapsed && inputText) ? 'none' : 'auto'
+                    whiteSpace: !areActionsCollapsed ? 'nowrap' : 'normal',
+                    height: (!areActionsCollapsed && !isInputFocused && inputText) ? '20px' : (!areActionsCollapsed ? '20px' : undefined),
+                    visibility: (!areActionsCollapsed && !isInputFocused && inputText) ? 'hidden' : 'visible',
+                    opacity: (!areActionsCollapsed && !isInputFocused && inputText) ? 0 : 1,
+                    pointerEvents: (!areActionsCollapsed && !isInputFocused && inputText) ? 'none' : 'auto'
                   }}
                 ></textarea>
               </div>

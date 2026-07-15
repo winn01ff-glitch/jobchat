@@ -117,6 +117,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [areActionsCollapsed, setAreActionsCollapsed] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -1055,7 +1056,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: '#ffb020' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               </button>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                {(!areActionsCollapsed && inputText) && (
+                {(!areActionsCollapsed && !isInputFocused && inputText) && (
                   <div 
                     className="chat-input-preview"
                     onClick={() => {
@@ -1079,8 +1080,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                       cursor: 'text',
                       userSelect: 'none',
                       background: 'transparent',
-                      display: 'flex',
-                      alignItems: 'center'
+                      display: 'block'
                     }}
                   >
                     {inputText}
@@ -1092,8 +1092,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   className="chat-input" 
                   placeholder={t('chat.placeholder')}
                   value={inputText}
-                  onFocus={() => setAreActionsCollapsed(true)}
+                  onFocus={() => {
+                    setIsInputFocused(true);
+                    setAreActionsCollapsed(true);
+                  }}
                   onBlur={() => {
+                    setIsInputFocused(false);
                     if (!inputText.trim()) {
                       setAreActionsCollapsed(false);
                     }
@@ -1119,12 +1123,13 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     border: 'none', 
                     outline: 'none', 
                     resize: 'none', 
-                    overflowY: 'auto', 
+                    overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
                     maxHeight: '120px',
-                    height: (!areActionsCollapsed && inputText) ? '20px' : undefined,
-                    visibility: (!areActionsCollapsed && inputText) ? 'hidden' : 'visible',
-                    opacity: (!areActionsCollapsed && inputText) ? 0 : 1,
-                    pointerEvents: (!areActionsCollapsed && inputText) ? 'none' : 'auto'
+                    whiteSpace: !areActionsCollapsed ? 'nowrap' : 'normal',
+                    height: (!areActionsCollapsed && !isInputFocused && inputText) ? '20px' : (!areActionsCollapsed ? '20px' : undefined),
+                    visibility: (!areActionsCollapsed && !isInputFocused && inputText) ? 'hidden' : 'visible',
+                    opacity: (!areActionsCollapsed && !isInputFocused && inputText) ? 0 : 1,
+                    pointerEvents: (!areActionsCollapsed && !isInputFocused && inputText) ? 'none' : 'auto'
                   }}
                 ></textarea>
               </div>
