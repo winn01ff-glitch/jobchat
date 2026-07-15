@@ -1054,34 +1054,80 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               >
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: '#ffb020' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               </button>
-              <textarea 
-                id="admin-chat-input"
-                ref={textareaRef}
-                className="chat-input" 
-                placeholder={t('chat.placeholder')}
-                value={inputText}
-                onFocus={() => setAreActionsCollapsed(true)}
-                onBlur={() => {
-                  if (!inputText.trim()) {
-                    setAreActionsCollapsed(false);
-                  }
-                }}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  handleTextChange(val);
-                  if (val.includes('\n') || val.length > 25) {
-                    autoResize(e.target);
-                  } else {
-                    e.target.style.height = '';
-                  }
-                  if (val.trim()) {
-                    setAreActionsCollapsed(true);
-                  }
-                }}
-                onKeyDown={handleKeyDown}
-                rows="1"
-                style={{background:'transparent', margin:0, flex:1, border:'none', outline:'none', resize:'none', overflowY:'auto', maxHeight:'120px'}}
-              ></textarea>
+              <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
+                {(!areActionsCollapsed && inputText) && (
+                  <div 
+                    className="chat-input-preview"
+                    onClick={() => {
+                      setAreActionsCollapsed(true);
+                      setTimeout(() => textareaRef.current?.focus(), 50);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: '36px',
+                      lineHeight: '36px',
+                      padding: '0 8px',
+                      fontSize: '15px',
+                      color: 'var(--text-primary)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      cursor: 'text',
+                      userSelect: 'none',
+                      background: 'transparent',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {inputText}
+                  </div>
+                )}
+                <textarea 
+                  id="admin-chat-input"
+                  ref={textareaRef}
+                  className="chat-input" 
+                  placeholder={t('chat.placeholder')}
+                  value={inputText}
+                  onFocus={() => setAreActionsCollapsed(true)}
+                  onBlur={() => {
+                    if (!inputText.trim()) {
+                      setAreActionsCollapsed(false);
+                    }
+                  }}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    handleTextChange(val);
+                    if (val.includes('\n') || val.length > 25) {
+                      autoResize(e.target);
+                    } else {
+                      e.target.style.height = '';
+                    }
+                    if (val.trim()) {
+                      setAreActionsCollapsed(true);
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
+                  rows="1"
+                  style={{
+                    background: 'transparent', 
+                    margin: 0, 
+                    flex: 1, 
+                    border: 'none', 
+                    outline: 'none', 
+                    resize: 'none', 
+                    overflowY: 'auto', 
+                    maxHeight: '120px',
+                    height: (!areActionsCollapsed && inputText) ? '20px' : undefined,
+                    visibility: (!areActionsCollapsed && inputText) ? 'hidden' : 'visible',
+                    opacity: (!areActionsCollapsed && inputText) ? 0 : 1,
+                    pointerEvents: (!areActionsCollapsed && inputText) ? 'none' : 'auto'
+                  }}
+                ></textarea>
+              </div>
               <button 
                 className="emoji-toggle-btn" 
                 onMouseDown={(e) => {
