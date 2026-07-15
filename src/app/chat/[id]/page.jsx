@@ -1116,9 +1116,19 @@ export default function ChatPage({ params }) {
             <button 
               className={`chat-action-btn expand-btn ${areActionsCollapsed ? 'active' : ''}`}
               title="Mở rộng" 
+              onMouseDown={() => {
+                window.expandBtnFocused = (document.activeElement === textareaRef.current);
+              }}
+              onTouchStart={() => {
+                window.expandBtnFocused = (document.activeElement === textareaRef.current);
+              }}
               onClick={() => {
                 setAreActionsCollapsed(false);
-                textareaRef.current?.blur();
+                if (window.expandBtnFocused) {
+                  textareaRef.current?.focus({ preventScroll: true });
+                } else {
+                  textareaRef.current?.blur();
+                }
               }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
