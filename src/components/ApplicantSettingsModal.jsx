@@ -340,12 +340,9 @@ export default function ApplicantSettingsModal({ isOpen, onClose, applicantId })
           <button 
             type="button" 
             onClick={onClose}
-            onMouseEnter={() => setIsCloseHovered(true)}
-            onMouseLeave={() => setIsCloseHovered(false)}
             style={{
-              background: isCloseHovered ? 'var(--border-light)' : 'none',
+              background: 'none',
               border: 'none',
-              borderRadius: '50%',
               width: '36px',
               height: '36px',
               display: 'flex',
@@ -353,7 +350,6 @@ export default function ApplicantSettingsModal({ isOpen, onClose, applicantId })
               justifyContent: 'center',
               cursor: 'pointer',
               color: 'var(--text-secondary)',
-              transition: 'background 0.2s ease',
               marginRight: '-6px',
               fontSize: '20px',
               lineHeight: 1
