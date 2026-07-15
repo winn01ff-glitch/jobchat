@@ -34,7 +34,7 @@
             "office": "Office Work",
             "nursing": "Nursing",
             "it": "IT / Technical",
-            "other": "Other"
+            "other": "No job selected"
         },
         "submit": "Start Chat",
         "enterOtp": "Enter Verification Code",
@@ -170,6 +170,7 @@
         "passwordMismatch": "New passwords do not match",
         "passwordTooShort": "Password must be at least 4 characters",
         "settingsSaved": "Settings saved ✓",
+        "reset": "Default",
         "jobPosts": "Job Posts",
         "createJob": "Create New",
         "editJob": "Edit",
@@ -337,6 +338,7 @@
         "errorPasswordLength": "Password must be at least 6 characters.",
         "errorIdExists": "This ID already exists, please choose another.",
         "errorNoEmailLinked": "No email address linked to this account. Please contact Admin.",
+        "noEmailLinked": "No email linked",
         "otpSentSuccess": "Verification code sent to your linked email address.",
         "resetSuccess": "Password reset successfully! Please log in again.",
         "linkChangeEmail": "Link / Change Email",

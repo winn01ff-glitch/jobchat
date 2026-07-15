@@ -34,7 +34,7 @@
             "office": "Văn phòng",
             "nursing": "Điều dưỡng",
             "it": "IT / Kỹ thuật",
-            "other": "Khác"
+            "other": "Chưa chọn việc làm"
         },
         "submit": "Bắt đầu chat",
         "enterOtp": "Nhập mã xác thực",
@@ -183,6 +183,7 @@
         "passwordMismatch": "Mật khẩu mới không khớp",
         "passwordTooShort": "Mật khẩu phải ít nhất 4 ký tự",
         "settingsSaved": "Đã lưu cài đặt ✓",
+        "reset": "Mặc định",
         "jobPosts": "Quản lý việc làm",
         "createJob": "Thêm bài mới",
         "editJob": "Sửa",
@@ -337,6 +338,7 @@
         "errorPasswordLength": "Mật khẩu phải có ít nhất 6 ký tự.",
         "errorIdExists": "ID này đã tồn tại, vui lòng chọn ID khác.",
         "errorNoEmailLinked": "Tài khoản này chưa liên kết email. Vui lòng liên hệ Quản lý để được hỗ trợ.",
+        "noEmailLinked": "Chưa liên kết Email",
         "otpSentSuccess": "Mã xác thực đã được gửi tới email liên kết của bạn.",
         "resetSuccess": "Đặt lại mật khẩu thành công! Hãy đăng nhập lại.",
         "linkChangeEmail": "Liên kết / Thay đổi Email",

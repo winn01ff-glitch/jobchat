@@ -1139,8 +1139,41 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
             <div className="job-form-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>{t('register.name') || 'Tên hiển thị'}</span>
-                <div style={{ padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: '12px', fontSize: '15px', color: 'var(--text-primary)', border: '1px solid var(--border-light)', fontWeight: '500' }}>
-                  {applicant?.name || '--'}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%' }}>
+                  <input 
+                    type="text" 
+                    value={editName}
+                    onChange={e => setEditName(e.target.value)}
+                    style={{ 
+                      flexGrow: 1, 
+                      padding: '10px 14px', 
+                      background: 'var(--bg-primary)', 
+                      borderRadius: '12px', 
+                      fontSize: '15px', 
+                      color: 'var(--text-primary)', 
+                      border: '1px solid var(--border-light)', 
+                      fontWeight: '500',
+                      outline: 'none'
+                    }} 
+                  />
+                  {editName !== applicant?.name && (
+                    <button 
+                      onClick={() => setEditName(applicant?.name || '')}
+                      style={{
+                        padding: '10px 14px',
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-light)',
+                        borderRadius: '12px',
+                        fontSize: '13px',
+                        color: 'var(--text-primary)',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {t('admin.reset') || 'Đặt lại'}
+                    </button>
+                  )}
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -1164,9 +1197,38 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 </div>
               </div>
             </div>
-            <div className="job-form-footer" style={{ marginTop: '24px', justifyContent: 'flex-end' }}>
-              <button className="btn-job-cancel" onClick={() => setIsEditingProfile(false)} style={{ background: 'var(--messenger-blue)', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '12px', fontWeight: '600', cursor: 'pointer' }}>
-                {t('admin.close') || 'Đóng'}
+            <div className="job-form-footer" style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                className="btn-job-cancel" 
+                onClick={() => setIsEditingProfile(false)} 
+                style={{ 
+                  background: 'white', 
+                  color: 'var(--text-primary)', 
+                  border: '1px solid var(--border-light)', 
+                  padding: '10px 24px', 
+                  borderRadius: '12px', 
+                  fontWeight: '600', 
+                  cursor: 'pointer' 
+                }}
+              >
+                {t('admin.cancel') || 'Hủy'}
+              </button>
+              <button 
+                className="btn-job-save" 
+                onClick={handleSaveProfile} 
+                disabled={isSavingProfile}
+                style={{ 
+                  background: 'var(--messenger-blue)', 
+                  color: 'white', 
+                  border: 'none', 
+                  padding: '10px 24px', 
+                  borderRadius: '12px', 
+                  fontWeight: '600', 
+                  cursor: 'pointer',
+                  opacity: isSavingProfile ? 0.7 : 1
+                }}
+              >
+                {isSavingProfile ? (t('admin.saving') || 'Đang lưu...') : (t('admin.save') || 'Lưu')}
               </button>
             </div>
           </div>

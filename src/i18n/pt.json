@@ -34,7 +34,7 @@
             "office": "Escritório",
             "nursing": "Enfermagem / Cuidados",
             "it": "TI / Técnico",
-            "other": "Outro"
+            "other": "Nenhum trabalho selecionado"
         },
         "submit": "Iniciar chat",
         "enterOtp": "Digite o código de verificação",
@@ -170,6 +170,7 @@
         "passwordMismatch": "As novas senhas não coincidem",
         "passwordTooShort": "A senha deve ter pelo menos 4 caracteres",
         "settingsSaved": "Configurações salvas ✓",
+        "reset": "Padrão",
         "jobPosts": "Vagas de emprego",
         "createJob": "Criar nova",
         "editJob": "Editar",
@@ -337,6 +338,7 @@
         "errorPasswordLength": "A senha deve ter pelo menos 6 caracteres.",
         "errorIdExists": "Este ID já existe, escolha outro.",
         "errorNoEmailLinked": "Nenhum endereço de e-mail associado a esta conta. Entre em contato com o Admin.",
+        "noEmailLinked": "Nenhum e-mail associado",
         "otpSentSuccess": "Código de verificação enviado para o seu e-mail cadastrado.",
         "resetSuccess": "Senha redefinida com sucesso! Por favor, faça login novamente.",
         "linkChangeEmail": "Vincular / Alterar E-mail",
