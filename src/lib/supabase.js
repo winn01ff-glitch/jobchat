@@ -130,13 +130,20 @@ export const DB = {
     },
 
     getApplicantByToken: async function (token) {
-        const { data, error } = await supabaseClient
+        const { data: sessionData, error: sessionError } = await supabaseClient
+            .from('applicant_sessions')
+            .select('applicant_id')
+            .eq('token', token)
+            .single();
+        if (sessionError || !sessionData) return null;
+
+        const { data: applicantData, error: applicantError } = await supabaseClient
             .from('applicants')
             .select('*')
-            .eq('session_token', token)
+            .eq('id', sessionData.applicant_id)
             .single();
-        if (error) return null;
-        return data;
+        if (applicantError) return null;
+        return applicantData;
     },
 
     getApplicantByEmail: async function (email) {
