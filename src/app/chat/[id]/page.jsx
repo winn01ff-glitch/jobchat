@@ -716,14 +716,12 @@ export default function ChatPage({ params }) {
       });
     }
 
-    if (!contentVal) {
-      setInputText('');
-      setAreActionsCollapsed(false);
-      if (textareaRef.current) {
-        textareaRef.current.value = '';
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.focus({ preventScroll: true });
-      }
+    setInputText('');
+    setAreActionsCollapsed(false);
+    if (textareaRef.current) {
+      textareaRef.current.value = '';
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.focus({ preventScroll: true });
     }
     setTimeout(scrollToBottom, 50);
 

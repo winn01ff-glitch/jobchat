@@ -186,27 +186,37 @@ export const EmojiPicker = {
         }
         
         this.lastBtn = btnElement;
-        var rect = btnElement.getBoundingClientRect();
         
         var bar = btnElement.closest('.chat-input-bar');
-        var bottomVal = 0;
         if (bar) {
+            bar.style.position = 'relative';
+            bar.appendChild(picker);
+            picker.style.position = 'absolute';
+            picker.style.bottom = '100%';
+            var rect = btnElement.getBoundingClientRect();
             var barRect = bar.getBoundingClientRect();
-            bottomVal = window.innerHeight - barRect.top + 2;
+            picker.style.right = Math.max(10, barRect.right - rect.right - 10) + 'px';
+            picker.style.left = 'auto';
         } else {
-            bottomVal = window.innerHeight - rect.top + 12;
+            document.body.appendChild(picker);
+            var rect = btnElement.getBoundingClientRect();
+            picker.style.position = 'fixed';
+            picker.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
+            picker.style.right = (window.innerWidth - rect.right - 10) + 'px';
+            picker.style.left = 'auto';
         }
         
-        picker.style.bottom = bottomVal + 'px';
-        picker.style.right = (window.innerWidth - rect.right - 10) + 'px';
         picker.classList.remove('hidden');
 
         var input = document.getElementById(inputId);
-        if (input && !input.dataset.hasEmojiKeydown) {
-            input.dataset.hasEmojiKeydown = 'true';
-            input.addEventListener('keydown', () => {
-                this.hide();
-            });
+        if (input) {
+            input.focus({ preventScroll: true });
+            if (!input.dataset.hasEmojiKeydown) {
+                input.dataset.hasEmojiKeydown = 'true';
+                input.addEventListener('keydown', () => {
+                    this.hide();
+                });
+            }
         }
     },
     select: function(emoji) {
