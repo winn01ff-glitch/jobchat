@@ -984,10 +984,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
             <button 
               className={`chat-action-btn expand-btn ${areActionsCollapsed ? 'active' : ''}`}
               title="Mở rộng" 
-              onMouseDown={() => {
+              onMouseDown={(e) => {
+                e.preventDefault();
                 window.expandBtnFocused = (document.activeElement === textareaRef.current);
               }}
-              onTouchStart={() => {
+              onTouchStart={(e) => {
+                e.preventDefault();
                 window.expandBtnFocused = (document.activeElement === textareaRef.current);
               }}
               onClick={() => {
