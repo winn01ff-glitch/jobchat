@@ -1122,11 +1122,18 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   className={`chat-input ${!areActionsCollapsed ? 'collapsed-height' : ''}`}
                   placeholder={t('chat.placeholder') || 'Nhắn tin...'}
                   wrap="soft"
-                  onFocus={() => {
+                  onFocus={(e) => {
                     setIsInputFocused(true);
                     setAreActionsCollapsed(true);
                     setTimeout(() => scrollToBottom('smooth'), 100);
                     setTimeout(() => scrollToBottom('smooth'), 300);
+                    
+                    const el = e.target;
+                    const val = el.value;
+                    setTimeout(() => {
+                      el.setSelectionRange(val.length, val.length);
+                      el.scrollTop = el.scrollHeight;
+                    }, 10);
                   }}
                   onBlur={() => {
                     setIsInputFocused(false);
