@@ -1279,6 +1279,7 @@ export default function ChatPage({ params }) {
                   placeholder={t('chat.placeholder')}
                   value={inputText}
                   wrap="soft"
+                  rows={1}
                   onFocus={() => {
                     setIsInputFocused(true);
                     setAreActionsCollapsed(true);

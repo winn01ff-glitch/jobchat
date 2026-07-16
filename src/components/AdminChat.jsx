@@ -1148,6 +1148,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   placeholder={t('chat.placeholder')}
                   value={inputText}
                   wrap="soft"
+                  rows={1}
                   onFocus={() => {
                     setIsInputFocused(true);
                     setAreActionsCollapsed(true);

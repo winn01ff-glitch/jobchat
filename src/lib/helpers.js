@@ -161,7 +161,7 @@ export function autoResize(textarea) {
     // Disable transition for accurate, invisible measurement
     textarea.style.transition = 'none';
     textarea.style.height = '1px';
-    const newHeight = Math.min(textarea.scrollHeight, 120) + 'px';
+    const newHeight = Math.min(textarea.scrollHeight + 2, 120) + 'px'; // +2 for top and bottom border
     
     // Revert to previous height and force a reflow before re-enabling transitions
     textarea.style.height = prevHeight || '36px'; 
