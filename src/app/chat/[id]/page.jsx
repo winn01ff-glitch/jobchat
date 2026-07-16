@@ -693,32 +693,6 @@ export default function ChatPage({ params }) {
     };
   }, []);
 
-  useEffect(() => {
-    if (areActionsCollapsed) {
-      if (textareaRef.current) {
-        const lastHeight = textareaRef.current.dataset.lastActiveHeight;
-        if (lastHeight) {
-          textareaRef.current.style.height = lastHeight;
-        } else {
-          autoResize(textareaRef.current);
-        }
-        const resizeTimer = setTimeout(() => {
-          if (textareaRef.current) {
-            autoResize(textareaRef.current);
-          }
-        }, 150);
-
-        return () => {
-          clearTimeout(resizeTimer);
-        };
-      }
-    } else {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = '';
-        textareaRef.current.scrollTop = 0;
-      }
-    }
-  }, [areActionsCollapsed]);
 
   const handleScroll = () => {
     const container = listRef.current;
