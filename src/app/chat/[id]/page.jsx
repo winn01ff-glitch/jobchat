@@ -168,7 +168,6 @@ export default function ChatPage({ params }) {
   const [adminsMap, setAdminsMap] = useState({});
   const [areActionsCollapsed, setAreActionsCollapsed] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
-  const [showActualText, setShowActualText] = useState(false);
 
   const typingTimeoutRef = useRef(null);
   const typingChannelRef = useRef(null);
@@ -700,31 +699,18 @@ export default function ChatPage({ params }) {
             autoResize(textareaRef.current);
           }
         }, 150);
-        
-        // Delay showing the actual text until layout transition completes (150ms)
-        const textTimer = setTimeout(() => {
-          setShowActualText(true);
-        }, 150);
 
         return () => {
           clearTimeout(resizeTimer);
-          clearTimeout(textTimer);
         };
       }
     } else {
-      setShowActualText(false);
       if (textareaRef.current) {
         textareaRef.current.style.height = '';
         textareaRef.current.scrollTop = 0;
       }
     }
   }, [areActionsCollapsed]);
-
-  useEffect(() => {
-    if (showActualText && textareaRef.current) {
-      autoResize(textareaRef.current);
-    }
-  }, [showActualText]);
 
   const handleScroll = () => {
     const container = listRef.current;
@@ -1286,32 +1272,6 @@ export default function ChatPage({ params }) {
                   textareaRef.current?.focus();
                 }}
               >
-                {(!showActualText && inputText) && (
-                  <div 
-                    className="chat-input-preview"
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: '36px',
-                      lineHeight: '20px',
-                      padding: '8px 12px',
-                      fontSize: '15px',
-                      color: 'var(--text-primary)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      pointerEvents: 'none',
-                      background: 'transparent',
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}
-                  >
-                    {formatPreviewText(inputText)}
-                  </div>
-                )}
                 <textarea 
                   id="chat-input"
                   ref={textareaRef}
@@ -1319,13 +1279,9 @@ export default function ChatPage({ params }) {
                   placeholder={t('chat.placeholder')}
                   value={inputText}
                   wrap="soft"
-                  onFocus={(e) => {
+                  onFocus={() => {
                     setIsInputFocused(true);
                     setAreActionsCollapsed(true);
-                    const el = e.target;
-                    const len = el.value.length;
-                    el.setSelectionRange(len, len);
-                    el.scrollTop = el.scrollHeight;
                     setTimeout(() => scrollToBottom('smooth'), 100);
                     setTimeout(() => scrollToBottom('smooth'), 300);
                   }}
@@ -1335,18 +1291,9 @@ export default function ChatPage({ params }) {
                     if (textareaRef.current) {
                       textareaRef.current.scrollTop = 0;
                     }
-                    window.scrollTo(0, 0);
                   }}
-                  onClick={(e) => {
-                    if (!isInputFocused) {
-                      setAreActionsCollapsed(true);
-                      const el = e.target;
-                      const len = el.value.length;
-                      el.setSelectionRange(len, len);
-                      el.scrollTop = el.scrollHeight;
-                      setTimeout(() => scrollToBottom('smooth'), 100);
-                      setTimeout(() => scrollToBottom('smooth'), 300);
-                    }
+                  onClick={() => {
+                    setAreActionsCollapsed(true);
                   }}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -1371,9 +1318,7 @@ export default function ChatPage({ params }) {
                     maxHeight: '120px',
                     minHeight: !areActionsCollapsed ? '36px' : undefined,
                     height: !areActionsCollapsed ? '36px' : undefined,
-                    color: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
-                    WebkitTextFillColor: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
-                    caretColor: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
+                    color: 'var(--text-primary)',
                   }}
                 ></textarea>
               </div>

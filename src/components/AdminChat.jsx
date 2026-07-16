@@ -138,7 +138,6 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const [areActionsCollapsed, setAreActionsCollapsed] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [showActualText, setShowActualText] = useState(false);
 
   const messagesEndRef = useRef(null);
   const listRef = useRef(null);
@@ -517,31 +516,18 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
             autoResize(textareaRef.current);
           }
         }, 150);
-        
-        // Delay showing the actual text until layout transition completes (150ms)
-        const textTimer = setTimeout(() => {
-          setShowActualText(true);
-        }, 150);
 
         return () => {
           clearTimeout(resizeTimer);
-          clearTimeout(textTimer);
         };
       }
     } else {
-      setShowActualText(false);
       if (textareaRef.current) {
         textareaRef.current.style.height = '';
         textareaRef.current.scrollTop = 0;
       }
     }
   }, [areActionsCollapsed]);
-
-  useEffect(() => {
-    if (showActualText && textareaRef.current) {
-      autoResize(textareaRef.current);
-    }
-  }, [showActualText]);
 
   const handleSend = async (customContent = null, keepFocus = false) => {
     EmojiPicker.hide();
@@ -1154,38 +1140,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               >
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: '#ffb020' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               </button>
-              <div 
-                style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}
-                onClick={() => {
-                  textareaRef.current?.focus();
-                }}
-              >
-                {(!showActualText && inputText) && (
-                  <div 
-                    className="chat-input-preview"
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: '36px',
-                      lineHeight: '20px',
-                      padding: '8px 12px',
-                      fontSize: '15px',
-                      color: 'var(--text-primary)',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      pointerEvents: 'none',
-                      background: 'transparent',
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}
-                  >
-                    {formatPreviewText(inputText)}
-                  </div>
-                )}
+              <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
                 <textarea 
                   id="admin-chat-input"
                   ref={textareaRef}
@@ -1193,13 +1148,9 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   placeholder={t('chat.placeholder')}
                   value={inputText}
                   wrap="soft"
-                  onFocus={(e) => {
+                  onFocus={() => {
                     setIsInputFocused(true);
                     setAreActionsCollapsed(true);
-                    const el = e.target;
-                    const len = el.value.length;
-                    el.setSelectionRange(len, len);
-                    el.scrollTop = el.scrollHeight;
                     setTimeout(() => scrollToBottom('smooth'), 100);
                     setTimeout(() => scrollToBottom('smooth'), 300);
                   }}
@@ -1209,18 +1160,9 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     if (textareaRef.current) {
                       textareaRef.current.scrollTop = 0;
                     }
-                    window.scrollTo(0, 0);
                   }}
-                  onClick={(e) => {
-                    if (!isInputFocused) {
-                      setAreActionsCollapsed(true);
-                      const el = e.target;
-                      const len = el.value.length;
-                      el.setSelectionRange(len, len);
-                      el.scrollTop = el.scrollHeight;
-                      setTimeout(() => scrollToBottom('smooth'), 100);
-                      setTimeout(() => scrollToBottom('smooth'), 300);
-                    }
+                  onClick={() => {
+                    setAreActionsCollapsed(true);
                   }}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -1245,9 +1187,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     maxHeight: '120px',
                     minHeight: !areActionsCollapsed ? '36px' : undefined,
                     height: !areActionsCollapsed ? '36px' : undefined,
-                    color: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
-                    WebkitTextFillColor: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
-                    caretColor: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
+                    color: 'var(--text-primary)',
                   }}
                 ></textarea>
               </div>
