@@ -158,6 +158,10 @@ export function autoResize(textarea) {
     
     textarea.style.height = 'auto';
     const newHeight = Math.min(textarea.scrollHeight, 120) + 'px';
+    
+    // Cache the calculated height for transitions
+    textarea.dataset.lastActiveHeight = newHeight;
+    
     if (prevHeight !== newHeight) {
         textarea.style.height = newHeight;
     } else {
