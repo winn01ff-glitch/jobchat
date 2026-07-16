@@ -1257,9 +1257,9 @@ export default function ChatPage({ params }) {
                 <textarea 
                   id="chat-input"
                   ref={textareaRef}
-                  className="chat-input" 
-                  placeholder={t('chat.placeholder')}
                   value={inputText}
+                  className={`chat-input ${!areActionsCollapsed ? 'collapsed-height' : ''}`}
+                  placeholder={t('chat.placeholder') || 'Nhắn tin...'}
                   wrap="soft"
                   onFocus={() => {
                     setIsInputFocused(true);

@@ -1116,11 +1116,11 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               </button>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
                 <textarea 
-                  id="admin-chat-input"
+                  id="chat-input"
                   ref={textareaRef}
-                  className="chat-input" 
-                  placeholder={t('chat.placeholder')}
                   value={inputText}
+                  className={`chat-input ${!areActionsCollapsed ? 'collapsed-height' : ''}`}
+                  placeholder={t('chat.placeholder') || 'Nhắn tin...'}
                   wrap="soft"
                   onFocus={() => {
                     setIsInputFocused(true);

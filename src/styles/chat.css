@@ -369,6 +369,12 @@ body.chat-page-active #page-container {
     scrollbar-width: none;  /* Firefox */
 }
 
+.chat-input.collapsed-height {
+    height: 36px !important;
+    overflow-y: hidden !important;
+    transition: height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 .chat-input::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
 }
