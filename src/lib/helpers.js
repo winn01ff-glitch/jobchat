@@ -134,8 +134,14 @@ export function debounce(func, wait) {
 // Auto-resize textarea
 export function autoResize(textarea) {
     if (!textarea) return;
+    const prevHeight = textarea.style.height;
     textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    const newHeight = Math.min(textarea.scrollHeight, 120) + 'px';
+    if (prevHeight !== newHeight) {
+        textarea.style.height = newHeight;
+    } else {
+        textarea.style.height = prevHeight;
+    }
 }
 
 export const EmojiPicker = {

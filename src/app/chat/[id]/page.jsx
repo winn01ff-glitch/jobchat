@@ -171,6 +171,20 @@ export default function ChatPage({ params }) {
 
   const typingTimeoutRef = useRef(null);
   const typingChannelRef = useRef(null);
+  const saveTimeoutRef = useRef(null);
+
+  const saveDraft = (id, val) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      try {
+        if (val) {
+          localStorage.setItem(`jobchat_draft_${id}`, val);
+        } else {
+          localStorage.removeItem(`jobchat_draft_${id}`);
+        }
+      } catch (e) {}
+    }, 400);
+  };
 
   const messagesEndRef = useRef(null);
   const listRef = useRef(null);
@@ -704,13 +718,9 @@ export default function ChatPage({ params }) {
   const handleTextChange = (val) => {
     setInputText(val);
     if (applicantId) {
-      if (val) {
-        localStorage.setItem(`jobchat_draft_${applicantId}`, val);
-      } else {
-        localStorage.removeItem(`jobchat_draft_${applicantId}`);
-      }
+      saveDraft(applicantId, val);
     }
-    if (val.length > 0) {
+    if (val.length > 0 && !areActionsCollapsed) {
       setAreActionsCollapsed(true);
     }
     
@@ -789,6 +799,7 @@ export default function ChatPage({ params }) {
     if (!isAttachment(contentVal)) {
       setInputText('');
       if (applicantId) {
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         localStorage.removeItem(`jobchat_draft_${applicantId}`);
       }
       setAreActionsCollapsed(false);
@@ -1238,7 +1249,7 @@ export default function ChatPage({ params }) {
 
             <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                {(!areActionsCollapsed && inputText) && (
+                {(!isInputFocused && inputText) && (
                   <div 
                     className="chat-input-preview"
                     style={{
@@ -1294,7 +1305,7 @@ export default function ChatPage({ params }) {
                   onChange={(e) => {
                     const val = e.target.value;
                     handleTextChange(val);
-                    if (val.includes('\n') || val.length > 25) {
+                    if (val.includes('\n') || val.length > 35) {
                       autoResize(e.target);
                     } else {
                       e.target.style.height = '';
@@ -1310,13 +1321,13 @@ export default function ChatPage({ params }) {
                     outline: 'none', 
                     resize: 'none', 
                     overflowX: 'hidden',
-                    overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
+                    overflowY: !isInputFocused ? 'hidden' : 'auto', 
                     maxHeight: '120px',
-                    whiteSpace: !areActionsCollapsed ? 'nowrap' : 'normal',
-                    minHeight: !areActionsCollapsed ? '36px' : undefined,
-                    height: !areActionsCollapsed ? '36px' : undefined,
-                    color: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
-                    caretColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
+                    whiteSpace: !isInputFocused ? 'nowrap' : 'normal',
+                    minHeight: !isInputFocused ? '36px' : undefined,
+                    height: !isInputFocused ? '36px' : undefined,
+                    color: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
+                    caretColor: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
                   }}
                 ></textarea>
               </div>

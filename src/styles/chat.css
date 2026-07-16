@@ -300,7 +300,7 @@ body.chat-page-active #page-container {
     width: 114px;
     opacity: 1;
     overflow: hidden;
-    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, margin 0.25s;
+    transition: width 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.12s ease-out, margin 0.15s;
 }
 
 .chat-actions.collapsed {
@@ -316,7 +316,7 @@ body.chat-page-active #page-container {
     margin-right: 0;
     overflow: hidden;
     pointer-events: none;
-    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, margin 0.25s;
+    transition: width 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.12s ease-out, margin 0.15s;
 }
 
 .chat-action-btn.expand-btn.active {
@@ -337,9 +337,16 @@ body.chat-page-active #page-container {
     border-radius: var(--radius-full);
     transition: var(--transition-fast);
     flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .chat-action-btn:hover { background: rgba(0,132,255,0.08); }
+.chat-action-btn:focus,
+.chat-action-btn:focus-visible,
+.chat-action-btn:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
 .chat-action-btn svg { width: 20px; height: 20px; }
 
 .chat-input-wrapper { flex: 1; position: relative; }
@@ -380,9 +387,16 @@ body.chat-page-active #page-container {
     border-radius: var(--radius-full);
     transition: var(--transition-fast);
     flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-send:hover { background: rgba(0,132,255,0.08); }
+.btn-send:focus,
+.btn-send:focus-visible,
+.btn-send:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
 .btn-send:disabled { opacity: 0.3; cursor: default; }
 .btn-send svg { width: 22px; height: 22px; }
 
@@ -612,11 +626,18 @@ body.chat-page-active #page-container {
     transition: opacity 0.2s;
     align-self: flex-end;
     margin-bottom: 7px;
+    -webkit-tap-highlight-color: transparent;
 }
 .emoji-toggle-btn:hover { opacity: 1; }
+.emoji-toggle-btn:focus,
+.emoji-toggle-btn:focus-visible,
+.emoji-toggle-btn:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
 
 .canned-toggle-btn {
-    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, margin 0.25s, padding 0.25s;
+    transition: width 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.12s ease-out, margin 0.15s, padding 0.15s;
     width: 28px;
     opacity: 0.7;
     margin-left: 8px;
@@ -624,8 +645,15 @@ body.chat-page-active #page-container {
     flex-shrink: 0;
     align-self: flex-end;
     margin-bottom: 7px;
+    -webkit-tap-highlight-color: transparent;
 }
 .canned-toggle-btn:hover { opacity: 1; }
+.canned-toggle-btn:focus,
+.canned-toggle-btn:focus-visible,
+.canned-toggle-btn:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
 
 @media (max-width: 768px) {
     .canned-toggle-btn.collapsed-mobile {

@@ -148,6 +148,20 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const isProgrammaticScrolling = useRef(false);
   const lastTypingBroadcastTimeRef = useRef(0);
   const lastTypingStateRef = useRef(false);
+  const saveTimeoutRef = useRef(null);
+
+  const saveDraft = (id, val) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      try {
+        if (val) {
+          localStorage.setItem(`jobchat_admin_draft_${id}`, val);
+        } else {
+          localStorage.removeItem(`jobchat_admin_draft_${id}`);
+        }
+      } catch (e) {}
+    }, 400);
+  };
 
   useEffect(() => {
     const fetchAdmins = async () => {
@@ -549,6 +563,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     if (!isAttachment(contentVal)) {
       setInputText('');
       if (applicantId) {
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
         localStorage.removeItem(`jobchat_admin_draft_${applicantId}`);
       }
       setAreActionsCollapsed(false);
@@ -705,13 +720,9 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const handleTextChange = (val) => {
     setInputText(val);
     if (applicantId) {
-      if (val) {
-        localStorage.setItem(`jobchat_admin_draft_${applicantId}`, val);
-      } else {
-        localStorage.removeItem(`jobchat_admin_draft_${applicantId}`);
-      }
+      saveDraft(applicantId, val);
     }
-    if (val.length > 0) {
+    if (val.length > 0 && !areActionsCollapsed) {
       setAreActionsCollapsed(true);
     }
     
@@ -1112,7 +1123,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: '#ffb020' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               </button>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                {(!areActionsCollapsed && inputText) && (
+                {(!isInputFocused && inputText) && (
                   <div 
                     className="chat-input-preview"
                     style={{
@@ -1168,7 +1179,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   onChange={(e) => {
                     const val = e.target.value;
                     handleTextChange(val);
-                    if (val.includes('\n') || val.length > 25) {
+                    if (val.includes('\n') || val.length > 35) {
                       autoResize(e.target);
                     } else {
                       e.target.style.height = '';
@@ -1184,13 +1195,13 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     outline: 'none', 
                     resize: 'none', 
                     overflowX: 'hidden',
-                    overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
+                    overflowY: !isInputFocused ? 'hidden' : 'auto', 
                     maxHeight: '120px',
-                    whiteSpace: !areActionsCollapsed ? 'nowrap' : 'normal',
-                    minHeight: !areActionsCollapsed ? '36px' : undefined,
-                    height: !areActionsCollapsed ? '36px' : undefined,
-                    color: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
-                    caretColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
+                    whiteSpace: !isInputFocused ? 'nowrap' : 'normal',
+                    minHeight: !isInputFocused ? '36px' : undefined,
+                    height: !isInputFocused ? '36px' : undefined,
+                    color: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
+                    caretColor: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
                   }}
                 ></textarea>
               </div>
