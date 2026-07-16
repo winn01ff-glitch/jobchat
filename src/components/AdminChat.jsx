@@ -138,6 +138,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   const [areActionsCollapsed, setAreActionsCollapsed] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showActualText, setShowActualText] = useState(false);
 
   const messagesEndRef = useRef(null);
   const listRef = useRef(null);
@@ -503,22 +504,36 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   }, []);
 
   useEffect(() => {
-    if (areActionsCollapsed && textareaRef.current) {
-      const lastHeight = textareaRef.current.dataset.lastActiveHeight;
-      if (lastHeight) {
-        textareaRef.current.style.height = lastHeight;
-      } else {
-        autoResize(textareaRef.current);
-      }
-      const timer = setTimeout(() => {
-        if (textareaRef.current) {
+    if (areActionsCollapsed) {
+      if (textareaRef.current) {
+        const lastHeight = textareaRef.current.dataset.lastActiveHeight;
+        if (lastHeight) {
+          textareaRef.current.style.height = lastHeight;
+        } else {
           autoResize(textareaRef.current);
         }
-      }, 150);
-      return () => clearTimeout(timer);
-    } else if (!areActionsCollapsed && textareaRef.current) {
-      textareaRef.current.style.height = '';
-      textareaRef.current.scrollTop = 0;
+        const resizeTimer = setTimeout(() => {
+          if (textareaRef.current) {
+            autoResize(textareaRef.current);
+          }
+        }, 150);
+        
+        // Delay showing the actual text until layout transition completes (150ms)
+        const textTimer = setTimeout(() => {
+          setShowActualText(true);
+        }, 150);
+
+        return () => {
+          clearTimeout(resizeTimer);
+          clearTimeout(textTimer);
+        };
+      }
+    } else {
+      setShowActualText(false);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = '';
+        textareaRef.current.scrollTop = 0;
+      }
     }
   }, [areActionsCollapsed]);
 
@@ -1134,7 +1149,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: '#ffb020' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               </button>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                {(!areActionsCollapsed && inputText) && (
+                {(!showActualText && inputText) && (
                   <div 
                     className="chat-input-preview"
                     style={{
@@ -1209,14 +1224,14 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     outline: 'none', 
                     resize: 'none', 
                     overflowX: 'hidden',
-                    overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
+                    overflowY: !showActualText ? 'hidden' : 'auto', 
                     maxHeight: '120px',
-                    whiteSpace: !areActionsCollapsed ? 'nowrap' : 'normal',
-                    minHeight: !areActionsCollapsed ? '36px' : undefined,
-                    height: !areActionsCollapsed ? '36px' : undefined,
-                    color: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
-                    WebkitTextFillColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
-                    caretColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
+                    whiteSpace: !showActualText ? 'nowrap' : 'normal',
+                    minHeight: !showActualText ? '36px' : undefined,
+                    height: !showActualText ? '36px' : undefined,
+                    color: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
+                    WebkitTextFillColor: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
+                    caretColor: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
                   }}
                 ></textarea>
               </div>

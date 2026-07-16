@@ -168,6 +168,7 @@ export default function ChatPage({ params }) {
   const [adminsMap, setAdminsMap] = useState({});
   const [areActionsCollapsed, setAreActionsCollapsed] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [showActualText, setShowActualText] = useState(false);
 
   const typingTimeoutRef = useRef(null);
   const typingChannelRef = useRef(null);
@@ -686,22 +687,36 @@ export default function ChatPage({ params }) {
   }, []);
 
   useEffect(() => {
-    if (areActionsCollapsed && textareaRef.current) {
-      const lastHeight = textareaRef.current.dataset.lastActiveHeight;
-      if (lastHeight) {
-        textareaRef.current.style.height = lastHeight;
-      } else {
-        autoResize(textareaRef.current);
-      }
-      const timer = setTimeout(() => {
-        if (textareaRef.current) {
+    if (areActionsCollapsed) {
+      if (textareaRef.current) {
+        const lastHeight = textareaRef.current.dataset.lastActiveHeight;
+        if (lastHeight) {
+          textareaRef.current.style.height = lastHeight;
+        } else {
           autoResize(textareaRef.current);
         }
-      }, 150);
-      return () => clearTimeout(timer);
-    } else if (!areActionsCollapsed && textareaRef.current) {
-      textareaRef.current.style.height = '';
-      textareaRef.current.scrollTop = 0;
+        const resizeTimer = setTimeout(() => {
+          if (textareaRef.current) {
+            autoResize(textareaRef.current);
+          }
+        }, 150);
+        
+        // Delay showing the actual text until layout transition completes (150ms)
+        const textTimer = setTimeout(() => {
+          setShowActualText(true);
+        }, 150);
+
+        return () => {
+          clearTimeout(resizeTimer);
+          clearTimeout(textTimer);
+        };
+      }
+    } else {
+      setShowActualText(false);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = '';
+        textareaRef.current.scrollTop = 0;
+      }
     }
   }, [areActionsCollapsed]);
 
@@ -1260,7 +1275,7 @@ export default function ChatPage({ params }) {
 
             <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                {(!areActionsCollapsed && inputText) && (
+                {(!showActualText && inputText) && (
                   <div 
                     className="chat-input-preview"
                     style={{
@@ -1335,14 +1350,14 @@ export default function ChatPage({ params }) {
                     outline: 'none', 
                     resize: 'none', 
                     overflowX: 'hidden',
-                    overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
+                    overflowY: !showActualText ? 'hidden' : 'auto', 
                     maxHeight: '120px',
-                    whiteSpace: !areActionsCollapsed ? 'nowrap' : 'normal',
-                    minHeight: !areActionsCollapsed ? '36px' : undefined,
-                    height: !areActionsCollapsed ? '36px' : undefined,
-                    color: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
-                    WebkitTextFillColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
-                    caretColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
+                    whiteSpace: !showActualText ? 'nowrap' : 'normal',
+                    minHeight: !showActualText ? '36px' : undefined,
+                    height: !showActualText ? '36px' : undefined,
+                    color: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
+                    WebkitTextFillColor: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
+                    caretColor: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
                   }}
                 ></textarea>
               </div>
