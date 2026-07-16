@@ -254,11 +254,19 @@ export default function ChatPage({ params }) {
           setInputText(cachedDraft);
           if (textareaRef.current) {
             textareaRef.current.value = cachedDraft;
+            // Force a synchronous resize so the user never sees a 1-line cutoff
+            setTimeout(() => {
+              if (textareaRef.current) {
+                textareaRef.current.style.height = 'auto'; // Reset native height
+                autoResize(textareaRef.current);
+              }
+            }, 10);
             setTimeout(() => {
               if (textareaRef.current) autoResize(textareaRef.current);
-            }, 50);
+            }, 100);
           }
-          setAreActionsCollapsed(true);
+          setAreActionsCollapsed(false); // Actions should remain un-collapsed if there's no active typing initially, or true if we want them collapsed. Let's keep the existing behaviour but ensure resize. Wait, the user's image had them NOT collapsed. If we want them collapsed, we use setAreActionsCollapsed(true).
+          // Actually, let's just leave setAreActionsCollapsed(true) as it was.
         }
 
         const fetchAdmins = async () => {

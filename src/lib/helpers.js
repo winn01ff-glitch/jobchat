@@ -157,10 +157,11 @@ export function autoResize(textarea) {
     }
     
     const oldTransition = textarea.style.transition;
+    const oldOverflow = textarea.style.overflow;
     
     // Disable transition for accurate, invisible measurement
     textarea.style.transition = 'none';
-    textarea.style.transition = 'none';
+    textarea.style.overflow = 'hidden';
     textarea.style.height = '1px';
     
     let scrollH = textarea.scrollHeight;
@@ -178,6 +179,7 @@ export function autoResize(textarea) {
     
     // Revert to previous height and force a reflow before re-enabling transitions
     textarea.style.height = prevHeight || '36px'; 
+    textarea.style.overflow = oldOverflow;
     void textarea.offsetHeight;
     textarea.style.transition = oldTransition;
     
