@@ -1195,6 +1195,8 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     const len = el.value.length;
                     el.setSelectionRange(len, len);
                     el.scrollTop = el.scrollHeight;
+                    setTimeout(() => scrollToBottom('smooth'), 100);
+                    setTimeout(() => scrollToBottom('smooth'), 300);
                   }}
                   onBlur={() => {
                     setIsInputFocused(false);
@@ -1205,10 +1207,15 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     window.scrollTo(0, 0);
                   }}
                   onClick={(e) => {
-                    setAreActionsCollapsed(true);
-                    const el = e.target;
-                    const len = el.value.length;
-                    el.setSelectionRange(len, len);
+                    if (!isInputFocused) {
+                      setAreActionsCollapsed(true);
+                      const el = e.target;
+                      const len = el.value.length;
+                      el.setSelectionRange(len, len);
+                      el.scrollTop = el.scrollHeight;
+                      setTimeout(() => scrollToBottom('smooth'), 100);
+                      setTimeout(() => scrollToBottom('smooth'), 300);
+                    }
                   }}
                   onChange={(e) => {
                     const val = e.target.value;
