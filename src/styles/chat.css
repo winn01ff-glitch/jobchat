@@ -370,13 +370,16 @@ body.chat-page-active #page-container {
 }
 
 .chat-input.collapsed-height {
-    height: 34px !important;
-    min-height: 34px !important;
-    padding: 6px 12px !important;
-    white-space: nowrap !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 12px !important;
+    line-height: 30px !important;
     overflow-y: hidden !important;
     overflow-x: hidden !important;
-    transition: height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), min-height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), padding 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                min-height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                padding 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+                line-height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .chat-input::-webkit-scrollbar {
