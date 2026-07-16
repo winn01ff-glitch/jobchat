@@ -370,9 +370,13 @@ body.chat-page-active #page-container {
 }
 
 .chat-input.collapsed-height {
-    height: 36px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 6px 12px !important;
+    white-space: nowrap !important;
     overflow-y: hidden !important;
-    transition: height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+    overflow-x: hidden !important;
+    transition: height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), min-height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), padding 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .chat-input::-webkit-scrollbar {
