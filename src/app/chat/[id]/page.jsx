@@ -1297,6 +1297,9 @@ export default function ChatPage({ params }) {
                   onBlur={() => {
                     setIsInputFocused(false);
                     setAreActionsCollapsed(false);
+                    if (textareaRef.current) {
+                      textareaRef.current.scrollTop = 0;
+                    }
                     window.scrollTo(0, 0);
                   }}
                   onClick={() => {
@@ -1327,6 +1330,7 @@ export default function ChatPage({ params }) {
                     minHeight: !isInputFocused ? '36px' : undefined,
                     height: !isInputFocused ? '36px' : undefined,
                     color: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
+                    WebkitTextFillColor: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
                     caretColor: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
                   }}
                 ></textarea>
