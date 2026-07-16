@@ -686,13 +686,19 @@ export default function ChatPage({ params }) {
   }, []);
 
   useEffect(() => {
-    if (areActionsCollapsed && textareaRef.current) {
-      autoResize(textareaRef.current);
-    } else if (!areActionsCollapsed && textareaRef.current) {
-      textareaRef.current.style.height = '';
-      textareaRef.current.scrollTop = 0;
+    if (textareaRef.current) {
+      if (isInputFocused) {
+        autoResize(textareaRef.current);
+        const timer = setTimeout(() => {
+          if (textareaRef.current) autoResize(textareaRef.current);
+        }, 150);
+        return () => clearTimeout(timer);
+      } else {
+        textareaRef.current.style.height = '';
+        textareaRef.current.scrollTop = 0;
+      }
     }
-  }, [areActionsCollapsed]);
+  }, [areActionsCollapsed, isInputFocused]);
 
   const handleScroll = () => {
     const container = listRef.current;
