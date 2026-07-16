@@ -365,6 +365,12 @@ body.chat-page-active #page-container {
     resize: none;
     outline: none;
     line-height: 1.36;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.chat-input::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
 }
 
 .chat-input:focus { border-color: var(--messenger-blue); }
