@@ -134,7 +134,28 @@ export function debounce(func, wait) {
 // Auto-resize textarea
 export function autoResize(textarea) {
     if (!textarea) return;
+    
+    const val = textarea.value;
+    const lastLength = parseInt(textarea.dataset.lastLength || '0', 10);
+    textarea.dataset.lastLength = val.length.toString();
+    
+    const currentWidth = textarea.offsetWidth;
+    const lastWidth = parseInt(textarea.dataset.lastWidth || '0', 10);
+    textarea.dataset.lastWidth = currentWidth.toString();
+    
     const prevHeight = textarea.style.height;
+    
+    // Force shrink if text got shorter, or if width changed (layout transition)
+    const forceShrink = (val.length < lastLength) || (currentWidth !== lastWidth && lastWidth > 0);
+    
+    if (!forceShrink) {
+        const currentHeight = textarea.clientHeight;
+        const sh = textarea.scrollHeight;
+        if (sh <= currentHeight && prevHeight) {
+            return;
+        }
+    }
+    
     textarea.style.height = 'auto';
     const newHeight = Math.min(textarea.scrollHeight, 120) + 'px';
     if (prevHeight !== newHeight) {

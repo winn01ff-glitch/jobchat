@@ -505,6 +505,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   useEffect(() => {
     if (areActionsCollapsed && textareaRef.current) {
       autoResize(textareaRef.current);
+      const timer = setTimeout(() => {
+        if (textareaRef.current) {
+          autoResize(textareaRef.current);
+        }
+      }, 150);
+      return () => clearTimeout(timer);
     } else if (!areActionsCollapsed && textareaRef.current) {
       textareaRef.current.style.height = '';
       textareaRef.current.scrollTop = 0;
