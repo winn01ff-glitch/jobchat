@@ -537,6 +537,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     }
   }, [areActionsCollapsed]);
 
+  useEffect(() => {
+    if (showActualText && textareaRef.current) {
+      autoResize(textareaRef.current);
+    }
+  }, [showActualText]);
+
   const handleSend = async (customContent = null, keepFocus = false) => {
     EmojiPicker.hide();
     const contentVal = typeof customContent === 'string' ? customContent : null;

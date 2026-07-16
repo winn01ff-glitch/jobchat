@@ -720,6 +720,12 @@ export default function ChatPage({ params }) {
     }
   }, [areActionsCollapsed]);
 
+  useEffect(() => {
+    if (showActualText && textareaRef.current) {
+      autoResize(textareaRef.current);
+    }
+  }, [showActualText]);
+
   const handleScroll = () => {
     const container = listRef.current;
     if (!container) return;
