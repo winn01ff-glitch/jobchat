@@ -1154,7 +1154,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               >
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: '#ffb020' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               </button>
-              <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
+              <div 
+                style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}
+                onClick={() => {
+                  textareaRef.current?.focus();
+                }}
+              >
                 {(!showActualText && inputText) && (
                   <div 
                     className="chat-input-preview"

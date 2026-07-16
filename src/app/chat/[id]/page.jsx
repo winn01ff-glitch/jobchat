@@ -1280,7 +1280,12 @@ export default function ChatPage({ params }) {
             </div>
 
             <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
-              <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
+              <div 
+                style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}
+                onClick={() => {
+                  textareaRef.current?.focus();
+                }}
+              >
                 {(!showActualText && inputText) && (
                   <div 
                     className="chat-input-preview"
