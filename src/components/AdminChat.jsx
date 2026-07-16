@@ -56,6 +56,25 @@ const compressImage = (file) => {
   });
 };
 
+const isAttachment = (content) => {
+  if (!content) return false;
+  try {
+    const parsed = JSON.parse(content);
+    return parsed && typeof parsed === 'object' && ('type' in parsed);
+  } catch (e) {
+    return false;
+  }
+};
+
+const formatPreviewText = (text) => {
+  if (!text) return '';
+  const singleLine = text.replace(/[\r\n]+/g, ' ');
+  if (singleLine.length > 25) {
+    return '...' + singleLine.slice(-22);
+  }
+  return singleLine;
+};
+
 export default function AdminChat({ applicantId, onBack, onDelete, adminSession, isSidebarCollapsed, onToggleSidebar, onApplicantUpdate, isPartnerTyping }) {
   const { t } = useLanguage();
   const { showToast } = useNotification();
@@ -298,6 +317,29 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   }, [messages, applicantId]);
 
   useEffect(() => {
+    if (applicantId) {
+      const cachedDraft = localStorage.getItem(`jobchat_admin_draft_${applicantId}`);
+      if (cachedDraft) {
+        setInputText(cachedDraft);
+        if (textareaRef.current) {
+          textareaRef.current.value = cachedDraft;
+          setTimeout(() => {
+            if (textareaRef.current) autoResize(textareaRef.current);
+          }, 50);
+        }
+        setAreActionsCollapsed(true);
+      } else {
+        setInputText('');
+        if (textareaRef.current) {
+          textareaRef.current.value = '';
+          textareaRef.current.style.height = '';
+        }
+        setAreActionsCollapsed(false);
+      }
+    }
+  }, [applicantId]);
+
+  useEffect(() => {
     const handleOnline = () => {
       setConnectionStatus('reconnecting');
       setTimeout(() => {
@@ -449,6 +491,9 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   useEffect(() => {
     if (areActionsCollapsed && textareaRef.current) {
       autoResize(textareaRef.current);
+    } else if (!areActionsCollapsed && textareaRef.current) {
+      textareaRef.current.style.height = '';
+      textareaRef.current.scrollTop = 0;
     }
   }, [areActionsCollapsed]);
 
@@ -501,13 +546,18 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       });
     }
 
-    setInputText('');
-    setAreActionsCollapsed(false);
-    if (textareaRef.current) {
-      textareaRef.current.value = '';
-      textareaRef.current.style.height = 'auto';
-      if (keepFocus) {
-        textareaRef.current.focus({ preventScroll: true });
+    if (!isAttachment(contentVal)) {
+      setInputText('');
+      if (applicantId) {
+        localStorage.removeItem(`jobchat_admin_draft_${applicantId}`);
+      }
+      setAreActionsCollapsed(false);
+      if (textareaRef.current) {
+        textareaRef.current.value = '';
+        textareaRef.current.style.height = 'auto';
+        if (keepFocus) {
+          textareaRef.current.focus({ preventScroll: true });
+        }
       }
     }
     setTimeout(scrollToBottom, 50);
@@ -654,6 +704,13 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
 
   const handleTextChange = (val) => {
     setInputText(val);
+    if (applicantId) {
+      if (val) {
+        localStorage.setItem(`jobchat_admin_draft_${applicantId}`, val);
+      } else {
+        localStorage.removeItem(`jobchat_admin_draft_${applicantId}`);
+      }
+    }
     if (val.length > 0) {
       setAreActionsCollapsed(true);
     }
@@ -1001,19 +1058,12 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               title="Mở rộng" 
               onMouseDown={(e) => {
                 e.preventDefault();
-                window.expandBtnFocused = (document.activeElement === textareaRef.current);
               }}
               onTouchStart={(e) => {
                 e.preventDefault();
-                window.expandBtnFocused = (document.activeElement === textareaRef.current);
               }}
               onClick={() => {
                 setAreActionsCollapsed(false);
-                if (window.expandBtnFocused) {
-                  textareaRef.current?.focus({ preventScroll: true });
-                } else {
-                  textareaRef.current?.blur();
-                }
               }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
@@ -1062,21 +1112,9 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: '#ffb020' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               </button>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                {(!areActionsCollapsed && !isInputFocused && inputText) && (
+                {(!areActionsCollapsed && inputText) && (
                   <div 
                     className="chat-input-preview"
-                    onClick={() => {
-                      setAreActionsCollapsed(true);
-                      setTimeout(() => {
-                        const el = textareaRef.current;
-                        if (el) {
-                          el.focus();
-                          const len = el.value.length;
-                          el.setSelectionRange(len, len);
-                          el.scrollTop = el.scrollHeight;
-                        }
-                      }, 50);
-                    }}
                     style={{
                       position: 'absolute',
                       top: 0,
@@ -1084,20 +1122,20 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                       right: 0,
                       bottom: 0,
                       height: '36px',
-                      lineHeight: '36px',
-                      padding: '0 8px',
+                      lineHeight: '20px',
+                      padding: '8px 12px',
                       fontSize: '15px',
                       color: 'var(--text-primary)',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      cursor: 'text',
-                      userSelect: 'none',
+                      pointerEvents: 'none',
                       background: 'transparent',
-                      display: 'block'
+                      display: 'flex',
+                      alignItems: 'center'
                     }}
                   >
-                    {inputText}
+                    {formatPreviewText(inputText)}
                   </div>
                 )}
                 <textarea 
@@ -1110,17 +1148,22 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   onFocus={() => {
                     setIsInputFocused(true);
                     setAreActionsCollapsed(true);
+                    setTimeout(() => {
+                      const el = textareaRef.current;
+                      if (el) {
+                        const len = el.value.length;
+                        el.setSelectionRange(len, len);
+                        el.scrollTop = el.scrollHeight;
+                      }
+                    }, 50);
                   }}
                   onBlur={() => {
                     setIsInputFocused(false);
-                    if (!inputText.trim()) {
-                      setAreActionsCollapsed(false);
-                    }
+                    setAreActionsCollapsed(false);
+                    window.scrollTo(0, 0);
                   }}
                   onClick={() => {
-                    if (!areActionsCollapsed) {
-                      setAreActionsCollapsed(true);
-                    }
+                    setAreActionsCollapsed(true);
                   }}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -1129,9 +1172,6 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                       autoResize(e.target);
                     } else {
                       e.target.style.height = '';
-                    }
-                    if (val.trim()) {
-                      setAreActionsCollapsed(true);
                     }
                   }}
                   onKeyDown={handleKeyDown}
@@ -1143,17 +1183,18 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     border: 'none', 
                     outline: 'none', 
                     resize: 'none', 
+                    overflowX: 'hidden',
                     overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
                     maxHeight: '120px',
                     whiteSpace: !areActionsCollapsed ? 'nowrap' : 'normal',
                     minHeight: !areActionsCollapsed ? '36px' : undefined,
-                    height: (!areActionsCollapsed && !isInputFocused && inputText) ? '36px' : (!areActionsCollapsed ? '36px' : undefined),
-                    visibility: (!areActionsCollapsed && !isInputFocused && inputText) ? 'hidden' : 'visible',
-                    opacity: (!areActionsCollapsed && !isInputFocused && inputText) ? 0 : 1,
-                    pointerEvents: (!areActionsCollapsed && !isInputFocused && inputText) ? 'none' : 'auto'
+                    height: !areActionsCollapsed ? '36px' : undefined,
+                    color: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
+                    caretColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
                   }}
                 ></textarea>
               </div>
+
               <button 
                 className="emoji-toggle-btn" 
                 onMouseDown={(e) => {
