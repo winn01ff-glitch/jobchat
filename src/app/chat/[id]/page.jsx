@@ -1313,18 +1313,14 @@ export default function ChatPage({ params }) {
                   className="chat-input" 
                   placeholder={t('chat.placeholder')}
                   value={inputText}
-                  wrap={!areActionsCollapsed ? "off" : "soft"}
-                  onFocus={() => {
+                  wrap="soft"
+                  onFocus={(e) => {
                     setIsInputFocused(true);
                     setAreActionsCollapsed(true);
-                    setTimeout(() => {
-                      const el = textareaRef.current;
-                      if (el) {
-                        const len = el.value.length;
-                        el.setSelectionRange(len, len);
-                        el.scrollTop = el.scrollHeight;
-                      }
-                    }, 50);
+                    const el = e.target;
+                    const len = el.value.length;
+                    el.setSelectionRange(len, len);
+                    el.scrollTop = el.scrollHeight;
                   }}
                   onBlur={() => {
                     setIsInputFocused(false);
@@ -1334,8 +1330,11 @@ export default function ChatPage({ params }) {
                     }
                     window.scrollTo(0, 0);
                   }}
-                  onClick={() => {
+                  onClick={(e) => {
                     setAreActionsCollapsed(true);
+                    const el = e.target;
+                    const len = el.value.length;
+                    el.setSelectionRange(len, len);
                   }}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -1356,11 +1355,10 @@ export default function ChatPage({ params }) {
                     outline: 'none', 
                     resize: 'none', 
                     overflowX: 'hidden',
-                    overflowY: !showActualText ? 'hidden' : 'auto', 
+                    overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
                     maxHeight: '120px',
-                    whiteSpace: !showActualText ? 'nowrap' : 'normal',
-                    minHeight: !showActualText ? '36px' : undefined,
-                    height: !showActualText ? '36px' : undefined,
+                    minHeight: !areActionsCollapsed ? '36px' : undefined,
+                    height: !areActionsCollapsed ? '36px' : undefined,
                     color: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
                     WebkitTextFillColor: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
                     caretColor: !showActualText && inputText ? 'transparent' : 'var(--text-primary)',
