@@ -503,19 +503,13 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
   }, []);
 
   useEffect(() => {
-    if (textareaRef.current) {
-      if (isInputFocused) {
-        autoResize(textareaRef.current);
-        const timer = setTimeout(() => {
-          if (textareaRef.current) autoResize(textareaRef.current);
-        }, 150);
-        return () => clearTimeout(timer);
-      } else {
-        textareaRef.current.style.height = '';
-        textareaRef.current.scrollTop = 0;
-      }
+    if (areActionsCollapsed && textareaRef.current) {
+      autoResize(textareaRef.current);
+    } else if (!areActionsCollapsed && textareaRef.current) {
+      textareaRef.current.style.height = '';
+      textareaRef.current.scrollTop = 0;
     }
-  }, [areActionsCollapsed, isInputFocused]);
+  }, [areActionsCollapsed]);
 
   const handleSend = async (customContent = null, keepFocus = false) => {
     EmojiPicker.hide();
@@ -1129,7 +1123,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', color: '#ffb020' }}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
               </button>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                {(!isInputFocused && inputText) && (
+                {(!areActionsCollapsed && inputText) && (
                   <div 
                     className="chat-input-preview"
                     style={{
@@ -1204,14 +1198,14 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     outline: 'none', 
                     resize: 'none', 
                     overflowX: 'hidden',
-                    overflowY: !isInputFocused ? 'hidden' : 'auto', 
+                    overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
                     maxHeight: '120px',
-                    whiteSpace: !isInputFocused ? 'nowrap' : 'normal',
-                    minHeight: !isInputFocused ? '36px' : undefined,
-                    height: !isInputFocused ? '36px' : undefined,
-                    color: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
-                    WebkitTextFillColor: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
-                    caretColor: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
+                    whiteSpace: !areActionsCollapsed ? 'nowrap' : 'normal',
+                    minHeight: !areActionsCollapsed ? '36px' : undefined,
+                    height: !areActionsCollapsed ? '36px' : undefined,
+                    color: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
+                    WebkitTextFillColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
+                    caretColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
                   }}
                 ></textarea>
               </div>

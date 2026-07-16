@@ -686,19 +686,13 @@ export default function ChatPage({ params }) {
   }, []);
 
   useEffect(() => {
-    if (textareaRef.current) {
-      if (isInputFocused) {
-        autoResize(textareaRef.current);
-        const timer = setTimeout(() => {
-          if (textareaRef.current) autoResize(textareaRef.current);
-        }, 150);
-        return () => clearTimeout(timer);
-      } else {
-        textareaRef.current.style.height = '';
-        textareaRef.current.scrollTop = 0;
-      }
+    if (areActionsCollapsed && textareaRef.current) {
+      autoResize(textareaRef.current);
+    } else if (!areActionsCollapsed && textareaRef.current) {
+      textareaRef.current.style.height = '';
+      textareaRef.current.scrollTop = 0;
     }
-  }, [areActionsCollapsed, isInputFocused]);
+  }, [areActionsCollapsed]);
 
   const handleScroll = () => {
     const container = listRef.current;
@@ -1255,7 +1249,7 @@ export default function ChatPage({ params }) {
 
             <div className="chat-input-wrapper" style={{flex:1, display:'flex', alignItems:'center', background:'var(--bg-input)', borderRadius:'20px', paddingRight:'4px'}}>
               <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
-                {(!isInputFocused && inputText) && (
+                {(!areActionsCollapsed && inputText) && (
                   <div 
                     className="chat-input-preview"
                     style={{
@@ -1330,14 +1324,14 @@ export default function ChatPage({ params }) {
                     outline: 'none', 
                     resize: 'none', 
                     overflowX: 'hidden',
-                    overflowY: !isInputFocused ? 'hidden' : 'auto', 
+                    overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
                     maxHeight: '120px',
-                    whiteSpace: !isInputFocused ? 'nowrap' : 'normal',
-                    minHeight: !isInputFocused ? '36px' : undefined,
-                    height: !isInputFocused ? '36px' : undefined,
-                    color: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
-                    WebkitTextFillColor: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
-                    caretColor: !isInputFocused && inputText ? 'transparent' : 'var(--text-primary)',
+                    whiteSpace: !areActionsCollapsed ? 'nowrap' : 'normal',
+                    minHeight: !areActionsCollapsed ? '36px' : undefined,
+                    height: !areActionsCollapsed ? '36px' : undefined,
+                    color: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
+                    WebkitTextFillColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
+                    caretColor: !areActionsCollapsed && inputText ? 'transparent' : 'var(--text-primary)',
                   }}
                 ></textarea>
               </div>
