@@ -160,8 +160,21 @@ export function autoResize(textarea) {
     
     // Disable transition for accurate, invisible measurement
     textarea.style.transition = 'none';
+    textarea.style.transition = 'none';
     textarea.style.height = '1px';
-    const newHeight = Math.min(textarea.scrollHeight + 2, 120) + 'px'; // +2 for top and bottom border
+    
+    let scrollH = textarea.scrollHeight;
+    const computed = window.getComputedStyle(textarea);
+    if (computed.boxSizing === 'border-box') {
+        scrollH += (parseFloat(computed.borderTopWidth) || 0) + (parseFloat(computed.borderBottomWidth) || 0);
+    }
+    
+    // Snap to 36px for 1-line text to prevent 1.5 line glitches from browser variations
+    if (scrollH <= 42) {
+        scrollH = 36;
+    }
+    
+    const newHeight = Math.min(scrollH, 120) + 'px';
     
     // Revert to previous height and force a reflow before re-enabling transitions
     textarea.style.height = prevHeight || '36px'; 

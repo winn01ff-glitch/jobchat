@@ -1148,7 +1148,6 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   placeholder={t('chat.placeholder')}
                   value={inputText}
                   wrap="soft"
-                  rows={1}
                   onFocus={() => {
                     setIsInputFocused(true);
                     setAreActionsCollapsed(true);
@@ -1168,11 +1167,7 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                   onChange={(e) => {
                     const val = e.target.value;
                     handleTextChange(val);
-                    if (val.includes('\n') || val.length > 35) {
-                      autoResize(e.target);
-                    } else {
-                      e.target.style.height = '';
-                    }
+                    autoResize(e.target);
                   }}
                   onKeyDown={handleKeyDown}
                   rows="1"
@@ -1184,10 +1179,8 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     outline: 'none', 
                     resize: 'none', 
                     overflowX: 'hidden',
-                    overflowY: !areActionsCollapsed ? 'hidden' : 'auto', 
+                    overflowY: 'auto', 
                     maxHeight: '120px',
-                    minHeight: !areActionsCollapsed ? '36px' : undefined,
-                    height: !areActionsCollapsed ? '36px' : undefined,
                     color: 'var(--text-primary)',
                   }}
                 ></textarea>
