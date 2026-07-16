@@ -156,16 +156,26 @@ export function autoResize(textarea) {
         }
     }
     
-    textarea.style.height = 'auto';
+    const oldTransition = textarea.style.transition;
+    
+    // Disable transition for accurate, invisible measurement
+    textarea.style.transition = 'none';
+    textarea.style.height = '1px';
     const newHeight = Math.min(textarea.scrollHeight, 120) + 'px';
     
-    // Cache the calculated height for transitions
+    // Revert to previous height and force a reflow before re-enabling transitions
+    textarea.style.height = prevHeight || '36px'; 
+    void textarea.offsetHeight;
+    textarea.style.transition = oldTransition;
+    
+    // Cache the calculated height for layout transitions
     textarea.dataset.lastActiveHeight = newHeight;
     
+    // Apply the new height cleanly (with CSS transition active)
     if (prevHeight !== newHeight) {
-        textarea.style.height = newHeight;
-    } else {
-        textarea.style.height = prevHeight;
+        requestAnimationFrame(() => {
+            textarea.style.height = newHeight;
+        });
     }
 }
 
