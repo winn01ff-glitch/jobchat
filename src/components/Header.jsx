@@ -37,18 +37,40 @@ export default function Header() {
   const [showLangOptions, setShowLangOptions] = useState(false);
 
   useEffect(() => {
+    let lastViewportHeight = 0;
+    let expandDebounceTimer = null;
+
     const updateVisualViewport = () => {
-      if (window.visualViewport) {
-        document.documentElement.style.setProperty(
-          '--visual-viewport-height',
-          `${window.visualViewport.height}px`
-        );
-        // Force scroll reset to keep fixed elements in place when typing
-        const isChatActive = document.body.classList.contains('chat-page-active') || 
-                             document.body.classList.contains('chat-active-mobile');
-        if (isChatActive && (window.scrollX !== 0 || window.scrollY !== 0)) {
-          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-        }
+      if (!window.visualViewport) return;
+      const newHeight = window.visualViewport.height;
+      const isExpanding = newHeight > lastViewportHeight && lastViewportHeight > 0;
+      lastViewportHeight = newHeight;
+
+      if (isExpanding) {
+        // Keyboard hiding → viewport expanding frame-by-frame
+        // Debounce: skip intermediate frames, apply final height instantly
+        if (expandDebounceTimer) clearTimeout(expandDebounceTimer);
+        expandDebounceTimer = setTimeout(() => {
+          if (window.visualViewport) {
+            document.documentElement.style.setProperty(
+              '--visual-viewport-height',
+              `${window.visualViewport.height}px`
+            );
+          }
+        }, 80);
+        return;
+      }
+
+      // Keyboard showing → viewport shrinking → update immediately
+      document.documentElement.style.setProperty(
+        '--visual-viewport-height',
+        `${newHeight}px`
+      );
+      // Force scroll reset to keep fixed elements in place when typing
+      const isChatActive = document.body.classList.contains('chat-page-active') || 
+                           document.body.classList.contains('chat-active-mobile');
+      if (isChatActive && (window.scrollX !== 0 || window.scrollY !== 0)) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       }
     };
 
@@ -75,6 +97,7 @@ export default function Header() {
     window.addEventListener('chat-open-applicant-settings', handleOpenApplicantSettings);
 
     return () => {
+      if (expandDebounceTimer) clearTimeout(expandDebounceTimer);
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', updateVisualViewport);
       }
