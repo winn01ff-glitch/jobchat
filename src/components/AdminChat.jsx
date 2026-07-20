@@ -1177,8 +1177,20 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     if (!areActionsCollapsed && textareaRef.current) {
                       const isTyping = e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Enter';
                       if (isTyping && !e.ctrlKey && !e.metaKey) {
-                        const len = textareaRef.current.value.length;
-                        textareaRef.current.setSelectionRange(len, len);
+                        const ta = textareaRef.current;
+                        const len = ta.value.length;
+                        ta.setSelectionRange(len, len);
+                        ta.style.transition = 'none';
+                        ta.classList.remove('collapsed-height');
+                        ta.style.height = '1px';
+                        const scrollH = ta.scrollHeight;
+                        const correctHeight = Math.min(scrollH, 120);
+                        ta.style.height = correctHeight + 'px';
+                        ta.dataset.lastWidth = ta.offsetWidth.toString();
+                        ta.dataset.lastLength = len.toString();
+                        ta.dataset.lastActiveHeight = correctHeight + 'px';
+                        void ta.offsetHeight;
+                        ta.style.transition = '';
                         setAreActionsCollapsed(true);
                       }
                     }
