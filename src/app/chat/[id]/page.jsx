@@ -1295,6 +1295,16 @@ export default function ChatPage({ params }) {
                     }
                   }}
                   onClick={() => {
+                    if (!areActionsCollapsed) {
+                      // Returning from collapsed view → move cursor to end
+                      setTimeout(() => {
+                        if (textareaRef.current) {
+                          const len = textareaRef.current.value.length;
+                          textareaRef.current.setSelectionRange(len, len);
+                          textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+                        }
+                      }, 10);
+                    }
                     setAreActionsCollapsed(true);
                   }}
                   onChange={(e) => {

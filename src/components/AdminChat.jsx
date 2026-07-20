@@ -1157,6 +1157,15 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     }
                   }}
                   onClick={() => {
+                    if (!areActionsCollapsed) {
+                      setTimeout(() => {
+                        if (textareaRef.current) {
+                          const len = textareaRef.current.value.length;
+                          textareaRef.current.setSelectionRange(len, len);
+                          textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+                        }
+                      }, 10);
+                    }
                     setAreActionsCollapsed(true);
                   }}
                   onChange={(e) => {
