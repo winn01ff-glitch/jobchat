@@ -128,9 +128,13 @@ export default function Header() {
       router.push('/');
     } else if (pathname.startsWith('/admin')) {
       router.push('/admin/dashboard');
-    } else if (pathname.startsWith('/jobs/')) {
-      router.push('/jobs');
-    } else if (pathname === '/jobs') {
+    } else if (pathname.startsWith('/jobs/') || pathname === '/jobs') {
+      // Admin logged in → back to admin dashboard
+      if (isAdminLoggedIn) {
+        router.push('/admin/dashboard');
+        return;
+      }
+      // Applicant logged in → back to their chat
       const sessionStr = localStorage.getItem('jobchat_session');
       if (sessionStr) {
         try {
@@ -141,7 +145,12 @@ export default function Header() {
           }
         } catch (e) {}
       }
-      router.push('/');
+      // Not logged in: /jobs/[id] → /jobs, /jobs → /
+      if (pathname.startsWith('/jobs/')) {
+        router.push('/jobs');
+      } else {
+        router.push('/');
+      }
     } else {
       router.push('/');
     }

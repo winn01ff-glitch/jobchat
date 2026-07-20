@@ -235,8 +235,10 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
     let sub;
     const load = async () => {
       setIsLoading(true);
+      setShowScrollBtn(false);
+      setNewMessagesCount(0);
 
-      // 1. Try loading from cache first
+      // 1. Try loading from cache first (only pre-populate messages, do NOT clear isLoading yet)
       const cached = localStorage.getItem(`jobchat_cache_msgs_${applicantId}`);
       if (cached) {
         try {
@@ -244,7 +246,6 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
           if (parsed && parsed.length > 0) {
             setMessages(parsed);
             setMessagesOffset(parsed.length);
-            setIsLoading(false);
           }
         } catch(e) {}
       } else {
@@ -352,6 +353,19 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
       }
     }
   }, [applicantId]);
+
+  // Re-measure textarea height when collapsed-height is removed (actions collapse, textarea widens)
+  useEffect(() => {
+    if (!areActionsCollapsed) return; // collapsed-height active → CSS !important handles height, skip
+    if (!textareaRef.current || !inputText) return;
+    const timer = setTimeout(() => {
+      if (textareaRef.current) {
+        autoResize(textareaRef.current);
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [areActionsCollapsed]);
+
 
   useEffect(() => {
     const handleOnline = () => {
@@ -1067,6 +1081,9 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
               }}
               onClick={() => {
                 setAreActionsCollapsed(false);
+                if (textareaRef.current) {
+                  textareaRef.current.scrollTop = 0;
+                }
               }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
