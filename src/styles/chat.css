@@ -376,6 +376,7 @@ body.chat-page-active #page-container {
     line-height: 30px !important;
     overflow-y: hidden !important;
     overflow-x: hidden !important;
+    caret-color: transparent;
     transition: height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
                 min-height 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), 
                 padding 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
