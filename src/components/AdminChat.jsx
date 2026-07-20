@@ -1073,17 +1073,11 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
             <button 
               className={`chat-action-btn expand-btn ${areActionsCollapsed ? 'active' : ''}`}
               title="Mở rộng" 
-              onMouseDown={(e) => {
-                e.preventDefault();
-              }}
-              onTouchStart={(e) => {
-                e.preventDefault();
-              }}
               onClick={() => {
-                setAreActionsCollapsed(false);
                 if (textareaRef.current) {
-                  textareaRef.current.scrollTop = 0;
+                  textareaRef.current.blur();
                 }
+                setAreActionsCollapsed(false);
               }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: '20px', height: '20px' }}>
