@@ -1173,7 +1173,17 @@ export default function AdminChat({ applicantId, onBack, onDelete, adminSession,
                     handleTextChange(val);
                     autoResize(e.target);
                   }}
-                  onKeyDown={handleKeyDown}
+                  onKeyDown={(e) => {
+                    if (!areActionsCollapsed && textareaRef.current) {
+                      const isTyping = e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Enter';
+                      if (isTyping && !e.ctrlKey && !e.metaKey) {
+                        const len = textareaRef.current.value.length;
+                        textareaRef.current.setSelectionRange(len, len);
+                        setAreActionsCollapsed(true);
+                      }
+                    }
+                    handleKeyDown(e);
+                  }}
                   rows="1"
                   style={{
                     background: 'transparent', 

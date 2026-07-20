@@ -1312,7 +1312,18 @@ export default function ChatPage({ params }) {
                     handleTextChange(val);
                     autoResize(e.target);
                   }}
-                  onKeyDown={handleKeyDown}
+                  onKeyDown={(e) => {
+                    // If typing in collapsed mode, move cursor to end first
+                    if (!areActionsCollapsed && textareaRef.current) {
+                      const isTyping = e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Enter';
+                      if (isTyping && !e.ctrlKey && !e.metaKey) {
+                        const len = textareaRef.current.value.length;
+                        textareaRef.current.setSelectionRange(len, len);
+                        setAreActionsCollapsed(true);
+                      }
+                    }
+                    handleKeyDown(e);
+                  }}
                   rows="1"
                   style={{
                     background: 'transparent', 
