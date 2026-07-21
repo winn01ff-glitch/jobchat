@@ -151,7 +151,9 @@ export default function Header() {
       router.push('/');
     } else if (pathname.startsWith('/admin')) {
       router.push('/admin/dashboard');
-    } else if (pathname.startsWith('/jobs/') || pathname === '/jobs') {
+    } else if (pathname.startsWith('/jobs/')) {
+      router.push('/jobs');
+    } else if (pathname === '/jobs') {
       // Admin logged in → back to admin dashboard
       if (isAdminLoggedIn) {
         router.push('/admin/dashboard');
@@ -168,12 +170,8 @@ export default function Header() {
           }
         } catch (e) {}
       }
-      // Not logged in: /jobs/[id] → /jobs, /jobs → /
-      if (pathname.startsWith('/jobs/')) {
-        router.push('/jobs');
-      } else {
-        router.push('/');
-      }
+      // Not logged in → back to home
+      router.push('/');
     } else {
       router.push('/');
     }
