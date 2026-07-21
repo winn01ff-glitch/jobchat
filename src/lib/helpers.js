@@ -170,15 +170,15 @@ export function autoResize(textarea) {
         scrollH += (parseFloat(computed.borderTopWidth) || 0) + (parseFloat(computed.borderBottomWidth) || 0);
     }
     
-    // Snap to 36px for 1-line text to prevent 1.5 line glitches from browser variations
-    if (scrollH <= 42) {
-        scrollH = 36;
+    // Snap to 31px for 1-line text to prevent 1.5 line glitches from browser variations
+    if (scrollH <= 37) {
+        scrollH = 31;
     }
     
     const newHeight = Math.min(scrollH, 120) + 'px';
     
     // Revert to previous height and force a reflow before re-enabling transitions
-    textarea.style.height = prevHeight || '36px'; 
+    textarea.style.height = prevHeight || '31px'; 
     textarea.style.overflow = oldOverflow;
     void textarea.offsetHeight;
     textarea.style.transition = oldTransition;

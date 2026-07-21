@@ -287,7 +287,7 @@ body.chat-page-active #page-container {
     display: flex;
     align-items: flex-end;
     gap: 6px;
-    padding: 8px var(--space-md);
+    padding: 8px var(--space-md) 3px;
     width: 100%;
     max-width: 850px;
 }
@@ -337,6 +337,7 @@ body.chat-page-active #page-container {
     border-radius: var(--radius-full);
     transition: var(--transition-fast);
     flex-shrink: 0;
+    margin-bottom: 2px;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -349,13 +350,13 @@ body.chat-page-active #page-container {
 }
 .chat-action-btn svg { width: 20px; height: 20px; }
 
-.chat-input-wrapper { flex: 1; position: relative; }
+.chat-input-wrapper { flex: 1; position: relative; margin-bottom: 4px; }
 
 .chat-input {
     width: 100%;
-    min-height: 36px;
+    min-height: 31px;
     max-height: 100px;
-    padding: 8px 12px;
+    padding: 5px 12px;
     background: var(--bg-input);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-xl);
@@ -370,10 +371,10 @@ body.chat-page-active #page-container {
 }
 
 .chat-input.collapsed-height {
-    height: 32px !important;
-    min-height: 32px !important;
-    padding: 0 12px !important;
-    line-height: 30px !important;
+    height: 31px !important;
+    min-height: 31px !important;
+    padding: 5px 12px !important;
+    line-height: 1.36 !important;
     overflow-y: hidden !important;
     overflow-x: hidden !important;
     caret-color: transparent;
@@ -407,6 +408,7 @@ body.chat-page-active #page-container {
     border-radius: var(--radius-full);
     transition: var(--transition-fast);
     flex-shrink: 0;
+    margin-bottom: 3px;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -638,14 +640,20 @@ body.chat-page-active #page-container {
     background: none;
     cursor: pointer;
     font-size: 20px;
+    line-height: 1;
     color: var(--text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0.7;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin: 0;
+    flex-shrink: 0;
+    opacity: 1;
     transition: opacity 0.2s;
     align-self: flex-end;
-    margin-bottom: 7px;
+    margin-bottom: 1px;
     -webkit-tap-highlight-color: transparent;
 }
 .emoji-toggle-btn:hover { opacity: 1; }
@@ -659,12 +667,12 @@ body.chat-page-active #page-container {
 .canned-toggle-btn {
     transition: width 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.12s ease-out, margin 0.15s, padding 0.15s;
     width: 28px;
-    opacity: 0.7;
+    opacity: 1;
     margin-left: 8px;
     margin-right: 4px;
     flex-shrink: 0;
     align-self: flex-end;
-    margin-bottom: 7px;
+    margin-bottom: 0;
     -webkit-tap-highlight-color: transparent;
 }
 .canned-toggle-btn:hover { opacity: 1; }
