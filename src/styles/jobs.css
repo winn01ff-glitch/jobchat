@@ -934,7 +934,7 @@
 
 /* Fixed Bottom Apply Bar */
 .btn-apply {
-    position: absolute;
+    position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
