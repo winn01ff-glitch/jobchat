@@ -1098,11 +1098,28 @@
 }
 
 
+/* Lock viewport height when jobs page is active */
+html.jobs-page-active,
+body.jobs-page-active {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow: hidden !important;
+    width: 100% !important;
+}
+
+body.jobs-page-active #app,
+body.jobs-page-active #page-container {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+}
+
 /* ============ Guest Jobs Page Slide Transitions ============ */
 .jobs-layout-container {
     position: relative;
     width: 100%;
     height: calc(100dvh - var(--header-height));
+    max-height: calc(100dvh - var(--header-height));
     overflow: hidden;
     display: flex;
     flex: 1;

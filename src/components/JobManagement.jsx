@@ -65,11 +65,15 @@ export default function JobManagement({ onSelectJob, selectedJobId }) {
                 className={`job-post-item ${selectedJobId === job.id ? 'selected' : ''}`}
                 onClick={() => onSelectJob(job.id)}
                 style={{
-                  padding: '8px 12px', borderRadius: '8px', marginBottom: '8px', cursor: 'pointer',
-                  background: selectedJobId === job.id ? 'rgba(0, 132, 255, 0.06)' : 'var(--bg-secondary)',
-                  border: '1px solid var(--border-light)',
-                  borderLeft: selectedJobId === job.id ? '4px solid var(--messenger-blue)' : '1px solid var(--border-light)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  marginBottom: '8px',
+                  cursor: 'pointer',
+                  background: selectedJobId === job.id ? 'rgba(0, 132, 255, 0.06)' : 'transparent',
+                  border: selectedJobId === job.id ? '1px solid var(--messenger-blue)' : '1px solid var(--border-light)',
+                  borderLeft: selectedJobId === job.id ? '3px solid var(--messenger-blue)' : '1px solid var(--border-light)',
+                  boxShadow: selectedJobId === job.id ? '0 2px 8px rgba(0, 132, 255, 0.1)' : 'none',
+                  transition: 'all 0.15s ease'
                 }}
               >
                 <div className="job-post-item-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', alignItems: 'center' }}>

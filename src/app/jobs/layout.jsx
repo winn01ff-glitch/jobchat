@@ -9,6 +9,15 @@ export default function JobsLayout({ children }) {
   const [savedDetailChild, setSavedDetailChild] = useState(null);
 
   useEffect(() => {
+    document.documentElement.classList.add('jobs-page-active');
+    document.body.classList.add('jobs-page-active');
+    return () => {
+      document.documentElement.classList.remove('jobs-page-active');
+      document.body.classList.remove('jobs-page-active');
+    };
+  }, []);
+
+  useEffect(() => {
     if (isDetail) {
       setSavedDetailChild(children);
     }
