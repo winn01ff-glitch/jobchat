@@ -354,9 +354,9 @@ body.chat-page-active #page-container {
 
 .chat-input {
     width: 100%;
-    min-height: 31px;
+    min-height: 36px;
     max-height: 100px;
-    padding: 5px 12px;
+    padding: 8px 12px 2px;
     background: var(--bg-input);
     border: 1px solid var(--border-light);
     border-radius: var(--radius-xl);
@@ -371,10 +371,10 @@ body.chat-page-active #page-container {
 }
 
 .chat-input.collapsed-height {
-    height: 31px !important;
-    min-height: 31px !important;
-    padding: 5px 12px !important;
-    line-height: 1.36 !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 1px 12px 0 !important;
+    line-height: 34px !important;
     overflow-y: hidden !important;
     overflow-x: hidden !important;
     caret-color: transparent;
